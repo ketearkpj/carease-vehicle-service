@@ -1,0 +1,83 @@
+/* ===== MASTER VARIABLES - SINGLE SOURCE OF TRUTH ===== */
+:root {
+  /* ===== COLOR PALETTE ===== */
+  --bg-deep: #0a0c14;
+  --bg-dark: #0f172a;
+  --bg-charcoal: #1a1f2f;
+  --nav-bg: #0d1119;
+  
+  --gold-primary: #d4af37;
+  --gold-light: #f5d742;
+  --gold-dark: #b8960c;
+  --gold-glow: rgba(212, 175, 55, 0.25);
+  --gold-gradient: linear-gradient(135deg, #d4af37 0%, #f5d742 50%, #d4af37 100%);
+  
+  --silver: #e2e8f0;
+  --silver-dark: #94a3b8;
+  --silver-metallic: #cbd5e1;
+  
+  --white: #ffffff;
+  --white-off: #f8fafc;
+  
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-border: rgba(212, 175, 55, 0.15);
+  --glass-glow: rgba(212, 175, 55, 0.1);
+  
+  /* Status Colors */
+  --success: #00ff88;
+  --error: #ff4444;
+  --warning: #ffbb33;
+  --info: #33b5e5;
+  --success-bg: rgba(0, 255, 136, 0.1);
+  --error-bg: rgba(255, 68, 68, 0.1);
+  --warning-bg: rgba(255, 187, 51, 0.1);
+  --info-bg: rgba(51, 181, 229, 0.1);
+  
+  /* ===== TYPOGRAPHY ===== */
+  --font-display: 'Syncopate', sans-serif;
+  --font-primary: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* ===== SPACING ===== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  
+  /* ===== TRANSITIONS ===== */
+  --transition-fast: 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-base: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-slow: 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --transition-bounce: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  
+  /* ===== SHADOWS ===== */
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 5px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-gold: 0 5px 30px rgba(212, 175, 55, 0.2);
+  --shadow-gold-intense: 0 5px 40px rgba(212, 175, 55, 0.4);
+  
+  /* ===== BORDERS ===== */
+  --border-fine: 1px solid var(--glass-border);
+  --border-gold: 1px solid var(--gold-primary);
+  --border-glow: 0 0 15px var(--gold-glow);
+  
+  /* ===== LAYOUT ===== */
+  --nav-height: 90px;
+  --container-max: 1440px;
+  --border-radius-sm: 8px;
+  --border-radius-md: 12px;
+  --border-radius-lg: 20px;
+  --border-radius-xl: 30px;
+  --border-radius-full: 9999px;
+}
+
+/* Dark mode enhancements */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-deep: #03050a;
+  }
+}

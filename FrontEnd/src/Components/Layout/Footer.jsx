@@ -1,0 +1,182 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import '../../Styles/Layout.css';
+
+const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
+  const socialLinks = [
+    { 
+      icon: '📘', 
+      url: 'https://facebook.com/carease', 
+      label: 'Facebook',
+      svg: 'M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879v-6.99h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.99C18.343 21.128 22 16.991 22 12z'
+    },
+    { 
+      icon: '🐦', 
+      url: 'https://twitter.com/carease', 
+      label: 'Twitter',
+      svg: 'M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.937 4.937 0 004.604 3.417 9.868 9.868 0 01-6.102 2.104c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 0021.765-3.784c.48-.955.857-1.97 1.126-3.022.269-1.053.403-2.156.403-3.265 0-.5-.011-.997-.032-1.492a10.04 10.04 0 002.46-2.548l-.047-.02z'
+    },
+    { 
+      icon: '📷', 
+      url: 'https://instagram.com/carease', 
+      label: 'Instagram',
+      svg: 'M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zM5.838 12a6.162 6.162 0 1112.324 0 6.162 6.162 0 01-12.324 0zM12 16a4 4 0 110-8 4 4 0 010 8zm4.965-10.405a1.44 1.44 0 112.881.001 1.44 1.44 0 01-2.881-.001z'
+    },
+    { 
+      icon: '💼', 
+      url: 'https://linkedin.com/company/carease', 
+      label: 'LinkedIn',
+      svg: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z'
+    }
+  ];
+
+  const quickLinks = [
+    { path: '/services', label: 'Services' },
+    { path: '/about', label: 'About Us' },
+    { path: '/contact', label: 'Contact' },
+    { path: '/booking', label: 'Book Now' }
+  ];
+
+  const supportLinks = [
+    { path: '/faq', label: 'FAQ' },
+    { path: '/terms', label: 'Terms of Service' },
+    { path: '/privacy', label: 'Privacy Policy' },
+    { path: '/support', label: '24/7 Support' }
+  ];
+
+  return (
+    <footer className="footer">
+      {/* Newsletter Section - UI Only (EmailService will handle later) */}
+      <div className="footer-newsletter">
+        <div className="container">
+          <div className="newsletter-content">
+            <h3>Join the CAR EASE Community</h3>
+            <p>Subscribe to receive exclusive offers and luxury automotive insights</p>
+            <form 
+              className="newsletter-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // This will be handled by EmailService.js later
+                alert('Thank you for subscribing! You will receive our newsletter soon.');
+                e.target.reset();
+              }}
+            >
+              <input 
+                type="email" 
+                placeholder="Your email address" 
+                className="newsletter-input"
+                aria-label="Email for newsletter"
+                required
+              />
+              <button type="submit" className="newsletter-btn">
+                Subscribe
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Footer Content */}
+      <div className="footer-main">
+        <div className="container">
+          <div className="footer-grid">
+            {/* Brand Section */}
+            <div className="footer-section brand">
+              <Link to="/" className="footer-logo" onClick={() => window.scrollTo(0, 0)}>
+                <span className="logo-text">CAR<span className="gold-text">EASE</span></span>
+              </Link>
+              <p className="footer-description">
+                Experience the pinnacle of automotive luxury. From bespoke rentals 
+                to elite maintenance, we provide a seamless journey for the driven.
+              </p>
+              <div className="social-links">
+                {socialLinks.map((social, index) => (
+                  <a 
+                    key={index}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="social-link"
+                    aria-label={social.label}
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d={social.svg} />
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div className="footer-section">
+              <h4 className="footer-heading">Quick Links</h4>
+              <ul className="footer-links">
+                {quickLinks.map((link, index) => (
+                  <li key={index}>
+                    <Link to={link.path} onClick={() => window.scrollTo(0, 0)}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div className="footer-section">
+              <h4 className="footer-heading">Support</h4>
+              <ul className="footer-links">
+                {supportLinks.map((link, index) => (
+                  <li key={index}>
+                    <Link to={link.path} onClick={() => window.scrollTo(0, 0)}>
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact Info */}
+            <div className="footer-section">
+              <h4 className="footer-heading">Contact</h4>
+              <ul className="footer-contact">
+                <li>
+                  <span className="contact-icon">📍</span>
+                  <span>123 Luxury Lane, Beverly Hills, CA 90210</span>
+                </li>
+                <li>
+                  <span className="contact-icon">📞</span>
+                  <a href="tel:+18005550123">+1 (800) 555-0123</a>
+                </li>
+                <li>
+                  <span className="contact-icon">✉️</span>
+                  <a href="mailto:concierge@carease.com">concierge@carease.com</a>
+                </li>
+                <li>
+                  <span className="contact-icon">⏰</span>
+                  <span>Mon-Sun: 9am - 8pm</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Bar */}
+      <div className="footer-bottom">
+        <div className="container">
+          <div className="footer-bottom-content">
+            <p>&copy; {currentYear} CAR EASE. All rights reserved.</p>
+            <div className="footer-badges">
+              <span className="footer-badge">EST. 2018</span>
+              <span className="footer-badge">LUXURY AUTOMOTIVE</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;
