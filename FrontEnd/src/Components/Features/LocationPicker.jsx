@@ -50,7 +50,7 @@ const LocationPicker = ({
     setMapError(null);
     try {
       await loadGoogleMapsScript();
-      let defaultLocation = { lat: 34.0736, lng: -118.4004 };
+      let defaultLocation = { lat: -1.2195, lng: 36.8869 }; // Roysambu, next to TRM
       try {
         const location = await getCurrentLocation();
         defaultLocation = location;
@@ -104,7 +104,7 @@ const LocationPicker = ({
     try {
       const response = await new Promise((resolve, reject) => {
         autocompleteService.getPlacePredictions(
-          { input: searchQuery, types: ['address'], componentRestrictions: { country: 'us' } },
+          { input: searchQuery, types: ['address'], componentRestrictions: { country: 'ke' } },
           (results, status) => {
             if (status === 'OK' && results) resolve(results);
             else reject(status);
