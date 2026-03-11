@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
-import { VEHICLE_CATEGORIES, CURRENCY } from '../Utils/constants';
+import { VEHICLE_CATEGORIES } from '../Utils/constants';
+import { formatCurrency } from '../Utils/format';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -27,6 +28,7 @@ import '../Styles/Sales.css';
 
 const Sales = () => {
   const navigate = useNavigate();
+  const toKES = (amount) => Number(amount || 0) * 130;
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -99,8 +101,8 @@ const Sales = () => {
           specs: {
             engine: '6.5L V10',
             power: '640 hp',
-            acceleration: '2.9s 0-60',
-            topSpeed: '202 mph',
+            acceleration: '2.9s 0-100 km/h',
+            topSpeed: '202 km/h',
             transmission: '7-speed dual clutch',
             drivetrain: 'AWD'
           },
@@ -133,8 +135,8 @@ const Sales = () => {
           specs: {
             engine: '3.9L V8',
             power: '710 hp',
-            acceleration: '2.9s 0-60',
-            topSpeed: '211 mph',
+            acceleration: '2.9s 0-100 km/h',
+            topSpeed: '211 km/h',
             transmission: '7-speed dual clutch',
             drivetrain: 'RWD'
           },
@@ -167,8 +169,8 @@ const Sales = () => {
           specs: {
             engine: '6.75L V12',
             power: '563 hp',
-            acceleration: '4.6s 0-60',
-            topSpeed: '155 mph',
+            acceleration: '4.6s 0-100 km/h',
+            topSpeed: '155 km/h',
             transmission: '8-speed automatic',
             drivetrain: 'AWD'
           },
@@ -201,8 +203,8 @@ const Sales = () => {
           specs: {
             engine: '3.7L Flat-6',
             power: '640 hp',
-            acceleration: '2.6s 0-60',
-            topSpeed: '205 mph',
+            acceleration: '2.6s 0-100 km/h',
+            topSpeed: '205 km/h',
             transmission: '8-speed dual clutch',
             drivetrain: 'AWD'
           },
@@ -234,8 +236,8 @@ const Sales = () => {
           specs: {
             engine: '6.0L W12',
             power: '650 hp',
-            acceleration: '3.5s 0-60',
-            topSpeed: '208 mph',
+            acceleration: '3.5s 0-100 km/h',
+            topSpeed: '208 km/h',
             transmission: '8-speed dual clutch',
             drivetrain: 'AWD'
           },
@@ -267,8 +269,8 @@ const Sales = () => {
           specs: {
             engine: '4.0L V8',
             power: '710 hp',
-            acceleration: '2.7s 0-60',
-            topSpeed: '212 mph',
+            acceleration: '2.7s 0-100 km/h',
+            topSpeed: '212 km/h',
             transmission: '7-speed dual clutch',
             drivetrain: 'RWD'
           },
@@ -300,8 +302,8 @@ const Sales = () => {
           specs: {
             engine: '4.4L V8',
             power: '523 hp',
-            acceleration: '4.4s 0-60',
-            topSpeed: '155 mph',
+            acceleration: '4.4s 0-100 km/h',
+            topSpeed: '155 km/h',
             transmission: '8-speed automatic',
             drivetrain: 'AWD'
           },
@@ -333,8 +335,8 @@ const Sales = () => {
           specs: {
             engine: '5.2L V12',
             power: '715 hp',
-            acceleration: '3.2s 0-60',
-            topSpeed: '211 mph',
+            acceleration: '3.2s 0-100 km/h',
+            topSpeed: '211 km/h',
             transmission: '8-speed automatic',
             drivetrain: 'RWD'
           },
@@ -454,7 +456,7 @@ const Sales = () => {
   const calculateFinancing = () => {
     if (!selectedVehicle) return null;
 
-    const price = selectedVehicle.price;
+    const price = toKES(selectedVehicle.price);
     const downPaymentAmount = price * (financing.downPayment / 100);
     const loanAmount = price - downPaymentAmount;
     const monthlyRate = financing.interestRate / 100 / 12;
@@ -475,11 +477,11 @@ const Sales = () => {
   const categories = ['all', 'supercar', 'luxury', 'sports', 'suv', 'grand_tourer'];
   const priceRanges = [
     { value: 'all', label: 'All Prices' },
-    { value: '0-100000', label: 'Under $100k' },
-    { value: '100000-200000', label: '$100k - $200k' },
-    { value: '200000-300000', label: '$200k - $300k' },
-    { value: '300000-400000', label: '$300k - $400k' },
-    { value: '400000-999999', label: '$400k+' }
+    { value: '0-100000', label: `Under ${formatCurrency(toKES(100000))}` },
+    { value: '100000-200000', label: `${formatCurrency(toKES(100000))} - ${formatCurrency(toKES(200000))}` },
+    { value: '200000-300000', label: `${formatCurrency(toKES(200000))} - ${formatCurrency(toKES(300000))}` },
+    { value: '300000-400000', label: `${formatCurrency(toKES(300000))} - ${formatCurrency(toKES(400000))}` },
+    { value: '400000-999999', label: `${formatCurrency(toKES(400000))}+` }
   ];
   const yearRanges = [
     { value: 'all', label: 'All Years' },
@@ -637,11 +639,6 @@ const Sales = () => {
                   className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
                   onClick={() => setViewMode('grid')}
                   aria-label="Grid view"
-                  onClick={() => saveBookingDraft({
-                    serviceType: 'sales',
-                    inquiryType: 'vehicle_request',
-                    pickupLocation: 'roysambu-trm'
-                  })}
                 >
                   <span className="view-icon">⊞</span>
                 </button>
@@ -691,6 +688,8 @@ const Sales = () => {
                 <div key={vehicle.id} className={`vehicle-wrapper animate-fade-up animate-delay-${index % 4 + 1}`}>
                   <VehicleCard
                     {...vehicle}
+                    price={formatCurrency(toKES(vehicle.price))}
+                    pricePeriod=""
                     onQuickView={() => handleViewDetails(vehicle)}
                     variant={viewMode === 'list' ? 'horizontal' : 'featured'}
                   />
@@ -762,13 +761,13 @@ const Sales = () => {
                 </div>
 
                 <div className="vehicle-price-tag">
-                  <span className="price-amount">${selectedVehicle.price.toLocaleString()}</span>
+                  <span className="price-amount">{formatCurrency(toKES(selectedVehicle.price))}</span>
                 </div>
 
                 <div className="vehicle-highlights">
                   <div className="highlight-item">
                     <span className="highlight-label">Mileage</span>
-                    <span className="highlight-value">{selectedVehicle.mileage.toLocaleString()} miles</span>
+                    <span className="highlight-value">{Math.round(selectedVehicle.mileage * 1.609).toLocaleString()} km</span>
                   </div>
                   <div className="highlight-item">
                     <span className="highlight-label">Condition</span>
@@ -847,7 +846,7 @@ const Sales = () => {
                     </div>
                     <div className="history-item">
                       <span className="history-label">Accident History:</span>
-                      <span className="history-value">Clean Carfax</span>
+                      <span className="history-value">No recorded accident history</span>
                     </div>
                   </div>
 
@@ -905,23 +904,23 @@ const Sales = () => {
                         <div className="calculator-results">
                           <div className="result-item">
                             <span>Down Payment:</span>
-                            <span>${calculateFinancing().downPaymentAmount.toLocaleString()}</span>
+                            <span>{formatCurrency(calculateFinancing().downPaymentAmount)}</span>
                           </div>
                           <div className="result-item">
                             <span>Loan Amount:</span>
-                            <span>${calculateFinancing().loanAmount.toLocaleString()}</span>
+                            <span>{formatCurrency(calculateFinancing().loanAmount)}</span>
                           </div>
                           <div className="result-item highlight">
                             <span>Monthly Payment:</span>
-                            <span>${calculateFinancing().monthlyPayment}</span>
+                            <span>{formatCurrency(calculateFinancing().monthlyPayment)}</span>
                           </div>
                           <div className="result-item">
                             <span>Total Interest:</span>
-                            <span>${calculateFinancing().totalInterest}</span>
+                            <span>{formatCurrency(calculateFinancing().totalInterest)}</span>
                           </div>
                           <div className="result-item">
                             <span>Total Payments:</span>
-                            <span>${calculateFinancing().totalPayments}</span>
+                            <span>{formatCurrency(calculateFinancing().totalPayments)}</span>
                           </div>
                         </div>
                       )}
@@ -936,6 +935,14 @@ const Sales = () => {
                     fullWidth
                     onClick={() => handleInquirySubmit('purchase')}
                   >
+                    Buy This Vehicle
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    fullWidth
+                    onClick={() => handleInquirySubmit('inquiry')}
+                  >
                     Inquire About This Vehicle
                   </Button>
                   <Button 
@@ -949,7 +956,7 @@ const Sales = () => {
                 </div>
 
                 <p className="vehicle-disclaimer">
-                  *Price does not include tax, title, and license. Vehicle subject to prior sale.
+                  *Price excludes KRA taxes and transfer fees. Vehicle subject to prior sale.
                 </p>
               </div>
             </div>

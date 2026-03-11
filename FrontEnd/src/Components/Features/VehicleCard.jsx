@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '../Common/Card';
 import Button from '../Common/Button';
+import { formatCurrency } from '../../Utils/format';
 import '../../Styles/Features.css';
 
 /**
@@ -36,6 +37,7 @@ const VehicleCard = ({
   available = true,
   badge,
   linkTo,
+  pricePeriod = '/day',
   variant = 'default',
   onClick,
   onFavorite,
@@ -61,7 +63,7 @@ const VehicleCard = ({
 
   const formatPrice = (price) => {
     if (typeof price === 'string') return price;
-    return `$${price.toLocaleString()}`;
+    return formatCurrency(price);
   };
 
   const vehicleClasses = [
@@ -181,7 +183,7 @@ const VehicleCard = ({
           <div className="vehicle-price">
             <span className="price-label">from</span>
             <span className="price-amount">{formatPrice(price)}</span>
-            <span className="price-period">/day</span>
+            {pricePeriod && <span className="price-period">{pricePeriod}</span>}
           </div>
 
           {/* Action Buttons */}

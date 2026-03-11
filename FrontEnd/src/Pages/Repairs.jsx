@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 // Core imports
 import { ROUTES } from '../Config/Routes';
 import { REPAIR_SERVICES, LOCATIONS } from '../Utils/constants';
+import { formatCurrency } from '../Utils/format';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -26,6 +27,7 @@ import '../Styles/Repairs.css';
 
 const Repairs = () => {
   const navigate = useNavigate();
+  const formatKES = (amount) => formatCurrency(Number(amount || 0));
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +46,7 @@ const Repairs = () => {
   });
   const [availableSlots, setAvailableSlots] = useState([]);
   const [estimatedPrice, setEstimatedPrice] = useState(null);
-  const [diagnosticFee, setDiagnosticFee] = useState(89);
+  const diagnosticFee = 8500;
 
   const { addNotification } = useApp();
 
@@ -217,7 +219,7 @@ const Repairs = () => {
                   <p className="service-description">{service.description}</p>
                   <div className="service-price">
                     <span className="price-label">Starting at</span>
-                    <span className="price-amount">${service.price}</span>
+                    <span className="price-amount">{formatKES(service.price)}</span>
                   </div>
                   <Button
                     variant={selectedService?.id === service.id ? 'primary' : 'outline'}
@@ -258,7 +260,7 @@ const Repairs = () => {
             <div className="benefit-card animate-fade-up animate-delay-3">
               <div className="benefit-icon">🛡️</div>
               <h3 className="benefit-title">Warranty Included</h3>
-              <p className="benefit-description">24-month/24,000-mile warranty on all repairs</p>
+              <p className="benefit-description">24-month/40,000-km warranty on all repairs</p>
             </div>
 
             <div className="benefit-card animate-fade-up animate-delay-4">
@@ -300,7 +302,7 @@ const Repairs = () => {
                 <div className="booking-step">
                   <div className="selected-service-info">
                     <h3>Selected Service: {selectedService?.name}</h3>
-                    <p className="service-price">Starting at ${selectedService?.price}</p>
+                    <p className="service-price">Starting at {formatKES(selectedService?.price)}</p>
                   </div>
 
                   <div className="form-row">
@@ -478,7 +480,7 @@ const Repairs = () => {
                       onClick={handleBookingSubmit}
                       disabled={!formData.description}
                     >
-                      Submit Booking
+                      Continue to Payment
                     </Button>
                   </div>
                 </div>
@@ -517,13 +519,13 @@ const Repairs = () => {
                   {selectedService.id !== 'diagnostic' && (
                     <div className="summary-item">
                       <span className="item-label">Diagnostic Fee:</span>
-                      <span className="item-value">${diagnosticFee}</span>
+                      <span className="item-value">{formatKES(diagnosticFee)}</span>
                     </div>
                   )}
 
                   <div className="summary-item">
                     <span className="item-label">Base Labor:</span>
-                    <span className="item-value">${selectedService.price}</span>
+                    <span className="item-value">{formatKES(selectedService.price)}</span>
                   </div>
                   
                   {formData.vehicleType && formData.vehicleType !== 'standard' && (
@@ -549,7 +551,7 @@ const Repairs = () => {
                   <div className="summary-total">
                     <span className="total-label">Estimated Total:</span>
                     <span className="total-value">
-                      ${(estimatedPrice + (selectedService.id !== 'diagnostic' ? diagnosticFee : 0)).toFixed(2)}
+                      {formatKES((estimatedPrice || 0) + (selectedService.id !== 'diagnostic' ? diagnosticFee : 0))}
                     </span>
                   </div>
 
@@ -606,7 +608,7 @@ const Repairs = () => {
             <div className="faq-item">
               <h3 className="faq-question">What is your warranty policy?</h3>
               <p className="faq-answer">
-                All repairs come with a 24-month/24,000-mile warranty on parts and labor.
+                All repairs come with a 24-month/40,000-km warranty on parts and labor.
                 We stand behind our work and offer comprehensive warranty coverage.
               </p>
             </div>
@@ -652,7 +654,7 @@ const Repairs = () => {
                   Schedule Service
                 </Button>
               </Link>
-              <a href="tel:+18005550123">
+              <a href="tel:+254758458358">
                 <Button variant="outline" size="lg">
                   Call Emergency Line
                 </Button>

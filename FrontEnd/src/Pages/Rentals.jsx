@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
-import { VEHICLE_CATEGORIES, CURRENCY } from '../Utils/constants';
+import { VEHICLE_CATEGORIES } from '../Utils/constants';
+import { formatCurrency } from '../Utils/format';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -27,6 +28,8 @@ import '../Styles/Rentals.css';
 
 const Rentals = () => {
   const navigate = useNavigate();
+  const toKES = (amount) => Number(amount || 0) * 130;
+  const formatKES = (amount) => formatCurrency(toKES(amount));
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -92,8 +95,8 @@ const Rentals = () => {
           specs: {
             engine: '6.5L V10',
             power: '640 hp',
-            acceleration: '2.9s 0-60',
-            topSpeed: '202 mph',
+            acceleration: '2.9s 0-100 km/h',
+            topSpeed: '202 km/h',
             transmission: '7-speed dual clutch',
             drivetrain: 'AWD'
           },
@@ -120,8 +123,8 @@ const Rentals = () => {
           specs: {
             engine: '3.9L V8',
             power: '710 hp',
-            acceleration: '2.9s 0-60',
-            topSpeed: '211 mph',
+            acceleration: '2.9s 0-100 km/h',
+            topSpeed: '211 km/h',
             transmission: '7-speed dual clutch',
             drivetrain: 'RWD'
           },
@@ -148,8 +151,8 @@ const Rentals = () => {
           specs: {
             engine: '6.75L V12',
             power: '563 hp',
-            acceleration: '4.6s 0-60',
-            topSpeed: '155 mph',
+            acceleration: '4.6s 0-100 km/h',
+            topSpeed: '155 km/h',
             transmission: '8-speed automatic',
             drivetrain: 'AWD'
           },
@@ -176,8 +179,8 @@ const Rentals = () => {
           specs: {
             engine: '3.7L Flat-6',
             power: '640 hp',
-            acceleration: '2.6s 0-60',
-            topSpeed: '205 mph',
+            acceleration: '2.6s 0-100 km/h',
+            topSpeed: '205 km/h',
             transmission: '8-speed dual clutch',
             drivetrain: 'AWD'
           },
@@ -204,8 +207,8 @@ const Rentals = () => {
           specs: {
             engine: '6.0L W12',
             power: '650 hp',
-            acceleration: '3.5s 0-60',
-            topSpeed: '208 mph',
+            acceleration: '3.5s 0-100 km/h',
+            topSpeed: '208 km/h',
             transmission: '8-speed dual clutch',
             drivetrain: 'AWD'
           },
@@ -232,8 +235,8 @@ const Rentals = () => {
           specs: {
             engine: '4.0L V8',
             power: '710 hp',
-            acceleration: '2.7s 0-60',
-            topSpeed: '212 mph',
+            acceleration: '2.7s 0-100 km/h',
+            topSpeed: '212 km/h',
             transmission: '7-speed dual clutch',
             drivetrain: 'RWD'
           },
@@ -260,8 +263,8 @@ const Rentals = () => {
           specs: {
             engine: '4.4L V8',
             power: '523 hp',
-            acceleration: '4.4s 0-60',
-            topSpeed: '155 mph',
+            acceleration: '4.4s 0-100 km/h',
+            topSpeed: '155 km/h',
             transmission: '8-speed automatic',
             drivetrain: 'AWD'
           },
@@ -288,8 +291,8 @@ const Rentals = () => {
           specs: {
             engine: '5.2L V12',
             power: '715 hp',
-            acceleration: '3.2s 0-60',
-            topSpeed: '211 mph',
+            acceleration: '3.2s 0-100 km/h',
+            topSpeed: '211 km/h',
             transmission: '8-speed automatic',
             drivetrain: 'RWD'
           },
@@ -386,11 +389,11 @@ const Rentals = () => {
 
   const priceRanges = [
     { value: 'all', label: 'All Prices' },
-    { value: '0-500', label: 'Under $500' },
-    { value: '500-1000', label: '$500 - $1,000' },
-    { value: '1000-1500', label: '$1,000 - $1,500' },
-    { value: '1500-2000', label: '$1,500 - $2,000' },
-    { value: '2000-9999', label: '$2,000+' }
+    { value: '0-500', label: `Under ${formatKES(500)}` },
+    { value: '500-1000', label: `${formatKES(500)} - ${formatKES(1000)}` },
+    { value: '1000-1500', label: `${formatKES(1000)} - ${formatKES(1500)}` },
+    { value: '1500-2000', label: `${formatKES(1500)} - ${formatKES(2000)}` },
+    { value: '2000-9999', label: `${formatKES(2000)}+` }
   ];
 
   const sortOptions = [
@@ -554,6 +557,7 @@ const Rentals = () => {
                 <div key={vehicle.id} className={`vehicle-wrapper animate-fade-up animate-delay-${index % 4 + 1}`}>
                   <VehicleCard
                     {...vehicle}
+                    price={toKES(vehicle.price)}
                     onQuickView={() => handleQuickView(vehicle)}
                     onQuickBook={() => handleQuickBook(vehicle)}
                     variant={viewMode === 'list' ? 'horizontal' : 'featured'}
@@ -628,7 +632,7 @@ const Rentals = () => {
                 </div>
 
                 <div className="vehicle-price">
-                  <span className="price-amount">${selectedVehicle.price}</span>
+                  <span className="price-amount">{formatKES(selectedVehicle.price)}</span>
                   <span className="price-period">/day</span>
                 </div>
 
@@ -644,7 +648,7 @@ const Rentals = () => {
                       <span className="spec-value">{selectedVehicle.specs.power}</span>
                     </div>
                     <div className="spec-item">
-                      <span className="spec-label">0-60 mph</span>
+                      <span className="spec-label">0-100 km/h</span>
                       <span className="spec-value">{selectedVehicle.specs.acceleration}</span>
                     </div>
                     <div className="spec-item">

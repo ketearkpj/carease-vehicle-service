@@ -255,7 +255,7 @@ export const WASH_PACKAGES = [
   {
     id: 'express',
     name: 'Express Wash',
-    price: 29,
+    price: 3500,
     duration: 30,
     description: 'Quick and efficient exterior wash',
     features: [
@@ -270,7 +270,7 @@ export const WASH_PACKAGES = [
   {
     id: 'premium',
     name: 'Premium Detail',
-    price: 79,
+    price: 9500,
     duration: 90,
     description: 'Comprehensive interior and exterior detailing',
     features: [
@@ -286,7 +286,7 @@ export const WASH_PACKAGES = [
   {
     id: 'ultimate',
     name: 'Ultimate Ceramic',
-    price: 199,
+    price: 24900,
     duration: 180,
     description: 'Professional ceramic coating for lasting protection',
     features: [
@@ -306,7 +306,7 @@ export const REPAIR_SERVICES = [
   {
     id: 'diagnostic',
     name: 'Diagnostic Service',
-    price: 89,
+    price: 8500,
     duration: 60,
     description: 'Complete vehicle diagnostics and health check',
     icon: '🔍'
@@ -314,7 +314,7 @@ export const REPAIR_SERVICES = [
   {
     id: 'maintenance',
     name: 'Regular Maintenance',
-    price: 199,
+    price: 19500,
     duration: 120,
     description: 'Oil change, filters, fluid top-up, tire rotation',
     icon: '🔧'
@@ -322,7 +322,7 @@ export const REPAIR_SERVICES = [
   {
     id: 'repair',
     name: 'General Repairs',
-    price: 349,
+    price: 36500,
     duration: 180,
     description: 'Brakes, suspension, engine repairs',
     icon: '⚙️'
@@ -330,7 +330,7 @@ export const REPAIR_SERVICES = [
   {
     id: 'performance',
     name: 'Performance Tuning',
-    price: 599,
+    price: 78500,
     duration: 240,
     description: 'ECU tuning, dyno testing, custom mapping',
     icon: '🚀'
@@ -390,14 +390,14 @@ export const DATE_FORMATS = {
 
 // ===== CURRENCY =====
 export const CURRENCY = {
-  code: 'USD',
-  symbol: '$',
-  name: 'US Dollar',
-  locale: 'en-US'
+  code: 'KES',
+  symbol: 'KSh',
+  name: 'Kenyan Shilling',
+  locale: 'en-KE'
 };
 
 // ===== TAX RATE =====
-export const TAX_RATE = 0.1;
+export const TAX_RATE = 0.16;
 
 // ===== DEPOSIT RATES =====
 export const DEPOSIT_RATES = {
@@ -407,7 +407,7 @@ export const DEPOSIT_RATES = {
 };
 
 // ===== LATE FEES =====
-export const LATE_FEE_DAILY = 50;
+export const LATE_FEE_DAILY = 6500;
 
 // ===== BOOKING LIMITS =====
 export const BOOKING_LIMITS = {

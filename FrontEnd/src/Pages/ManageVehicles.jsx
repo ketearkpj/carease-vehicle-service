@@ -399,7 +399,7 @@ const ManageVehicles = () => {
                 required
               />
               <Input
-                label="Daily Rate ($)"
+                label="Daily Rate (KSh)"
                 name="price"
                 type="number"
                 value={formData.price}

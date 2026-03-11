@@ -275,7 +275,7 @@ const AdminDashboard = () => {
             </div>
             <div className="activity-item">
               <span className="activity-label">Revenue Today</span>
-              <span className="activity-value">$12,450</span>
+              <span className="activity-value">{formatCurrency(12450)}</span>
             </div>
           </div>
         </Card>

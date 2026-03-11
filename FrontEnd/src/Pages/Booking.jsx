@@ -547,7 +547,7 @@ const Booking = () => {
       // Create final booking
       const finalBookingData = {
         ...bookingData,
-        inquiryType: queryParams.get('inquiryType') || null,
+        inquiryType: bookingData.inquiryType || queryParams.get('inquiryType') || null,
         paymentId: payment?.transactionId || `txn_${Date.now()}`,
         totalAmount: pricing.total,
         status: 'confirmed',

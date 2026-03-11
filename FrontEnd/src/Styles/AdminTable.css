@@ -36,6 +36,7 @@
   overflow-x: auto;
   border-radius: var(--radius-lg);
   background: var(--bg-dark);
+  border: var(--border-fine);
 }
 
 .admin-table {
@@ -52,6 +53,9 @@
   padding: var(--space-4);
   white-space: nowrap;
   border-bottom: var(--border-gold-light);
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .admin-table th.sortable {
@@ -99,6 +103,7 @@
   color: var(--silver);
   border-bottom: var(--border-fine);
   transition: background var(--transition-base);
+  vertical-align: top;
 }
 
 .admin-table tbody tr:hover td {
@@ -271,6 +276,16 @@
 }
 
 @media (max-width: 768px) {
+  .admin-table-container {
+    padding: var(--space-4);
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: var(--space-3);
+    font-size: var(--text-xs);
+  }
+
   .table-pagination {
     flex-direction: column;
     align-items: stretch;

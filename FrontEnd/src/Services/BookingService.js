@@ -55,28 +55,34 @@ const validateBookingData = (data) => {
 
 const mapBookingForApi = (bookingData) => ({
   vehicleId: bookingData.vehicleId || null,
+  vehicleName: bookingData.vehicleName || null,
   serviceType: bookingData.serviceType,
   packageId: bookingData.packageId || null,
+  packageName: bookingData.packageName || null,
+  listedPrice: bookingData.listedPrice || null,
+  inquiryType: bookingData.inquiryType || null,
   startDate: bookingData.startDate,
   endDate: bookingData.endDate,
   pickupTime: bookingData.timeSlot || bookingData.time || null,
   dropoffTime: bookingData.timeSlot || bookingData.time || null,
   pickupLocation: bookingData.pickupLocation || null,
   dropoffLocation: bookingData.dropoffLocation || bookingData.pickupLocation || null,
+  deliveryMode: bookingData.deliveryMode || 'pickup',
   extras: bookingData.extras || [],
   specialRequests: bookingData.specialRequests || '',
   paymentMethod: bookingData.paymentMethod || null,
   paymentId: bookingData.paymentId || null,
+  paymentMeta: bookingData.paymentMeta || null,
   totalAmount: bookingData.totalAmount || bookingData.totalPrice || 0,
   customerInfo: bookingData.customerInfo || {}
 });
 
 const estimatePrice = (bookingData = {}) => {
   const serviceBase = {
-    rental: 299,
-    car_wash: 79,
-    repair: 199,
-    sales: 500
+    rental: 18000,
+    car_wash: 3500,
+    repair: 8500,
+    sales: 5000
   };
   const days = bookingData.startDate && bookingData.endDate
     ? Math.max(
@@ -91,7 +97,7 @@ const estimatePrice = (bookingData = {}) => {
   return {
     basePrice: base * days,
     extrasPrice: extras,
-    deliveryFee: bookingData.deliveryMode === 'delivery' ? 50 : 0
+    deliveryFee: bookingData.deliveryMode === 'delivery' ? 6500 : 0
   };
 };
 

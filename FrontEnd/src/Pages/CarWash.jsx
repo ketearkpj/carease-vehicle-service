@@ -5,6 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 // Core imports
 import { ROUTES } from '../Config/Routes';
 import { WASH_PACKAGES, LOCATIONS } from '../Utils/constants';
+import { formatCurrency } from '../Utils/format';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -13,7 +14,6 @@ import Input from '../Components/Common/Input';
 import Select from '../Components/Common/Select';
 import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import HeroSection from '../Components/Features/HeroSection';
-import BookingForm from '../Components/Features/BookingForm';
 
 // Services
 import { getWashPackages, getAvailableTimeSlots } from '../Services/Service.Service';
@@ -27,6 +27,7 @@ import '../Styles/CarWash.css';
 
 const CarWash = () => {
   const navigate = useNavigate();
+  const formatKES = (amount) => formatCurrency(Number(amount || 0));
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -172,12 +173,12 @@ const CarWash = () => {
   };
 
   const extras = [
-    { id: 'ceramic', name: 'Ceramic Coating', price: 199, description: '9H ceramic protection' },
-    { id: 'interior', name: 'Deep Interior Clean', price: 79, description: 'Complete interior detailing' },
-    { id: 'engine', name: 'Engine Bay Cleaning', price: 49, description: 'Professional engine detailing' },
-    { id: 'headlight', name: 'Headlight Restoration', price: 89, description: 'Restore clarity to headlights' },
-    { id: 'odor', name: 'Odor Removal', price: 59, description: 'Ozone treatment' },
-    { id: 'paint', name: 'Paint Correction', price: 299, description: 'Remove swirl marks and scratches' }
+    { id: 'ceramic', name: 'Ceramic Coating', price: 24900, description: '9H ceramic protection' },
+    { id: 'interior', name: 'Deep Interior Clean', price: 9500, description: 'Complete interior detailing' },
+    { id: 'engine', name: 'Engine Bay Cleaning', price: 4500, description: 'Professional engine detailing' },
+    { id: 'headlight', name: 'Headlight Restoration', price: 6500, description: 'Restore clarity to headlights' },
+    { id: 'odor', name: 'Odor Removal', price: 5200, description: 'Ozone treatment' },
+    { id: 'paint', name: 'Paint Correction', price: 29500, description: 'Remove swirl marks and scratches' }
   ];
 
   const vehicleSizes = [
@@ -239,7 +240,7 @@ const CarWash = () => {
                     ))}
                   </ul>
                   <div className="package-price">
-                    <span className="price-amount">${pkg.price}</span>
+                    <span className="price-amount">{formatKES(pkg.price)}</span>
                   </div>
                   <Button
                     variant={selectedPackage?.id === pkg.id ? 'primary' : 'outline'}
@@ -322,7 +323,7 @@ const CarWash = () => {
                 <div className="booking-step">
                   <div className="selected-package-info">
                     <h3>Selected Package: {selectedPackage?.name}</h3>
-                    <p className="package-price">${selectedPackage?.price}</p>
+                    <p className="package-price">{formatKES(selectedPackage?.price)}</p>
                   </div>
 
                   <div className="form-row">
@@ -410,7 +411,7 @@ const CarWash = () => {
                             <span className="extra-name">{extra.name}</span>
                             <span className="extra-description">{extra.description}</span>
                           </div>
-                          <span className="extra-price">+${extra.price}</span>
+                          <span className="extra-price">+{formatKES(extra.price)}</span>
                         </div>
                       </label>
                     ))}
@@ -439,7 +440,7 @@ const CarWash = () => {
                       variant="primary"
                       onClick={handleBookingSubmit}
                     >
-                      Complete Booking
+                      Continue to Payment
                     </Button>
                   </div>
                 </div>
@@ -476,7 +477,7 @@ const CarWash = () => {
                   </div>
                   <div className="summary-item">
                     <span className="item-label">Base Price:</span>
-                    <span className="item-value">${selectedPackage.price}</span>
+                    <span className="item-value">{formatKES(selectedPackage.price)}</span>
                   </div>
                   
                   {formData.vehicleSize && (
@@ -495,7 +496,7 @@ const CarWash = () => {
                       {formData.extras.map(extra => (
                         <div key={extra.id} className="summary-item">
                           <span className="item-label">{extra.name}:</span>
-                          <span className="item-value">+${extra.price}</span>
+                          <span className="item-value">+{formatKES(extra.price)}</span>
                         </div>
                       ))}
                     </>
@@ -505,7 +506,7 @@ const CarWash = () => {
                   
                   <div className="summary-total">
                     <span className="total-label">Total:</span>
-                    <span className="total-value">${price?.toFixed(2) || selectedPackage.price}</span>
+                    <span className="total-value">{formatKES(price || selectedPackage.price)}</span>
                   </div>
 
                   {formData.location && (
