@@ -14,25 +14,29 @@ router.post(
   paymentController.handleWebhook
 );
 
-// ===== PROTECTED ROUTES =====
-router.use(authMiddleware.protect);
-
+// ===== PUBLIC/GUEST CHECKOUT ROUTES =====
 router.post(
   '/process',
+  authMiddleware.optionalAuth,
   validationMiddleware.validate(validatePayment.processPayment),
   paymentController.processPayment
 );
 
 router.post(
   '/confirm',
+  authMiddleware.optionalAuth,
   validationMiddleware.validate(validatePayment.confirmPayment),
   paymentController.confirmPayment
 );
 
 router.get(
   '/mpesa-status/:checkoutRequestId',
+  authMiddleware.optionalAuth,
   paymentController.getMpesaStatus
 );
+
+// ===== USER PROTECTED ROUTES =====
+router.use(authMiddleware.protect);
 
 router.get(
   '/my-payments',
@@ -69,6 +73,7 @@ router.get(
 );
 
 // ===== ADMIN ROUTES =====
+router.use(authMiddleware.protectAdmin);
 router.use(authMiddleware.restrictTo('admin', 'super_admin'));
 
 router.get(

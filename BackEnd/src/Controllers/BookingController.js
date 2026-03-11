@@ -1,5 +1,6 @@
 // ===== src/controllers/bookingController.js =====
 const { Op, fn, col, literal } = require('sequelize');
+const bcrypt = require('bcryptjs');
 const { sequelize } = require('../Config/sequelize');
 const { Booking, Vehicle, User, Payment } = require('../Models');
 const AppError = require('../Utils/AppError');
@@ -60,11 +61,12 @@ exports.createBooking = catchAsync(async (req, res, next) => {
 
   // Generate booking number
   const bookingNumber = await generateBookingNumber();
+  const customerUser = await resolveCustomerUser(req.body, req.user);
 
   // Create booking
   const booking = await Booking.create({
     bookingNumber,
-    userId: req.user?.id || null,
+    userId: customerUser.id,
     vehicleId: vehicleId || null,
     serviceType,
     status: 'pending',
@@ -89,10 +91,10 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     depositAmount: pricing.deposit,
     extras: pricing.extrasList || pricing.breakdown?.extras || [],
     specialRequests,
-    customerFirstName: customerInfo?.firstName || req.user?.firstName || null,
-    customerLastName: customerInfo?.lastName || req.user?.lastName || null,
-    customerEmail: customerInfo?.email || req.user?.email || null,
-    customerPhone: customerInfo?.phone || req.user?.phone || null,
+    customerFirstName: customerInfo?.firstName || customerUser.firstName || null,
+    customerLastName: customerInfo?.lastName || customerUser.lastName || null,
+    customerEmail: customerInfo?.email || customerUser.email || null,
+    customerPhone: customerInfo?.phone || customerUser.phone || null,
     timeline: [{
       status: 'pending',
       timestamp: new Date(),
@@ -485,6 +487,57 @@ exports.getBookingStatistics = catchAsync(async (req, res, next) => {
 });
 
 // ===== HELPER FUNCTIONS =====
+
+const sanitizeKenyanPhone = (phone) => {
+  if (!phone) return null;
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.startsWith('254') && digits.length >= 12) return digits.slice(0, 12);
+  if (digits.startsWith('0') && digits.length >= 10) return `254${digits.slice(1, 10)}`;
+  if (digits.length === 9) return `254${digits}`;
+  return digits || null;
+};
+
+const generateGuestPhone = async () => {
+  let phone = null;
+  let exists = true;
+
+  while (exists) {
+    const candidate = `2547${Math.floor(10000000 + Math.random() * 89999999)}`;
+    const user = await User.findOne({ where: { phone: candidate }, attributes: ['id'] });
+    if (!user) {
+      phone = candidate;
+      exists = false;
+    }
+  }
+
+  return phone;
+};
+
+const resolveCustomerUser = async (payload, authUser) => {
+  if (authUser) return authUser;
+
+  const customerInfo = payload?.customerInfo || {};
+  const email = customerInfo.email;
+  if (!email) {
+    throw new AppError('Customer email is required for guest bookings', 400);
+  }
+
+  const existingUser = await User.findOne({ where: { email } });
+  if (existingUser) return existingUser;
+
+  const passwordHash = await bcrypt.hash(`guest_${Date.now()}_${Math.random()}`, 12);
+  const phone = sanitizeKenyanPhone(customerInfo.phone) || await generateGuestPhone();
+
+  return User.create({
+    firstName: customerInfo.firstName || 'Guest',
+    lastName: customerInfo.lastName || 'Customer',
+    email,
+    phone,
+    passwordHash,
+    role: 'customer',
+    isActive: true
+  });
+};
 
 const generateBookingNumber = async () => {
   const date = new Date();

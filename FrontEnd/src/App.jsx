@@ -39,6 +39,7 @@ import NotFound from './Pages/NotFound';
 // Routes
 import { ROUTES } from './Config/Routes';
 import { IS_DEV } from './Config/env';
+import { useAdminAuth } from './Hooks/useAdminAuth';
 
 // API (available globally if needed)
 import { API_BASE_URL } from './Config/API';
@@ -56,6 +57,13 @@ import './Styles/Modal.css';
 import './Styles/Features.css';
 import './Styles/ErrorBoundary.css';
 // Page-specific styles are imported within each page component
+
+const AdminProtectedRoute = ({ children }) => {
+  const { initializing, isAuthenticated } = useAdminAuth();
+
+  if (initializing) return null;
+  return isAuthenticated ? children : <Navigate to={ROUTES.ADMIN_LOGIN} replace />;
+};
 
 function App() {
   const [runtimeError, setRuntimeError] = useState(null);
@@ -142,11 +150,26 @@ function App() {
                     <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLogin />} />
                     
                     {/* ===== ADMIN DASHBOARD ROUTES ===== */}
-                    <Route path={ROUTES.ADMIN_DASHBOARD} element={<AdminDashboard />} />
-                    <Route path={ROUTES.ADMIN_BOOKINGS} element={<ManageBookings />} />
-                    <Route path={ROUTES.ADMIN_PAYMENTS} element={<ManagePayments />} />
-                    <Route path={ROUTES.ADMIN_VEHICLES} element={<ManageVehicles />} />
-                    <Route path={ROUTES.ADMIN_REPORTS} element={<Reports />} />
+                    <Route
+                      path={ROUTES.ADMIN_DASHBOARD}
+                      element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_BOOKINGS}
+                      element={<AdminProtectedRoute><ManageBookings /></AdminProtectedRoute>}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_PAYMENTS}
+                      element={<AdminProtectedRoute><ManagePayments /></AdminProtectedRoute>}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_VEHICLES}
+                      element={<AdminProtectedRoute><ManageVehicles /></AdminProtectedRoute>}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_REPORTS}
+                      element={<AdminProtectedRoute><Reports /></AdminProtectedRoute>}
+                    />
                     
                     {/* ===== LEGAL & INFORMATION ROUTES ===== */}
                     <Route path={ROUTES.PRIVACY} element={<Privacy />} />

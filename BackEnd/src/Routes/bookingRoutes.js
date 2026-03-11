@@ -26,24 +26,26 @@ router.post(
   bookingController.calculatePrice
 );
 
-// ===== PROTECTED ROUTES =====
-router.use(authMiddleware.protect);
-
 router.post(
   '/',
+  authMiddleware.optionalAuth,
   validationMiddleware.validate(validateBooking.createBooking),
   bookingController.createBooking
 );
 
 router.get(
-  '/my-bookings',
-  bookingController.getUserBookings
-);
-
-router.get(
   '/:id',
+  authMiddleware.optionalAuth,
   validationMiddleware.validate(validateBooking.getBooking, 'params'),
   bookingController.getBooking
+);
+
+// ===== USER PROTECTED ROUTES =====
+router.use(authMiddleware.protect);
+
+router.get(
+  '/my-bookings',
+  bookingController.getUserBookings
 );
 
 router.patch(
@@ -59,6 +61,7 @@ router.post(
 );
 
 // ===== ADMIN ROUTES =====
+router.use(authMiddleware.protectAdmin);
 router.use(authMiddleware.restrictTo('admin', 'super_admin'));
 
 router.get(

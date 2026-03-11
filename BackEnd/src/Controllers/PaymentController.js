@@ -1,5 +1,6 @@
 // ===== src/controllers/paymentController.js =====
 const { Op, fn, col, literal } = require('sequelize');
+const bcrypt = require('bcryptjs');
 const { Payment, Booking, User, UserPaymentMethod } = require('../Models');
 const AppError = require('../Utils/AppError');
 const catchAsync = require('../Utils/CatchAsync');
@@ -31,6 +32,13 @@ exports.processPayment = catchAsync(async (req, res, next) => {
     }
   }
 
+  const actorUser = await resolvePaymentUser({
+    authUser: req.user,
+    booking,
+    billingDetails: req.body.billingDetails,
+    phoneNumber: req.body.phoneNumber
+  });
+
   // Check if already paid (only when bookingId is supplied)
   if (bookingId) {
     const existingPaid = await Payment.findOne({ where: { bookingId, status: 'completed' } });
@@ -45,7 +53,7 @@ exports.processPayment = catchAsync(async (req, res, next) => {
   // Create payment record
   const payment = await Payment.create({
     paymentNumber,
-    userId: req.user.id,
+    userId: actorUser.id,
     bookingId: bookingId || null,
     amount,
     currency,
@@ -66,7 +74,7 @@ exports.processPayment = catchAsync(async (req, res, next) => {
       result = await stripeService.createPaymentIntent({
         amount,
         currency: String(currency || 'KES').toLowerCase(),
-        customerId: req.user.stripeCustomerId || undefined,
+        customerId: actorUser.stripeCustomerId || undefined,
         metadata: { paymentId: payment.id, bookingId }
       });
       break;
@@ -100,7 +108,7 @@ exports.processPayment = catchAsync(async (req, res, next) => {
       result = await flutterwaveService.charge({
         amount,
         currency,
-        email: req.user.email,
+        email: actorUser.email,
         phoneNumber: req.body.phoneNumber,
         paymentMethod: req.body.paymentMethod
       });
@@ -126,8 +134,8 @@ exports.processPayment = catchAsync(async (req, res, next) => {
   if (method === 'mpesa' && req.body.phoneNumber) {
     payment.mpesaNumber = req.body.phoneNumber;
   }
-  if (method === 'paypal' && req.user?.email) {
-    payment.paypalEmail = req.user.email;
+  if (method === 'paypal' && actorUser?.email) {
+    payment.paypalEmail = actorUser.email;
   }
 
   await payment.save();
@@ -139,10 +147,10 @@ exports.processPayment = catchAsync(async (req, res, next) => {
     await booking.save();
 
     // Send receipt
-    await sendPaymentReceipt(payment, booking, req.user);
+    await sendPaymentReceipt(payment, booking, actorUser);
 
     // Save payment method if requested
-    if (savePaymentMethod && result.paymentMethodId) {
+    if (savePaymentMethod && result.paymentMethodId && req.user?.id) {
       await saveUserPaymentMethod(req.user.id, {
         methodType: 'card',
         stripePaymentMethodId: result.paymentMethodId,
@@ -312,11 +320,26 @@ exports.getMpesaStatus = catchAsync(async (req, res, next) => {
   const payment = await Payment.findOne({ where: { transactionId: checkoutRequestId } });
 
   if (payment && result.resultCode === '0') {
+    const wasCompleted = payment.status === 'completed';
     payment.status = 'completed';
     payment.processedAt = new Date();
     payment.mpesaReceipt = result.mpesaReceipt || payment.mpesaReceipt;
     payment.gatewayResponse = { ...(payment.gatewayResponse || {}), statusQuery: result };
     await payment.save();
+
+    if (!wasCompleted && payment.bookingId) {
+      const booking = await Booking.findByPk(payment.bookingId);
+      if (booking) {
+        booking.status = 'confirmed';
+        booking.depositPaid = true;
+        await booking.save();
+      }
+
+      const user = payment.userId ? await User.findByPk(payment.userId) : null;
+      if (booking && user) {
+        await sendPaymentReceipt(payment, booking, user);
+      }
+    }
   }
 
   res.status(200).json({
@@ -638,6 +661,65 @@ exports.handleWebhook = catchAsync(async (req, res, next) => {
 });
 
 // ===== HELPER FUNCTIONS =====
+
+const sanitizeKenyanPhone = (phone) => {
+  if (!phone) return null;
+  const digits = String(phone).replace(/\D/g, '');
+  if (digits.startsWith('254') && digits.length >= 12) return digits.slice(0, 12);
+  if (digits.startsWith('0') && digits.length >= 10) return `254${digits.slice(1, 10)}`;
+  if (digits.length === 9) return `254${digits}`;
+  return digits || null;
+};
+
+const generateGuestPhone = async () => {
+  let phone = null;
+  let exists = true;
+
+  while (exists) {
+    const candidate = `2547${Math.floor(10000000 + Math.random() * 89999999)}`;
+    const user = await User.findOne({ where: { phone: candidate }, attributes: ['id'] });
+    if (!user) {
+      phone = candidate;
+      exists = false;
+    }
+  }
+
+  return phone;
+};
+
+const resolvePaymentUser = async ({ authUser, booking, billingDetails, phoneNumber }) => {
+  if (authUser) return authUser;
+
+  if (booking?.userId) {
+    const bookingUser = await User.findByPk(booking.userId);
+    if (bookingUser) return bookingUser;
+  }
+
+  const email = billingDetails?.email || booking?.customerEmail;
+  if (!email) {
+    throw new AppError('Customer email is required for guest payments', 400);
+  }
+
+  const existingUser = await User.findOne({ where: { email } });
+  if (existingUser) return existingUser;
+
+  const passwordHash = await bcrypt.hash(`guest_${Date.now()}_${Math.random()}`, 12);
+  const phone =
+    sanitizeKenyanPhone(phoneNumber) ||
+    sanitizeKenyanPhone(billingDetails?.phone) ||
+    sanitizeKenyanPhone(booking?.customerPhone) ||
+    await generateGuestPhone();
+
+  return User.create({
+    firstName: booking?.customerFirstName || billingDetails?.firstName || 'Guest',
+    lastName: booking?.customerLastName || billingDetails?.lastName || 'Customer',
+    email,
+    phone,
+    passwordHash,
+    role: 'customer',
+    isActive: true
+  });
+};
 
 const generatePaymentNumber = async () => {
   const date = new Date();

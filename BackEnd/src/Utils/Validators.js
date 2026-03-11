@@ -62,7 +62,7 @@ const validators = {
         is: 'rental',
         then: Joi.required()
       }),
-      serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'delivery').required(),
+      serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'sales', 'delivery').required(),
       startDate: Joi.date().greater('now').required(),
       endDate: Joi.date().greater(Joi.ref('startDate')).required(),
       pickupTime: Joi.string(),
@@ -136,14 +136,14 @@ const validators = {
 
     checkAvailability: Joi.object({
       vehicleId: Joi.string(),
-      serviceType: Joi.string().valid('rental', 'car_wash', 'repair'),
+      serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'sales'),
       startDate: Joi.date().greater('now').required(),
       endDate: Joi.date().greater(Joi.ref('startDate')).required()
     }),
 
     calculatePrice: Joi.object({
       vehicleId: Joi.string(),
-      serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'delivery').required(),
+      serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'sales', 'delivery').required(),
       startDate: Joi.date().required(),
       endDate: Joi.date().required(),
       extras: Joi.array().items(
@@ -468,4 +468,58 @@ const validators = {
   }
 };
 
-module.exports = validators;
+const idParamSchema = Joi.object({
+  id: Joi.string().uuid().required()
+});
+
+const userIdParamSchema = Joi.object({
+  userId: Joi.string().uuid().required()
+});
+
+const methodIdParamSchema = Joi.object({
+  methodId: Joi.string().uuid().required()
+});
+
+const checkoutRequestParamSchema = Joi.object({
+  checkoutRequestId: Joi.string().required()
+});
+
+// Backward-compatible route validator exports expected by route files.
+const validateBooking = {
+  createBooking: validators.booking.create,
+  checkAvailability: validators.booking.checkAvailability,
+  getAvailableSlots: Joi.object({
+    date: Joi.date().required(),
+    serviceType: Joi.string().allow('', null)
+  }),
+  calculatePrice: validators.booking.calculatePrice,
+  getBooking: idParamSchema,
+  updateBooking: validators.booking.updateBooking,
+  cancelBooking: validators.booking.cancelBooking,
+  getUserBookings: userIdParamSchema,
+  updateStatus: validators.admin.updateBookingStatus
+};
+
+const validatePayment = {
+  processPayment: validators.payment.process.keys({
+    bookingId: Joi.string().uuid().allow(null),
+    currency: Joi.string().default('KES')
+  }),
+  confirmPayment: Joi.object({
+    paymentIntentId: Joi.string(),
+    orderId: Joi.string()
+  }).or('paymentIntentId', 'orderId'),
+  getPayment: idParamSchema,
+  getUserPayments: userIdParamSchema,
+  processRefund: validators.admin.processRefund,
+  addPaymentMethod: validators.payment.addPaymentMethod,
+  deletePaymentMethod: methodIdParamSchema,
+  setDefaultMethod: methodIdParamSchema,
+  getMpesaStatus: checkoutRequestParamSchema
+};
+
+module.exports = {
+  ...validators,
+  validateBooking,
+  validatePayment
+};
