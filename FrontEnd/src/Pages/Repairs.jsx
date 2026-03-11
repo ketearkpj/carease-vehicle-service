@@ -19,6 +19,7 @@ import { getRepairServices, getAvailableTimeSlots } from '../Services/Service.Se
 
 // Hooks
 import { useApp } from '../Context/AppContext';
+import { saveBookingDraft } from '../Utils/bookingFlow';
 
 // Styles
 import '../Styles/Repairs.css';
@@ -132,6 +133,18 @@ const Repairs = () => {
   };
 
   const handleBookingSubmit = () => {
+    const draft = {
+      serviceType: 'repair',
+      packageId: selectedService?.id || formData.service,
+      packageName: selectedService?.name || '',
+      listedPrice: Number(estimatedPrice || selectedService?.price || 0),
+      startDate: formData.date,
+      endDate: formData.date,
+      time: formData.time,
+      pickupLocation: formData.location,
+      specialRequests: formData.description
+    };
+    saveBookingDraft(draft);
     const params = new URLSearchParams({
       service: 'repair',
       startDate: formData.date,
@@ -141,19 +154,7 @@ const Repairs = () => {
       location: formData.location || ''
     });
     navigate(`${ROUTES.BOOKING}?${params.toString()}`, {
-      state: {
-        bookingPrefill: {
-          serviceType: 'repair',
-          packageId: selectedService?.id || formData.service,
-          packageName: selectedService?.name || '',
-          listedPrice: Number(estimatedPrice || selectedService?.price || 0),
-          startDate: formData.date,
-          endDate: formData.date,
-          time: formData.time,
-          pickupLocation: formData.location,
-          specialRequests: formData.description
-        }
-      }
+      state: { bookingPrefill: draft }
     });
     addNotification('Continue to payment to confirm this repair booking.', 'info');
   };

@@ -179,7 +179,7 @@ const AdminLogin = () => {
                 error={touched.email && errors.email}
                 required
                 icon="✉️"
-                placeholder="admin@carease.com"
+                placeholder="admin@carease.co.ke"
               />
             </div>
 
@@ -240,7 +240,7 @@ const AdminLogin = () => {
             <div className="demo-credentials">
               <p className="demo-title">Demo Credentials</p>
               <p className="demo-item">
-                <span>Email:</span> admin@carease.com
+                <span>Email:</span> admin@carease.co.ke
               </p>
               <p className="demo-item">
                 <span>Password:</span> admin123
@@ -251,7 +251,7 @@ const AdminLogin = () => {
 
           <div className="form-footer">
             <p>Need help? Contact IT Support</p>
-            <a href="mailto:it@carease.com">it@carease.com</a>
+            <a href="mailto:it@carease.co.ke">it@carease.co.ke</a>
           </div>
         </Card>
       </div>

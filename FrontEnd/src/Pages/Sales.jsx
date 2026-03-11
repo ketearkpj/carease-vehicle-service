@@ -20,6 +20,7 @@ import { getSalesVehicles, getVehicleById } from '../Services/VehicleService';
 
 // Hooks
 import { useApp } from '../Context/AppContext';
+import { saveBookingDraft } from '../Utils/bookingFlow';
 
 // Styles
 import '../Styles/Sales.css';
@@ -431,19 +432,19 @@ const Sales = () => {
 
   const handleInquirySubmit = (type) => {
     if (!selectedVehicle) return;
+    const draft = {
+      serviceType: 'sales',
+      vehicleId: selectedVehicle.id,
+      vehicleName: selectedVehicle.name,
+      listedPrice: selectedVehicle.price * 130,
+      inquiryType: type,
+      pickupLocation: 'roysambu-trm'
+    };
+    saveBookingDraft(draft);
     navigate(
       `${ROUTES.BOOKING}?service=sales&vehicle=${selectedVehicle.id}&inquiryType=${type}`,
       {
-        state: {
-          bookingPrefill: {
-            serviceType: 'sales',
-            vehicleId: selectedVehicle.id,
-            vehicleName: selectedVehicle.name,
-            listedPrice: selectedVehicle.price * 130,
-            inquiryType: type,
-            pickupLocation: 'roysambu-trm'
-          }
-        }
+        state: { bookingPrefill: draft }
       }
     );
     addNotification('Complete your details to submit this inquiry.', 'info');
@@ -636,6 +637,11 @@ const Sales = () => {
                   className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
                   onClick={() => setViewMode('grid')}
                   aria-label="Grid view"
+                  onClick={() => saveBookingDraft({
+                    serviceType: 'sales',
+                    inquiryType: 'vehicle_request',
+                    pickupLocation: 'roysambu-trm'
+                  })}
                 >
                   <span className="view-icon">⊞</span>
                 </button>

@@ -20,6 +20,7 @@ import { getWashPackages, getAvailableTimeSlots } from '../Services/Service.Serv
 
 // Hooks
 import { useApp } from '../Context/AppContext';
+import { saveBookingDraft } from '../Utils/bookingFlow';
 
 // Styles
 import '../Styles/CarWash.css';
@@ -143,6 +144,19 @@ const CarWash = () => {
   };
 
   const handleBookingSubmit = () => {
+    const draft = {
+      serviceType: 'car_wash',
+      packageId: selectedPackage?.id || formData.package,
+      packageName: selectedPackage?.name || '',
+      listedPrice: Number(price || selectedPackage?.price || 0),
+      startDate: formData.date,
+      endDate: formData.date,
+      time: formData.time,
+      pickupLocation: formData.location,
+      extras: formData.extras,
+      specialRequests: formData.specialRequests
+    };
+    saveBookingDraft(draft);
     const params = new URLSearchParams({
       service: 'car_wash',
       startDate: formData.date,
@@ -152,20 +166,7 @@ const CarWash = () => {
       location: formData.location || ''
     });
     navigate(`${ROUTES.BOOKING}?${params.toString()}`, {
-      state: {
-        bookingPrefill: {
-          serviceType: 'car_wash',
-          packageId: selectedPackage?.id || formData.package,
-          packageName: selectedPackage?.name || '',
-          listedPrice: Number(price || selectedPackage?.price || 0),
-          startDate: formData.date,
-          endDate: formData.date,
-          time: formData.time,
-          pickupLocation: formData.location,
-          extras: formData.extras,
-          specialRequests: formData.specialRequests
-        }
-      }
+      state: { bookingPrefill: draft }
     });
     addNotification('Continue to payment to confirm your booking.', 'info');
   };

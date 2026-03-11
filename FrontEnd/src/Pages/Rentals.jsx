@@ -20,6 +20,7 @@ import { getVehicles, getVehicleCategories } from '../Services/VehicleService';
 
 // Hooks
 import { useApp } from '../Context/AppContext';
+import { saveBookingDraft } from '../Utils/bookingFlow';
 
 // Styles
 import '../Styles/Rentals.css';
@@ -367,18 +368,18 @@ const Rentals = () => {
   };
 
   const handleQuickBook = (vehicle) => {
+    const draft = {
+      serviceType: 'rental',
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      listedPrice: vehicle.price * 130,
+      startDate: '',
+      endDate: '',
+      pickupLocation: 'roysambu-trm'
+    };
+    saveBookingDraft(draft);
     navigate(`${ROUTES.BOOKING}?service=rental&vehicle=${vehicle.id}`, {
-      state: {
-        bookingPrefill: {
-          serviceType: 'rental',
-          vehicleId: vehicle.id,
-          vehicleName: vehicle.name,
-          listedPrice: vehicle.price * 130,
-          startDate: '',
-          endDate: '',
-          pickupLocation: 'roysambu-trm'
-        }
-      }
+      state: { bookingPrefill: draft }
     });
     addNotification('Vehicle selected. Complete your booking details.', 'info');
   };
@@ -674,22 +675,9 @@ const Rentals = () => {
                 </div>
 
                 <div className="quick-view-actions">
-                  <Link
-                    to={`${ROUTES.BOOKING}?service=rental&vehicle=${selectedVehicle.id}`}
-                    state={{
-                      bookingPrefill: {
-                        serviceType: 'rental',
-                        vehicleId: selectedVehicle.id,
-                        vehicleName: selectedVehicle.name,
-                        listedPrice: selectedVehicle.price * 130,
-                        pickupLocation: 'roysambu-trm'
-                      }
-                    }}
-                  >
-                    <Button variant="primary" size="lg" fullWidth>
-                      Book Now
-                    </Button>
-                  </Link>
+                  <Button variant="primary" size="lg" fullWidth onClick={() => handleQuickBook(selectedVehicle)}>
+                    Book Now
+                  </Button>
                   <Button variant="outline" size="lg" fullWidth onClick={() => setShowQuickView(false)}>
                     Close
                   </Button>

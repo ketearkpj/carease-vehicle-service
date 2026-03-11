@@ -17,6 +17,7 @@ import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import { checkAvailability } from '../Services/BookingService';
 import { getServicePricing } from '../Services/Service.Service';
 import { sendBookingConfirmation } from '../Services/EmailService';
+import { getBookingDraft, saveBookingDraft, clearBookingDraft } from '../Utils/bookingFlow';
 
 // Hooks
 import { useApp } from '../Context/AppContext';
@@ -31,28 +32,30 @@ const Booking = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const bookingPrefill = location.state?.bookingPrefill || {};
+  const cachedDraft = getBookingDraft() || {};
+  const mergedPrefill = { ...cachedDraft, ...bookingPrefill };
   const today = new Date().toISOString().split('T')[0];
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5; // Service -> Details -> Customer Info -> Review -> Payment
   
   const [bookingData, setBookingData] = useState({
-    serviceType: queryParams.get('service') || bookingPrefill.serviceType || null,
-    vehicleId: queryParams.get('vehicle') || bookingPrefill.vehicleId || null,
-    vehicleName: bookingPrefill.vehicleName || '',
-    packageId: queryParams.get('packageId') || bookingPrefill.packageId || null,
-    packageName: bookingPrefill.packageName || '',
-    listedPrice: Number(bookingPrefill.listedPrice || queryParams.get('listedPrice') || 0),
-    inquiryType: queryParams.get('inquiryType') || bookingPrefill.inquiryType || null,
-    startDate: queryParams.get('startDate') || bookingPrefill.startDate || '',
-    endDate: queryParams.get('endDate') || bookingPrefill.endDate || queryParams.get('startDate') || '',
-    time: queryParams.get('time') || bookingPrefill.time || '',
-    timeSlot: queryParams.get('time') || bookingPrefill.time || '09:00 AM',
-    pickupLocation: queryParams.get('location') || bookingPrefill.pickupLocation || '',
+    serviceType: queryParams.get('service') || mergedPrefill.serviceType || null,
+    vehicleId: queryParams.get('vehicle') || mergedPrefill.vehicleId || null,
+    vehicleName: mergedPrefill.vehicleName || '',
+    packageId: queryParams.get('packageId') || mergedPrefill.packageId || null,
+    packageName: mergedPrefill.packageName || '',
+    listedPrice: Number(mergedPrefill.listedPrice || queryParams.get('listedPrice') || 0),
+    inquiryType: queryParams.get('inquiryType') || mergedPrefill.inquiryType || null,
+    startDate: queryParams.get('startDate') || mergedPrefill.startDate || '',
+    endDate: queryParams.get('endDate') || mergedPrefill.endDate || queryParams.get('startDate') || '',
+    time: queryParams.get('time') || mergedPrefill.time || '',
+    timeSlot: queryParams.get('time') || mergedPrefill.time || '09:00 AM',
+    pickupLocation: queryParams.get('location') || mergedPrefill.pickupLocation || '',
     dropoffLocation: '',
     deliveryMode: 'pickup',
-    extras: bookingPrefill.extras || [],
-    specialRequests: bookingPrefill.specialRequests || '',
+    extras: mergedPrefill.extras || [],
+    specialRequests: mergedPrefill.specialRequests || '',
     customerInfo: {
       firstName: '',
       lastName: '',
@@ -111,6 +114,38 @@ const Booking = () => {
       specialRequests: prev.specialRequests || bookingPrefill.specialRequests || ''
     }));
   }, [location.state]);
+
+  useEffect(() => {
+    saveBookingDraft({
+      serviceType: bookingData.serviceType,
+      vehicleId: bookingData.vehicleId,
+      vehicleName: bookingData.vehicleName,
+      packageId: bookingData.packageId,
+      packageName: bookingData.packageName,
+      listedPrice: bookingData.listedPrice,
+      inquiryType: bookingData.inquiryType,
+      startDate: bookingData.startDate,
+      endDate: bookingData.endDate,
+      time: bookingData.timeSlot,
+      pickupLocation: bookingData.pickupLocation,
+      extras: bookingData.extras,
+      specialRequests: bookingData.specialRequests
+    });
+  }, [
+    bookingData.serviceType,
+    bookingData.vehicleId,
+    bookingData.vehicleName,
+    bookingData.packageId,
+    bookingData.packageName,
+    bookingData.listedPrice,
+    bookingData.inquiryType,
+    bookingData.startDate,
+    bookingData.endDate,
+    bookingData.timeSlot,
+    bookingData.pickupLocation,
+    bookingData.extras,
+    bookingData.specialRequests
+  ]);
 
   // Calculate pricing whenever booking data changes
   useEffect(() => {
@@ -400,6 +435,7 @@ const Booking = () => {
           });
         }
         navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${result.booking.id}`);
+        clearBookingDraft();
       }
     } catch (error) {
       console.error('Booking error:', error);
