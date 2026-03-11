@@ -534,15 +534,24 @@ const Booking = () => {
       }
 
       const paymentPayload = getPaymentPayload();
+      const gateway = bookingData.paymentMethod === 'card' ? 'stripe' : bookingData.paymentMethod;
       const payment = paymentResult || await processNewPayment({
-        bookingId: bookingData.vehicleId || `booking-${Date.now()}`,
+        bookingId: null,
         amount: pricing.total,
         currency: 'KES',
         customerEmail: paymentPayload.customerEmail || bookingData.customerInfo?.email,
         customerName: `${bookingData.customerInfo?.firstName || ''} ${bookingData.customerInfo?.lastName || ''}`.trim(),
         paymentMethod: bookingData.paymentMethod,
         ...paymentPayload
-      }, bookingData.paymentMethod === 'paypal' ? 'paypal' : bookingData.paymentMethod || 'stripe');
+      }, gateway || 'stripe');
+
+      if (!payment?.success || payment?.status !== 'completed') {
+        throw new Error(
+          bookingData.paymentMethod === 'mpesa'
+            ? 'Payment is still pending. Complete the M-PESA prompt on your phone, then try again.'
+            : 'Payment is not completed yet. Please complete the payment authorization and retry.'
+        );
+      }
 
       // Create final booking
       const finalBookingData = {

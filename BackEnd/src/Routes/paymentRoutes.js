@@ -30,6 +30,11 @@ router.post(
 );
 
 router.get(
+  '/mpesa-status/:checkoutRequestId',
+  paymentController.getMpesaStatus
+);
+
+router.get(
   '/my-payments',
   paymentController.getUserPayments
 );

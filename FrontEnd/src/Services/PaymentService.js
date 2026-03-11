@@ -50,6 +50,13 @@ const PAYMENT_CONFIG = {
   }
 };
 
+const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('carease_auth_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 /**
  * Get available payment methods
  * @returns {Promise<Array>} - Supported payment methods
@@ -84,6 +91,7 @@ export const processPayment = async (paymentData, gateway = 'stripe') => {
 
   switch (gateway) {
     case 'stripe':
+    case 'card':
       return await processStripePayment(paymentData);
     case 'paypal':
       return await processPayPalPayment(paymentData);
@@ -103,7 +111,7 @@ export const processPayment = async (paymentData, gateway = 'stripe') => {
  * @param {Object} data - Payment data to validate
  */
 const validatePaymentData = (data) => {
-  const { amount, currency, customerEmail, bookingId } = data;
+  const { amount, currency, customerEmail } = data;
 
   if (!amount || amount <= 0) {
     throw new Error('Invalid payment amount');
@@ -117,9 +125,6 @@ const validatePaymentData = (data) => {
     throw new Error('Customer email is required');
   }
 
-  if (!bookingId) {
-    throw new Error('Booking ID is required');
-  }
 };
 
 /**
@@ -131,65 +136,33 @@ const processStripePayment = async (paymentData) => {
   try {
     const { amount, currency, customerEmail, bookingId, paymentMethodId } = paymentData;
 
-    // Create payment intent on backend
-    const response = await axios.post('/api/payments/create-stripe-intent', {
-      amount: Math.round(amount * 100), // Convert to cents
-      currency,
-      customerEmail,
+    const response = await axios.post(`${API_BASE_URL}/payments/process`, {
       bookingId,
-      metadata: {
-        booking_id: bookingId,
-        customer_email: customerEmail
+      amount,
+      currency,
+      method: 'card',
+      paymentMethodId,
+      billingDetails: {
+        email: customerEmail
       }
+    }, {
+      headers: getAuthHeaders()
     });
 
-    const { clientSecret, paymentIntentId } = response.data;
-
-    // Confirm payment (if payment method provided)
-    if (paymentMethodId) {
-      const stripe = await getStripe();
-      const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-        payment_method: paymentMethodId
-      });
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      // Record successful payment
-      await recordPayment({
-        gateway: 'stripe',
-        transactionId: paymentIntent.id,
-        amount,
-        currency,
-        customerEmail,
-        bookingId,
-        status: 'completed'
-      });
-
-      return {
-        success: true,
-        transactionId: paymentIntent.id,
-        amount,
-        currency,
-        status: 'completed'
-      };
-    }
-
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
     return {
-      success: true,
-      clientSecret,
-      paymentIntentId,
-      requiresAction: true
+      success: payment.status === 'completed',
+      transactionId: payment.transactionId || payment.id,
+      amount,
+      currency,
+      status: payment.status || 'processing',
+      clientSecret: payload.clientSecret,
+      requiresAction: payment.status !== 'completed'
     };
   } catch (error) {
-    console.error('Stripe payment error:', error);
-    await recordFailedPayment({
-      gateway: 'stripe',
-      error: error.message,
-      data: paymentData
-    });
-    throw new Error(`Stripe payment failed: ${error.message}`);
+    const message = error.response?.data?.message || error.message || 'Stripe payment failed';
+    throw new Error(message);
   }
 };
 
@@ -202,41 +175,43 @@ const processPayPalPayment = async (paymentData) => {
   try {
     const { amount, currency, customerEmail, bookingId } = paymentData;
 
-    // Create PayPal order
-    const response = await axios.post('/api/payments/create-paypal-order', {
+    const response = await axios.post(`${API_BASE_URL}/payments/process`, {
+      bookingId,
       amount,
       currency,
-      customerEmail,
-      bookingId,
-      returnUrl: `${window.location.origin}/payment/success`,
-      cancelUrl: `${window.location.origin}/payment/cancel`
+      method: 'paypal',
+      billingDetails: {
+        email: customerEmail
+      }
+    }, {
+      headers: getAuthHeaders()
     });
 
-    const { orderId, approvalUrl } = response.data;
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
+    const approvalUrl = payload.approvalUrl;
 
-    // Redirect to PayPal for approval
     if (approvalUrl) {
       window.location.href = approvalUrl;
       return {
-        success: true,
-        orderId,
+        success: false,
+        transactionId: payment.transactionId || payment.id,
+        status: payment.status || 'processing',
         requiresRedirect: true,
         redirectUrl: approvalUrl
       };
     }
 
     return {
-      success: true,
-      orderId
+      success: payment.status === 'completed',
+      transactionId: payment.transactionId || payment.id,
+      amount,
+      currency,
+      status: payment.status || 'processing'
     };
   } catch (error) {
-    console.error('PayPal payment error:', error);
-    await recordFailedPayment({
-      gateway: 'paypal',
-      error: error.message,
-      data: paymentData
-    });
-    throw new Error(`PayPal payment failed: ${error.message}`);
+    const message = error.response?.data?.message || error.message || 'PayPal payment failed';
+    throw new Error(message);
   }
 };
 
@@ -290,41 +265,34 @@ const processMpesaPayment = async (paymentData) => {
       throw new Error('Invalid phone number format. Use 254XXXXXXXXX');
     }
 
-    // Initiate STK Push (Lipa Na M-PESA Online)
-    const response = await axios.post('/api/payments/mpesa-stk-push', {
+    const response = await axios.post(`${API_BASE_URL}/payments/process`, {
+      bookingId,
       amount: Math.round(amount),
+      currency: 'KES',
+      method: 'mpesa',
       phoneNumber,
-      accountReference: bookingId,
-      transactionDesc: `CAR EASE Booking ${bookingId}`
+      billingDetails: {
+        email: customerEmail
+      }
+    }, {
+      headers: getAuthHeaders()
     });
 
-    const { merchantRequestId, checkoutRequestID, responseDescription } = response.data;
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
+    const checkoutRequestId = payment.transactionId;
+    const paymentResult = await pollMpesaPaymentStatus(checkoutRequestId);
 
-    // Poll for payment confirmation
-    const paymentResult = await pollMpesaPaymentStatus(checkoutRequestID);
-
-    if (paymentResult.success) {
-      await recordPayment({
-        gateway: 'mpesa',
-        transactionId: paymentResult.transactionId,
-        amount,
-        currency: 'KES',
-        customerEmail,
-        bookingId,
-        phoneNumber,
-        status: 'completed'
-      });
-    }
-
-    return paymentResult;
+    return {
+      success: paymentResult.status === 'completed',
+      transactionId: paymentResult.transactionId || checkoutRequestId,
+      amount,
+      currency: 'KES',
+      status: paymentResult.status
+    };
   } catch (error) {
-    console.error('M-PESA payment error:', error);
-    await recordFailedPayment({
-      gateway: 'mpesa',
-      error: error.message,
-      data: paymentData
-    });
-    throw new Error(`M-PESA payment failed: ${error.message}`);
+    const message = error.response?.data?.message || error.message || 'M-PESA payment failed';
+    throw new Error(message);
   }
 };
 
@@ -334,17 +302,23 @@ const processMpesaPayment = async (paymentData) => {
  * @returns {Promise} - Payment status
  */
 const pollMpesaPaymentStatus = async (checkoutRequestID) => {
+  if (!checkoutRequestID) {
+    throw new Error('Missing M-PESA checkout request id');
+  }
   const maxAttempts = 30;
   const interval = 2000; // 2 seconds
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await axios.get(`/api/payments/mpesa-status/${checkoutRequestID}`);
-      const { statusCode, resultCode, transactionId } = response.data;
+      const response = await axios.get(`${API_BASE_URL}/payments/mpesa-status/${checkoutRequestID}`, {
+        headers: getAuthHeaders()
+      });
+      const data = response.data?.data || {};
+      const { resultCode, transactionId, paymentStatus } = data;
 
-      if (resultCode === '0') {
+      if (resultCode === '0' || paymentStatus === 'completed') {
         return {
-          success: true,
+          status: 'completed',
           transactionId,
           message: 'Payment successful'
         };
@@ -360,7 +334,7 @@ const pollMpesaPaymentStatus = async (checkoutRequestID) => {
     }
   }
 
-  throw new Error('Payment timeout');
+  throw new Error('M-PESA payment timeout. Confirm the STK prompt on your phone and try again.');
 };
 
 /**
@@ -370,43 +344,33 @@ const pollMpesaPaymentStatus = async (checkoutRequestID) => {
  */
 const processSquarePayment = async (paymentData) => {
   try {
-    const { amount, currency, customerEmail, bookingId, nonce } = paymentData;
-
-    const response = await axios.post('/api/payments/square-payment', {
-      amount: Math.round(amount * 100), // Square uses cents
+    const { amount, currency, customerEmail, bookingId, paymentMethodId } = paymentData;
+    const response = await axios.post(`${API_BASE_URL}/payments/process`, {
+      bookingId,
+      amount,
       currency,
-      customerEmail,
-      bookingId,
-      sourceId: nonce,
-      locationId: PAYMENT_CONFIG.square.locationId
+      method: 'square',
+      paymentMethodId,
+      billingDetails: {
+        email: customerEmail
+      }
+    }, {
+      headers: getAuthHeaders()
     });
 
-    const { payment } = response.data;
-
-    await recordPayment({
-      gateway: 'square',
-      transactionId: payment.id,
-      amount: payment.amount_money.amount / 100,
-      currency: payment.amount_money.currency,
-      customerEmail,
-      bookingId,
-      status: 'completed'
-    });
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
 
     return {
-      success: true,
-      transactionId: payment.id,
-      amount: payment.amount_money.amount / 100,
-      status: 'completed'
+      success: payment.status === 'completed',
+      transactionId: payment.transactionId || payment.id,
+      amount,
+      currency,
+      status: payment.status || 'processing'
     };
   } catch (error) {
-    console.error('Square payment error:', error);
-    await recordFailedPayment({
-      gateway: 'square',
-      error: error.message,
-      data: paymentData
-    });
-    throw new Error(`Square payment failed: ${error.message}`);
+    const message = error.response?.data?.message || error.message || 'Square payment failed';
+    throw new Error(message);
   }
 };
 
@@ -417,55 +381,34 @@ const processSquarePayment = async (paymentData) => {
  */
 const processFlutterwavePayment = async (paymentData) => {
   try {
-    const { amount, currency, customerEmail, customerName, bookingId, cardDetails } = paymentData;
-
-    const response = await axios.post('/api/payments/flutterwave-charge', {
+    const { amount, currency, customerEmail, customerName, bookingId, paymentMethod } = paymentData;
+    const response = await axios.post(`${API_BASE_URL}/payments/process`, {
+      bookingId,
       amount,
       currency,
-      customerEmail,
-      customerName,
-      bookingId,
-      card: cardDetails,
-      redirectUrl: `${window.location.origin}/payment/success`
+      method: 'flutterwave',
+      paymentMethod,
+      billingDetails: {
+        email: customerEmail,
+        name: customerName
+      }
+    }, {
+      headers: getAuthHeaders()
     });
 
-    const { data } = response.data;
-
-    if (data.auth_url) {
-      // 3D Secure redirect
-      window.location.href = data.auth_url;
-      return {
-        success: true,
-        requiresRedirect: true,
-        redirectUrl: data.auth_url,
-        transactionId: data.id
-      };
-    }
-
-    await recordPayment({
-      gateway: 'flutterwave',
-      transactionId: data.id,
-      amount,
-      currency,
-      customerEmail,
-      bookingId,
-      status: 'completed'
-    });
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
 
     return {
-      success: true,
-      transactionId: data.id,
+      success: payment.status === 'completed',
+      transactionId: payment.transactionId || payment.id,
       amount,
-      status: 'completed'
+      currency,
+      status: payment.status || 'processing'
     };
   } catch (error) {
-    console.error('Flutterwave payment error:', error);
-    await recordFailedPayment({
-      gateway: 'flutterwave',
-      error: error.message,
-      data: paymentData
-    });
-    throw new Error(`Flutterwave payment failed: ${error.message}`);
+    const message = error.response?.data?.message || error.message || 'Flutterwave payment failed';
+    throw new Error(message);
   }
 };
 
@@ -575,8 +518,10 @@ const recordRefund = async (refundRecord) => {
  */
 export const getPaymentStatus = async (transactionId) => {
   try {
-    const response = await axios.get(`/api/payments/status/${transactionId}`);
-    return response.data;
+    const response = await axios.get(`${API_BASE_URL}/payments/${transactionId}`, {
+      headers: getAuthHeaders()
+    });
+    return response.data?.data?.payment || response.data;
   } catch (error) {
     console.error('Failed to get payment status:', error);
     throw error;

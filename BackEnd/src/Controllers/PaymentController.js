@@ -17,22 +17,26 @@ exports.processPayment = catchAsync(async (req, res, next) => {
   const {
     bookingId,
     amount,
-    currency = 'USD',
+    currency = 'KES',
     method,
     paymentMethodId,
     savePaymentMethod = false
   } = req.body;
 
-  // Get booking
-  const booking = await Booking.findByPk(bookingId);
-  if (!booking) {
-    return next(new AppError('Booking not found', 404));
+  let booking = null;
+  if (bookingId) {
+    booking = await Booking.findByPk(bookingId);
+    if (!booking) {
+      return next(new AppError('Booking not found', 404));
+    }
   }
 
-  // Check if already paid
-  const existingPaid = await Payment.findOne({ where: { bookingId, status: 'completed' } });
-  if (existingPaid) {
-    return next(new AppError('Booking already paid', 400));
+  // Check if already paid (only when bookingId is supplied)
+  if (bookingId) {
+    const existingPaid = await Payment.findOne({ where: { bookingId, status: 'completed' } });
+    if (existingPaid) {
+      return next(new AppError('Booking already paid', 400));
+    }
   }
 
   // Generate payment number
@@ -42,7 +46,7 @@ exports.processPayment = catchAsync(async (req, res, next) => {
   const payment = await Payment.create({
     paymentNumber,
     userId: req.user.id,
-    bookingId,
+    bookingId: bookingId || null,
     amount,
     currency,
     method,
@@ -59,11 +63,10 @@ exports.processPayment = catchAsync(async (req, res, next) => {
   let result;
   switch (method) {
     case 'card':
-      result = await stripeService.processPayment({
+      result = await stripeService.createPaymentIntent({
         amount,
-        currency,
-        paymentMethodId,
-        customer: req.user.stripeCustomerId,
+        currency: String(currency || 'KES').toLowerCase(),
+        customerId: req.user.stripeCustomerId || undefined,
         metadata: { paymentId: payment.id, bookingId }
       });
       break;
@@ -108,15 +111,29 @@ exports.processPayment = catchAsync(async (req, res, next) => {
   }
 
   // Update payment with gateway response
-  payment.transactionId = result.transactionId;
+  payment.transactionId =
+    result.transactionId ||
+    result.paymentIntentId ||
+    result.orderId ||
+    result.checkoutRequestId ||
+    payment.transactionId;
   payment.gatewayResponse = result;
-  payment.status = result.status === 'success' ? 'completed' : 'processing';
-  payment.processedAt = new Date();
+  payment.status =
+    result.status === 'completed' || result.status === 'COMPLETED' || result.resultCode === '0'
+      ? 'completed'
+      : 'processing';
+  payment.processedAt = payment.status === 'completed' ? new Date() : null;
+  if (method === 'mpesa' && req.body.phoneNumber) {
+    payment.mpesaNumber = req.body.phoneNumber;
+  }
+  if (method === 'paypal' && req.user?.email) {
+    payment.paypalEmail = req.user.email;
+  }
 
   await payment.save();
 
   // Update booking if payment completed
-  if (payment.status === 'completed') {
+  if (payment.status === 'completed' && booking) {
     booking.status = 'confirmed';
     booking.depositPaid = true;
     await booking.save();
@@ -280,6 +297,36 @@ exports.confirmPayment = catchAsync(async (req, res, next) => {
     data: {
       payment,
       result
+    }
+  });
+});
+
+// ===== GET M-PESA STATUS =====
+exports.getMpesaStatus = catchAsync(async (req, res, next) => {
+  const { checkoutRequestId } = req.params;
+  if (!checkoutRequestId) {
+    return next(new AppError('checkoutRequestId is required', 400));
+  }
+
+  const result = await mpesaService.queryStatus(checkoutRequestId);
+  const payment = await Payment.findOne({ where: { transactionId: checkoutRequestId } });
+
+  if (payment && result.resultCode === '0') {
+    payment.status = 'completed';
+    payment.processedAt = new Date();
+    payment.mpesaReceipt = result.mpesaReceipt || payment.mpesaReceipt;
+    payment.gatewayResponse = { ...(payment.gatewayResponse || {}), statusQuery: result };
+    await payment.save();
+  }
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      paymentId: payment?.id || null,
+      paymentStatus: payment?.status || (result.resultCode === '0' ? 'completed' : 'processing'),
+      resultCode: result.resultCode,
+      resultDesc: result.resultDesc,
+      transactionId: result.mpesaReceipt || checkoutRequestId
     }
   });
 });

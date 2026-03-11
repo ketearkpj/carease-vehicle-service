@@ -51,17 +51,10 @@ export const usePayment = (initialConfig = {}) => {
         throw new Error('Payment failed');
       }
     } catch (err) {
-      const fallbackResult = {
-        success: true,
-        transactionId: `sim_${Date.now()}`,
-        amount: paymentData?.amount || 0,
-        status: 'completed',
-        fallback: true
-      };
-      setPayment(fallbackResult);
-      setTransactionStatus('success');
-      addNotification('Payment completed in fallback mode', 'warning');
-      return fallbackResult;
+      setError(err.message);
+      setTransactionStatus('failed');
+      addNotification(err.message || 'Payment failed', 'error');
+      throw err;
     } finally {
       setProcessing(false);
     }

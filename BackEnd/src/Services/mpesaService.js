@@ -2,6 +2,13 @@
 const axios = require('axios');
 const { logger } = require('../Middleware/Logger.md.js');
 
+const getBaseUrl = () =>
+  process.env.MPESA_ENVIRONMENT === 'live'
+    ? 'https://api.safaricom.co.ke'
+    : 'https://sandbox.safaricom.co.ke';
+
+const getShortCode = () => process.env.MPESA_SHORT_CODE || process.env.MPESA_SHORTCODE;
+
 // ===== GET ACCESS TOKEN =====
 const getAccessToken = async () => {
   const auth = Buffer.from(
@@ -10,7 +17,7 @@ const getAccessToken = async () => {
 
   try {
     const response = await axios.get(
-      'https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials',
+      `${getBaseUrl()}/oauth/v1/generate?grant_type=client_credentials`,
       {
         headers: {
           Authorization: `Basic ${auth}`
@@ -31,19 +38,19 @@ exports.stkPush = async ({ amount, phoneNumber, accountReference }) => {
     const token = await getAccessToken();
     const timestamp = getTimestamp();
     const password = Buffer.from(
-      `${process.env.MPESA_SHORT_CODE}${process.env.MPESA_PASSKEY}${timestamp}`
+      `${getShortCode()}${process.env.MPESA_PASSKEY}${timestamp}`
     ).toString('base64');
 
     const response = await axios.post(
-      'https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest',
+      `${getBaseUrl()}/mpesa/stkpush/v1/processrequest`,
       {
-        BusinessShortCode: process.env.MPESA_SHORT_CODE,
+        BusinessShortCode: getShortCode(),
         Password: password,
         Timestamp: timestamp,
         TransactionType: 'CustomerPayBillOnline',
         Amount: amount,
         PartyA: phoneNumber,
-        PartyB: process.env.MPESA_SHORT_CODE,
+        PartyB: getShortCode(),
         PhoneNumber: phoneNumber,
         CallBackURL: process.env.MPESA_CALLBACK_URL,
         AccountReference: accountReference,
@@ -75,13 +82,13 @@ exports.queryStatus = async (checkoutRequestId) => {
     const token = await getAccessToken();
     const timestamp = getTimestamp();
     const password = Buffer.from(
-      `${process.env.MPESA_SHORT_CODE}${process.env.MPESA_PASSKEY}${timestamp}`
+      `${getShortCode()}${process.env.MPESA_PASSKEY}${timestamp}`
     ).toString('base64');
 
     const response = await axios.post(
-      'https://sandbox.safaricom.co.ke/mpesa/stkpushquery/v1/query',
+      `${getBaseUrl()}/mpesa/stkpushquery/v1/query`,
       {
-        BusinessShortCode: process.env.MPESA_SHORT_CODE,
+        BusinessShortCode: getShortCode(),
         Password: password,
         Timestamp: timestamp,
         CheckoutRequestID: checkoutRequestId
