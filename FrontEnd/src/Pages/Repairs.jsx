@@ -140,7 +140,21 @@ const Repairs = () => {
       packageId: formData.service || '',
       location: formData.location || ''
     });
-    navigate(`${ROUTES.BOOKING}?${params.toString()}`);
+    navigate(`${ROUTES.BOOKING}?${params.toString()}`, {
+      state: {
+        bookingPrefill: {
+          serviceType: 'repair',
+          packageId: selectedService?.id || formData.service,
+          packageName: selectedService?.name || '',
+          listedPrice: Number(estimatedPrice || selectedService?.price || 0),
+          startDate: formData.date,
+          endDate: formData.date,
+          time: formData.time,
+          pickupLocation: formData.location,
+          specialRequests: formData.description
+        }
+      }
+    });
     addNotification('Continue to payment to confirm this repair booking.', 'info');
   };
 

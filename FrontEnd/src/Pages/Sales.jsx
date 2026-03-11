@@ -111,7 +111,7 @@ const Sales = () => {
           owners: 1,
           serviceHistory: 'Full service history',
           warranty: 'Remaining factory warranty',
-          location: 'Beverly Hills',
+          location: 'Roysambu (next to TRM)',
           featured: true
         },
         {
@@ -145,7 +145,7 @@ const Sales = () => {
           owners: 1,
           serviceHistory: 'Full Ferrari service history',
           warranty: 'Certified Pre-Owned',
-          location: 'Miami Beach',
+          location: 'Westlands',
           featured: true
         },
         {
@@ -179,7 +179,7 @@ const Sales = () => {
           owners: 0,
           serviceHistory: 'New vehicle',
           warranty: 'Full factory warranty',
-          location: 'Manhattan',
+          location: 'Mombasa Road',
           featured: true
         },
         {
@@ -213,7 +213,7 @@ const Sales = () => {
           owners: 1,
           serviceHistory: 'Porsche dealer serviced',
           warranty: 'CPO warranty',
-          location: 'Beverly Hills'
+          location: 'Roysambu (next to TRM)'
         },
         {
           id: 5,
@@ -246,7 +246,7 @@ const Sales = () => {
           owners: 2,
           serviceHistory: 'Complete service history',
           warranty: '6 months remaining',
-          location: 'Miami Beach'
+          location: 'Westlands'
         },
         {
           id: 6,
@@ -279,7 +279,7 @@ const Sales = () => {
           owners: 1,
           serviceHistory: 'McLaren dealer serviced',
           warranty: 'Extended warranty available',
-          location: 'Manhattan'
+          location: 'Mombasa Road'
         },
         {
           id: 7,
@@ -312,7 +312,7 @@ const Sales = () => {
           owners: 0,
           serviceHistory: 'New vehicle',
           warranty: 'Full factory warranty',
-          location: 'Beverly Hills'
+          location: 'Roysambu (next to TRM)'
         },
         {
           id: 8,
@@ -345,7 +345,7 @@ const Sales = () => {
           owners: 1,
           serviceHistory: 'Aston Martin dealer serviced',
           warranty: 'Remaining factory warranty',
-          location: 'Manhattan'
+          location: 'Mombasa Road'
         }
       ]);
     } finally {
@@ -432,7 +432,19 @@ const Sales = () => {
   const handleInquirySubmit = (type) => {
     if (!selectedVehicle) return;
     navigate(
-      `${ROUTES.BOOKING}?service=sales&vehicle=${selectedVehicle.id}&inquiryType=${type}`
+      `${ROUTES.BOOKING}?service=sales&vehicle=${selectedVehicle.id}&inquiryType=${type}`,
+      {
+        state: {
+          bookingPrefill: {
+            serviceType: 'sales',
+            vehicleId: selectedVehicle.id,
+            vehicleName: selectedVehicle.name,
+            listedPrice: selectedVehicle.price * 130,
+            inquiryType: type,
+            pickupLocation: 'roysambu-trm'
+          }
+        }
+      }
     );
     addNotification('Complete your details to submit this inquiry.', 'info');
     setShowDetails(false);
@@ -953,7 +965,16 @@ const Sales = () => {
                   Contact a Specialist
                 </Button>
               </Link>
-              <Link to={`${ROUTES.BOOKING}?service=sales&inquiryType=vehicle_request`}>
+              <Link
+                to={`${ROUTES.BOOKING}?service=sales&inquiryType=vehicle_request`}
+                state={{
+                  bookingPrefill: {
+                    serviceType: 'sales',
+                    inquiryType: 'vehicle_request',
+                    pickupLocation: 'roysambu-trm'
+                  }
+                }}
+              >
                 <Button variant="outline" size="lg">
                   Submit Vehicle Request
                 </Button>

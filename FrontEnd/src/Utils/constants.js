@@ -10,9 +10,9 @@ export const APP_CONFIG = {
   shortName: 'CAR EASE',
   version: '1.0.0',
   description: 'Luxury automotive services platform offering premium rentals, car wash, repairs, and vehicle sales.',
-  website: 'https://carease.com',
-  supportEmail: 'support@carease.com',
-  supportPhone: '+1 (800) 555-0123',
+  website: 'https://carease.co.ke',
+  supportEmail: 'support@carease.co.ke',
+  supportPhone: '0758458358',
   established: 2018,
   
   socialMedia: {
@@ -219,33 +219,33 @@ export const VEHICLE_CATEGORIES = [
 // ===== LOCATIONS =====
 export const LOCATIONS = [
   {
-    id: 'beverly-hills',
-    name: 'Beverly Hills Showroom',
-    address: '123 Luxury Lane, Beverly Hills, CA 90210',
-    coordinates: { lat: 34.0736, lng: -118.4004 },
-    phone: '+1 (310) 555-0123',
-    email: 'beverlyhills@carease.com',
-    hours: 'Mon-Sun: 9am - 8pm',
+    id: 'roysambu-trm',
+    name: 'Roysambu Branch (Next to TRM)',
+    address: 'Thika Road, next to TRM Mall, Roysambu, Nairobi',
+    coordinates: { lat: -1.2195, lng: 36.8869 },
+    phone: '0758458358',
+    email: 'roysambu@carease.co.ke',
+    hours: 'Mon-Sun: 8am - 8pm',
     services: [SERVICE_TYPES.RENTAL, SERVICE_TYPES.CAR_WASH, SERVICE_TYPES.REPAIR, SERVICE_TYPES.SALES]
   },
   {
-    id: 'miami',
-    name: 'Miami Beach Location',
-    address: '456 Ocean Drive, Miami Beach, FL 33139',
-    coordinates: { lat: 25.7907, lng: -80.1300 },
-    phone: '+1 (305) 555-0456',
-    email: 'miami@carease.com',
-    hours: 'Mon-Sun: 10am - 7pm',
+    id: 'westlands',
+    name: 'Westlands Service Hub',
+    address: 'Waiyaki Way, Westlands, Nairobi',
+    coordinates: { lat: -1.2683, lng: 36.8106 },
+    phone: '0758458358',
+    email: 'westlands@carease.co.ke',
+    hours: 'Mon-Sun: 8am - 8pm',
     services: [SERVICE_TYPES.RENTAL, SERVICE_TYPES.CAR_WASH, SERVICE_TYPES.SALES]
   },
   {
-    id: 'new-york',
-    name: 'Manhattan Showroom',
-    address: '789 Park Avenue, New York, NY 10022',
-    coordinates: { lat: 40.7614, lng: -73.9776 },
-    phone: '+1 (212) 555-0789',
-    email: 'nyc@carease.com',
-    hours: 'Mon-Fri: 9am - 8pm, Sat: 10am-6pm',
+    id: 'mombasa-road',
+    name: 'Mombasa Road Garage',
+    address: 'Mombasa Road near South C, Nairobi',
+    coordinates: { lat: -1.3197, lng: 36.8518 },
+    phone: '0758458358',
+    email: 'mombasaroad@carease.co.ke',
+    hours: 'Mon-Sat: 8am - 7pm',
     services: [SERVICE_TYPES.RENTAL, SERVICE_TYPES.REPAIR, SERVICE_TYPES.SALES]
   }
 ];
@@ -471,13 +471,13 @@ export const ANIMATION = {
 
 // ===== COMPANY INFO =====
 export const COMPANY_INFO = {
-  name: 'CAR EASE LLC',
-  phone: '+1 (800) 555-0123',
-  email: 'info@carease.com',
-  supportEmail: 'support@carease.com',
-  city: 'Beverly Hills',
-  state: 'California',
-  country: 'USA'
+  name: 'CAR EASE KENYA',
+  phone: '0758458358',
+  email: 'info@carease.co.ke',
+  supportEmail: 'support@carease.co.ke',
+  city: 'Nairobi',
+  state: 'Nairobi County',
+  country: 'Kenya'
 };
 
 // ===== EXPORT ALL =====

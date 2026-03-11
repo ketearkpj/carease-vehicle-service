@@ -100,7 +100,7 @@ const Rentals = () => {
           available: true,
           rating: 4.9,
           reviews: 124,
-          location: 'Beverly Hills'
+          location: 'Roysambu (next to TRM)'
         },
         {
           id: 2,
@@ -128,7 +128,7 @@ const Rentals = () => {
           available: true,
           rating: 4.8,
           reviews: 98,
-          location: 'Miami Beach'
+          location: 'Westlands'
         },
         {
           id: 3,
@@ -156,7 +156,7 @@ const Rentals = () => {
           available: true,
           rating: 5.0,
           reviews: 56,
-          location: 'Manhattan'
+          location: 'Mombasa Road'
         },
         {
           id: 4,
@@ -184,7 +184,7 @@ const Rentals = () => {
           available: true,
           rating: 4.9,
           reviews: 167,
-          location: 'Beverly Hills'
+          location: 'Roysambu (next to TRM)'
         },
         {
           id: 5,
@@ -212,7 +212,7 @@ const Rentals = () => {
           available: true,
           rating: 4.8,
           reviews: 82,
-          location: 'Miami Beach'
+          location: 'Westlands'
         },
         {
           id: 6,
@@ -240,7 +240,7 @@ const Rentals = () => {
           available: true,
           rating: 4.9,
           reviews: 103,
-          location: 'Manhattan'
+          location: 'Mombasa Road'
         },
         {
           id: 7,
@@ -268,7 +268,7 @@ const Rentals = () => {
           available: true,
           rating: 4.7,
           reviews: 145,
-          location: 'Beverly Hills'
+          location: 'Roysambu (next to TRM)'
         },
         {
           id: 8,
@@ -296,7 +296,7 @@ const Rentals = () => {
           available: true,
           rating: 4.9,
           reviews: 67,
-          location: 'Manhattan'
+          location: 'Mombasa Road'
         }
       ]);
     } finally {
@@ -367,7 +367,19 @@ const Rentals = () => {
   };
 
   const handleQuickBook = (vehicle) => {
-    navigate(`${ROUTES.BOOKING}?service=rental&vehicle=${vehicle.id}`);
+    navigate(`${ROUTES.BOOKING}?service=rental&vehicle=${vehicle.id}`, {
+      state: {
+        bookingPrefill: {
+          serviceType: 'rental',
+          vehicleId: vehicle.id,
+          vehicleName: vehicle.name,
+          listedPrice: vehicle.price * 130,
+          startDate: '',
+          endDate: '',
+          pickupLocation: 'roysambu-trm'
+        }
+      }
+    });
     addNotification('Vehicle selected. Complete your booking details.', 'info');
   };
 
@@ -662,7 +674,18 @@ const Rentals = () => {
                 </div>
 
                 <div className="quick-view-actions">
-                  <Link to={`${ROUTES.BOOKING}?service=rental&vehicle=${selectedVehicle.id}`}>
+                  <Link
+                    to={`${ROUTES.BOOKING}?service=rental&vehicle=${selectedVehicle.id}`}
+                    state={{
+                      bookingPrefill: {
+                        serviceType: 'rental',
+                        vehicleId: selectedVehicle.id,
+                        vehicleName: selectedVehicle.name,
+                        listedPrice: selectedVehicle.price * 130,
+                        pickupLocation: 'roysambu-trm'
+                      }
+                    }}
+                  >
                     <Button variant="primary" size="lg" fullWidth>
                       Book Now
                     </Button>

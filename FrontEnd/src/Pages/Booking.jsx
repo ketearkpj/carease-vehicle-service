@@ -30,23 +30,29 @@ const Booking = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
+  const bookingPrefill = location.state?.bookingPrefill || {};
+  const today = new Date().toISOString().split('T')[0];
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 5; // Service -> Details -> Customer Info -> Review -> Payment
   
   const [bookingData, setBookingData] = useState({
-    serviceType: queryParams.get('service') || null,
-    vehicleId: queryParams.get('vehicle') || null,
-    packageId: null,
-    startDate: queryParams.get('startDate') || '',
-    endDate: queryParams.get('endDate') || '',
-    time: queryParams.get('time') || '',
-    timeSlot: '09:00 AM',
-    pickupLocation: '',
+    serviceType: queryParams.get('service') || bookingPrefill.serviceType || null,
+    vehicleId: queryParams.get('vehicle') || bookingPrefill.vehicleId || null,
+    vehicleName: bookingPrefill.vehicleName || '',
+    packageId: queryParams.get('packageId') || bookingPrefill.packageId || null,
+    packageName: bookingPrefill.packageName || '',
+    listedPrice: Number(bookingPrefill.listedPrice || queryParams.get('listedPrice') || 0),
+    inquiryType: queryParams.get('inquiryType') || bookingPrefill.inquiryType || null,
+    startDate: queryParams.get('startDate') || bookingPrefill.startDate || '',
+    endDate: queryParams.get('endDate') || bookingPrefill.endDate || queryParams.get('startDate') || '',
+    time: queryParams.get('time') || bookingPrefill.time || '',
+    timeSlot: queryParams.get('time') || bookingPrefill.time || '09:00 AM',
+    pickupLocation: queryParams.get('location') || bookingPrefill.pickupLocation || '',
     dropoffLocation: '',
     deliveryMode: 'pickup',
-    extras: [],
-    specialRequests: '',
+    extras: bookingPrefill.extras || [],
+    specialRequests: bookingPrefill.specialRequests || '',
     customerInfo: {
       firstName: '',
       lastName: '',
@@ -83,6 +89,29 @@ const Booking = () => {
   const { createNewBooking } = useBooking();
   const { processNewPayment } = usePayment();
 
+  const formatCurrency = (amount) => `KSh ${Number(amount || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  useEffect(() => {
+    if (!bookingPrefill || Object.keys(bookingPrefill).length === 0) return;
+    setBookingData((prev) => ({
+      ...prev,
+      serviceType: prev.serviceType || bookingPrefill.serviceType || null,
+      vehicleId: prev.vehicleId || bookingPrefill.vehicleId || null,
+      vehicleName: prev.vehicleName || bookingPrefill.vehicleName || '',
+      packageId: prev.packageId || bookingPrefill.packageId || null,
+      packageName: prev.packageName || bookingPrefill.packageName || '',
+      listedPrice: prev.listedPrice || Number(bookingPrefill.listedPrice || 0),
+      inquiryType: prev.inquiryType || bookingPrefill.inquiryType || null,
+      startDate: prev.startDate || bookingPrefill.startDate || '',
+      endDate: prev.endDate || bookingPrefill.endDate || bookingPrefill.startDate || '',
+      time: prev.time || bookingPrefill.time || '',
+      timeSlot: prev.timeSlot || bookingPrefill.time || '09:00 AM',
+      pickupLocation: prev.pickupLocation || bookingPrefill.pickupLocation || '',
+      extras: prev.extras.length > 0 ? prev.extras : bookingPrefill.extras || [],
+      specialRequests: prev.specialRequests || bookingPrefill.specialRequests || ''
+    }));
+  }, [location.state]);
+
   // Calculate pricing whenever booking data changes
   useEffect(() => {
     if (bookingData.serviceType && currentStep >= 2) {
@@ -113,9 +142,26 @@ const Booking = () => {
     return Math.max(1, days);
   };
 
+  const getFallbackBasePrice = () => {
+    if (bookingData.listedPrice > 0) {
+      if (bookingData.serviceType === SERVICE_TYPES.SALES) {
+        return bookingData.inquiryType === 'purchase' ? bookingData.listedPrice : 5000;
+      }
+      return bookingData.listedPrice;
+    }
+
+    const defaults = {
+      [SERVICE_TYPES.RENTAL]: 18000,
+      [SERVICE_TYPES.CAR_WASH]: 3500,
+      [SERVICE_TYPES.REPAIR]: 8500,
+      [SERVICE_TYPES.SALES]: 5000
+    };
+    return defaults[bookingData.serviceType] || 2500;
+  };
+
   const calculatePricing = async () => {
+    const duration = calculateDuration();
     try {
-      const duration = calculateDuration();
       const result = await getServicePricing(bookingData.serviceType, {
         packageId: bookingData.packageId,
         duration,
@@ -123,22 +169,39 @@ const Booking = () => {
         deliveryMode: bookingData.deliveryMode
       });
 
-      const subtotal = (result.basePrice || 0) + (result.extrasPrice || 0) + (result.deliveryFee || 0);
+      const resultBase = Number(result.basePrice || 0);
+      const resultExtras = Number(result.extrasPrice || 0);
+      const resultDelivery = Number(result.deliveryFee || 0);
+      const fallbackBase = getFallbackBasePrice() * (bookingData.serviceType === SERVICE_TYPES.RENTAL ? duration : 1);
+      const basePrice = resultBase > 0 ? resultBase : fallbackBase;
+      const subtotal = basePrice + resultExtras + resultDelivery;
       const taxAmount = subtotal * (pricing.taxRate || 0.08);
       const total = subtotal + taxAmount - (pricing.discount || 0);
 
       setPricing(prev => ({
         ...prev,
-        basePrice: result.basePrice || 0,
-        extrasPrice: result.extrasPrice || 0,
-        deliveryFee: result.deliveryFee || 0,
+        basePrice,
+        extrasPrice: resultExtras,
+        deliveryFee: resultDelivery,
         subtotal,
         tax: taxAmount,
         total
       }));
     } catch (error) {
-      console.error('Pricing calculation failed:', error);
-      addNotification('Failed to calculate pricing', 'error');
+      const basePrice = getFallbackBasePrice() * (bookingData.serviceType === SERVICE_TYPES.RENTAL ? duration : 1);
+      const subtotal = basePrice;
+      const taxAmount = subtotal * (pricing.taxRate || 0.08);
+      const total = subtotal + taxAmount;
+      setPricing((prev) => ({
+        ...prev,
+        basePrice,
+        extrasPrice: 0,
+        deliveryFee: 0,
+        subtotal,
+        tax: taxAmount,
+        total
+      }));
+      addNotification('Using fallback pricing estimate', 'warning');
     }
   };
 
@@ -197,8 +260,11 @@ const Booking = () => {
       if (bookingData.startDate && bookingData.endDate) {
         const start = new Date(bookingData.startDate);
         const end = new Date(bookingData.endDate);
-        if (start >= end) {
-          newErrors.endDate = 'End date must be after start date';
+        const requiresMultipleDays = bookingData.serviceType === SERVICE_TYPES.RENTAL;
+        if (requiresMultipleDays ? start >= end : start > end) {
+          newErrors.endDate = requiresMultipleDays
+            ? 'End date must be after start date'
+            : 'End date cannot be before start date';
         }
       }
       if (!bookingData.timeSlot) newErrors.timeSlot = 'Time slot is required';
@@ -279,6 +345,11 @@ const Booking = () => {
       ...prev,
       serviceType,
       vehicleId: null,
+      vehicleName: '',
+      packageId: null,
+      packageName: '',
+      listedPrice: 0,
+      inquiryType: null,
       startDate: '',
       endDate: '',
       timeSlot: '09:00 AM'
@@ -298,11 +369,11 @@ const Booking = () => {
       const payment = paymentResult || await processNewPayment({
         bookingId: bookingData.vehicleId || `booking-${Date.now()}`,
         amount: pricing.total,
-        currency: 'USD',
+        currency: 'KES',
         customerEmail: bookingData.customerInfo?.email,
         customerName: `${bookingData.customerInfo?.firstName || ''} ${bookingData.customerInfo?.lastName || ''}`.trim(),
         paymentMethod: bookingData.paymentMethod
-      }, bookingData.paymentMethod === 'paypal' ? 'paypal' : 'stripe');
+      }, bookingData.paymentMethod === 'paypal' ? 'paypal' : bookingData.paymentMethod || 'stripe');
 
       // Create final booking
       const finalBookingData = {
@@ -439,7 +510,7 @@ const Booking = () => {
                                 onChange={(e) => handleFieldChange('startDate', e.target.value)}
                                 onBlur={() => handleFieldBlur('startDate')}
                                 error={touched.startDate ? errors.startDate : ''}
-                                min={new Date().toISOString().split('T')[0]}
+                                min={today}
                               />
                             </div>
                             <div className="form-group">
@@ -450,7 +521,7 @@ const Booking = () => {
                                 onChange={(e) => handleFieldChange('endDate', e.target.value)}
                                 onBlur={() => handleFieldBlur('endDate')}
                                 error={touched.endDate ? errors.endDate : ''}
-                                min={bookingData.startDate || new Date().toISOString().split('T')[0]}
+                                min={bookingData.startDate || today}
                               />
                             </div>
                           </div>
@@ -489,9 +560,10 @@ const Booking = () => {
                                 error={touched.pickupLocation ? errors.pickupLocation : ''}
                                 options={[
                                   { value: '', label: 'Select location...' },
-                                  { value: 'downtown', label: '📍 Downtown Office' },
-                                  { value: 'airport', label: '✈️ Airport' },
-                                  { value: 'home-delivery', label: '🚚 Home Delivery' }
+                                  { value: 'roysambu-trm', label: '📍 Roysambu (Next to TRM)' },
+                                  { value: 'westlands', label: '🏙️ Westlands' },
+                                  { value: 'mombasa-road', label: '🛣️ Mombasa Road' },
+                                  { value: 'home-delivery', label: '🚚 Home Delivery - Nairobi Metro' }
                                 ]}
                               />
                             </div>
@@ -534,37 +606,37 @@ const Booking = () => {
                               {showPricingBreakdown ? '▼' : '▶'}
                             </button>
                           </h3>
-                          <div className="pricing-amount-large">${(pricing.total || 0).toFixed(2)}</div>
+                          <div className="pricing-amount-large">{formatCurrency(pricing.total || 0)}</div>
 
                           {showPricingBreakdown && (
                             <div className="pricing-breakdown animate-fade-in">
                               <div className="pricing-row">
                                 <span>Base Price:</span>
-                                <span>${(pricing.basePrice || 0).toFixed(2)}</span>
+                                <span>{formatCurrency(pricing.basePrice || 0)}</span>
                               </div>
                               {pricing.extrasPrice > 0 && (
                                 <div className="pricing-row">
                                   <span>Extras:</span>
-                                  <span>${(pricing.extrasPrice || 0).toFixed(2)}</span>
+                                  <span>{formatCurrency(pricing.extrasPrice || 0)}</span>
                                 </div>
                               )}
                               {pricing.deliveryFee > 0 && (
                                 <div className="pricing-row">
                                   <span>Delivery Fee:</span>
-                                  <span>${(pricing.deliveryFee || 0).toFixed(2)}</span>
+                                  <span>{formatCurrency(pricing.deliveryFee || 0)}</span>
                                 </div>
                               )}
                               <div className="pricing-row subtotal">
                                 <span>Subtotal:</span>
-                                <span>${(pricing.subtotal || 0).toFixed(2)}</span>
+                                <span>{formatCurrency(pricing.subtotal || 0)}</span>
                               </div>
                               <div className="pricing-row">
                                 <span>Tax ({(pricing.taxRate * 100).toFixed(0)}%):</span>
-                                <span>${(pricing.tax || 0).toFixed(2)}</span>
+                                <span>{formatCurrency(pricing.tax || 0)}</span>
                               </div>
                               <div className="pricing-row total">
                                 <span>Total:</span>
-                                <span>${(pricing.total || 0).toFixed(2)}</span>
+                                <span>{formatCurrency(pricing.total || 0)}</span>
                               </div>
                             </div>
                           )}
@@ -649,7 +721,7 @@ const Booking = () => {
                               <Input
                                 value={bookingData.customerInfo.city}
                                 onChange={(e) => handleFieldChange('customerInfo.city', e.target.value, true)}
-                                placeholder="New York"
+                                placeholder="Nairobi"
                               />
                             </div>
                             <div className="form-group">
@@ -704,6 +776,18 @@ const Booking = () => {
                               <span className="label">Service Type:</span>
                               <span className="value">{bookingData.serviceType?.toUpperCase() || 'Not selected'}</span>
                             </div>
+                            {bookingData.vehicleName && (
+                              <div className="detail-row">
+                                <span className="label">Vehicle:</span>
+                                <span className="value">{bookingData.vehicleName}</span>
+                              </div>
+                            )}
+                            {bookingData.packageName && (
+                              <div className="detail-row">
+                                <span className="label">Package:</span>
+                                <span className="value">{bookingData.packageName}</span>
+                              </div>
+                            )}
                             {bookingData.startDate && (
                               <div className="detail-row">
                                 <span className="label">Start Date:</span>
@@ -781,31 +865,31 @@ const Booking = () => {
                           <div className="pricing-summary">
                             <div className="summary-row">
                               <span>Base Price:</span>
-                              <span className="amount">${(pricing.basePrice || 0).toFixed(2)}</span>
+                              <span className="amount">{formatCurrency(pricing.basePrice || 0)}</span>
                             </div>
                             {pricing.extrasPrice > 0 && (
                               <div className="summary-row">
                                 <span>Extras:</span>
-                                <span className="amount">${(pricing.extrasPrice || 0).toFixed(2)}</span>
+                                <span className="amount">{formatCurrency(pricing.extrasPrice || 0)}</span>
                               </div>
                             )}
                             {pricing.deliveryFee > 0 && (
                               <div className="summary-row">
                                 <span>Delivery:</span>
-                                <span className="amount">${(pricing.deliveryFee || 0).toFixed(2)}</span>
+                                <span className="amount">{formatCurrency(pricing.deliveryFee || 0)}</span>
                               </div>
                             )}
                             <div className="summary-row divider">
                               <span>Subtotal:</span>
-                              <span className="amount">${(pricing.subtotal || 0).toFixed(2)}</span>
+                              <span className="amount">{formatCurrency(pricing.subtotal || 0)}</span>
                             </div>
                             <div className="summary-row">
                               <span>Tax:</span>
-                              <span className="amount">${(pricing.tax || 0).toFixed(2)}</span>
+                              <span className="amount">{formatCurrency(pricing.tax || 0)}</span>
                             </div>
                             <div className="summary-row total">
                               <span className="label">TOTAL DUE</span>
-                              <span className="amount gold">${(pricing.total || 0).toFixed(2)}</span>
+                              <span className="amount gold">{formatCurrency(pricing.total || 0)}</span>
                             </div>
                           </div>
                         </div>
@@ -859,18 +943,18 @@ const Booking = () => {
                       {/* Order Summary */}
                       <div className="payment-summary">
                         <h3>Order Summary</h3>
-                        <div className="summary-item">
-                          <span>Service Charges:</span>
-                          <span>${(pricing.subtotal || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="summary-item">
-                          <span>Tax:</span>
-                          <span>${(pricing.tax || 0).toFixed(2)}</span>
-                        </div>
-                        <div className="summary-item total">
-                          <span>TOTAL AMOUNT:</span>
-                          <span className="gold-text">${(pricing.total || 0).toFixed(2)}</span>
-                        </div>
+                          <div className="summary-item">
+                            <span>Service Charges:</span>
+                            <span>{formatCurrency(pricing.subtotal || 0)}</span>
+                          </div>
+                          <div className="summary-item">
+                            <span>Tax:</span>
+                            <span>{formatCurrency(pricing.tax || 0)}</span>
+                          </div>
+                          <div className="summary-item total">
+                            <span>TOTAL AMOUNT:</span>
+                            <span className="gold-text">{formatCurrency(pricing.total || 0)}</span>
+                          </div>
                       </div>
 
                       {/* Security Message */}
@@ -914,15 +998,15 @@ const Booking = () => {
                           <div className="summary-pricing">
                             <div className="price-row">
                               <span>Subtotal:</span>
-                              <span>${(pricing.subtotal || 0).toFixed(2)}</span>
+                              <span>{formatCurrency(pricing.subtotal || 0)}</span>
                             </div>
                             <div className="price-row">
                               <span>Tax:</span>
-                              <span>${(pricing.tax || 0).toFixed(2)}</span>
+                              <span>{formatCurrency(pricing.tax || 0)}</span>
                             </div>
                             <div className="price-row total">
                               <span>Total:</span>
-                              <span className="total-amount">${(pricing.total || 0).toFixed(2)}</span>
+                              <span className="total-amount">{formatCurrency(pricing.total || 0)}</span>
                             </div>
                           </div>
                         </>
@@ -945,11 +1029,11 @@ const Booking = () => {
                     <div className="info-contact">
                       <a href="tel:+18005550123" className="info-phone">
                         <span className="info-icon">📞</span>
-                        +1 (800) 555-0123
+                        0758458358
                       </a>
-                      <a href="mailto:concierge@carease.com" className="info-email">
+                      <a href="mailto:concierge@carease.co.ke" className="info-email">
                         <span className="info-icon">✉️</span>
-                        concierge@carease.com
+                        concierge@carease.co.ke
                       </a>
                     </div>
                   </Card>

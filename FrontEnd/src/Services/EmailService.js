@@ -19,7 +19,7 @@ const EMAIL_CONFIG = {
   
   // SendGrid (backend recommended)
   sendGridApiKey: getEnv('REACT_APP_SENDGRID_API_KEY'),
-  sendGridFromEmail: 'noreply@carease.com',
+  sendGridFromEmail: 'noreply@carease.co.ke',
   
   // SMTP (for custom setup)
   smtp: {
@@ -132,7 +132,7 @@ export const sendBookingConfirmation = async (bookingData) => {
     booking_date: date,
     booking_time: time,
     booking_amount: `$${amount}`,
-    reply_to: 'bookings@carease.com',
+    reply_to: 'bookings@carease.co.ke',
     from_name: 'CAR EASE Concierge'
   };
 
@@ -195,12 +195,12 @@ export const sendBookingConfirmation = async (bookingData) => {
               </div>
               
               <div style="text-align: center;">
-                <a href="https://carease.com/bookings/${bookingId}" class="button">View Booking</a>
+                <a href="https://carease.co.ke/bookings/${bookingId}" class="button">View Booking</a>
               </div>
             </div>
             
             <div class="footer">
-              <p>Need help? Contact us at support@carease.com or call +1 (800) 555-0123</p>
+              <p>Need help? Contact us at support@carease.co.ke or call 0758458358</p>
               <p>© ${new Date().getFullYear()} CAR EASE. All rights reserved.</p>
             </div>
           </div>
@@ -243,7 +243,7 @@ export const sendPaymentReceipt = async (paymentData) => {
     payment_amount: `$${amount}`,
     payment_method: method,
     payment_date: date,
-    reply_to: 'payments@carease.com'
+    reply_to: 'payments@carease.co.ke'
   };
 
   try {
@@ -310,7 +310,7 @@ export const sendPaymentReceipt = async (paymentData) => {
             </div>
             
             <div class="footer">
-              <p>For questions about this payment, contact payments@carease.com</p>
+              <p>For questions about this payment, contact payments@carease.co.ke</p>
               <p>© ${new Date().getFullYear()} CAR EASE</p>
             </div>
           </div>
@@ -344,7 +344,7 @@ export const sendPaymentReceipt = async (paymentData) => {
  * @returns {Promise} - Email result
  */
 export const sendPasswordResetEmail = async (email, resetToken) => {
-  const resetLink = `https://carease.com/reset-password?token=${resetToken}`;
+  const resetLink = `https://carease.co.ke/reset-password?token=${resetToken}`;
 
   try {
     const htmlContent = `
@@ -415,8 +415,8 @@ export const sendContactFormEmail = async (contactData) => {
   try {
     // Send to admin
     await sendViaSendGrid({
-      to: 'info@carease.com',
-      from: 'contact@carease.com',
+      to: 'info@carease.co.ke',
+      from: 'contact@carease.co.ke',
       subject: `New Contact Form: ${subject}`,
       html: `
         <h3>New Contact Form Submission</h3>
@@ -432,7 +432,7 @@ export const sendContactFormEmail = async (contactData) => {
     // Send auto-reply to customer
     await sendViaSendGrid({
       to: email,
-      from: 'info@carease.com',
+      from: 'info@carease.co.ke',
       subject: 'Thank you for contacting CAR EASE',
       html: `
         <h3>Thank you for reaching out, ${name}!</h3>
@@ -442,7 +442,7 @@ export const sendContactFormEmail = async (contactData) => {
           <li>Subject: ${subject}</li>
           <li>Message: ${message}</li>
         </ul>
-        <p>If you need immediate assistance, please call us at +1 (800) 555-0123.</p>
+        <p>If you need immediate assistance, please call us at 0758458358.</p>
         <br>
         <p>Best regards,</p>
         <p><strong>CAR EASE Concierge Team</strong></p>
@@ -501,7 +501,7 @@ const sendConfirmationEmail = async (email) => {
             <p>Get 10% off your first booking with code: <strong style="color: #d4af37;">WELCOME10</strong></p>
             
             <div style="margin: 30px 0;">
-              <a href="https://carease.com/bookings" class="button">Book Now</a>
+              <a href="https://carease.co.ke/bookings" class="button">Book Now</a>
             </div>
           </div>
           
@@ -516,7 +516,7 @@ const sendConfirmationEmail = async (email) => {
 
     return await sendViaSendGrid({
       to: email,
-      from: 'newsletter@carease.com',
+      from: 'newsletter@carease.co.ke',
       subject: 'Welcome to CAR EASE! 🚗✨',
       html: htmlContent,
       text: 'Thank you for subscribing to CAR EASE newsletter!'

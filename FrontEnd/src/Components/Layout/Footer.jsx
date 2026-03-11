@@ -192,15 +192,15 @@ const Footer = () => {
               <ul className="footer-contact">
                 <li>
                   <span className="contact-icon">📍</span>
-                  <span className="contact-text">Beverly Hills, CA</span>
+                  <span className="contact-text">Roysambu, Nairobi (next to TRM)</span>
                 </li>
                 <li>
                   <span className="contact-icon">📞</span>
-                  <a href="tel:+18005550123" className="contact-text">+1 (800) 555-0123</a>
+                  <a href="tel:0758458358" className="contact-text">0758458358</a>
                 </li>
                 <li>
                   <span className="contact-icon">✉️</span>
-                  <a href="mailto:concierge@carease.com" className="contact-text">concierge@carease.com</a>
+                  <a href="mailto:concierge@carease.co.ke" className="contact-text">concierge@carease.co.ke</a>
                 </li>
               </ul>
             </div>

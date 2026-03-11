@@ -211,6 +211,33 @@ const Services = () => {
     { id: 'storage', label: 'Storage', icon: '🏢', gradient: 'linear-gradient(135deg, #ff80ab, #ff4081)', description: 'Climate-controlled storage' }
   ];
 
+  const kenyaServiceJourneys = [
+    {
+      id: SERVICE_TYPES.RENTAL,
+      title: 'Luxury Rentals in Nairobi',
+      description: 'Reserve premium rides for weddings, executive travel, or weekend escapes with pickup in Roysambu (next to TRM), Westlands, and CBD.',
+      link: ROUTES.RENTALS
+    },
+    {
+      id: SERVICE_TYPES.CAR_WASH,
+      title: 'Detailing & Car Wash',
+      description: 'Choose express, premium, or ceramic packages with add-ons and preferred slots, then complete payment in one flow.',
+      link: ROUTES.CAR_WASH
+    },
+    {
+      id: SERVICE_TYPES.REPAIR,
+      title: 'Repairs & Diagnostics',
+      description: 'Book diagnostics and repair services with vehicle details, issue notes, urgent handling, and a structured checkout experience.',
+      link: ROUTES.REPAIRS
+    },
+    {
+      id: SERVICE_TYPES.SALES,
+      title: 'Vehicle Sales & Inquiries',
+      description: 'Browse stock, submit purchase inquiry or test-drive request, and carry selected vehicle details into booking and payment.',
+      link: ROUTES.SALES
+    }
+  ];
+
   const handleCategoryChange = (categoryId) => {
     setActiveCategory(categoryId);
   };
@@ -512,6 +539,32 @@ const Services = () => {
           </div>
         </section>
       )}
+
+      {/* ===== SERVICE JOURNEYS ===== */}
+      <section className="experience-timeline">
+        <div className="container">
+          <div className="timeline-header">
+            <h2 className="timeline-title">Designed End-to-End for Kenya</h2>
+            <p className="timeline-subtitle">Every service keeps your selection through booking and payment</p>
+          </div>
+
+          <div className="timeline-grid">
+            {kenyaServiceJourneys.map((journey) => (
+              <div key={journey.id} className="timeline-item">
+                <div className="timeline-year">✓</div>
+                <div className="timeline-content">
+                  <h4>{journey.title}</h4>
+                  <p>{journey.description}</p>
+                  <Link to={journey.link} className="showcase-link">
+                    Open Service
+                    <span className="link-arrow">→</span>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ===== EXPERIENCE TIMELINE ===== */}
       <section className="experience-timeline">

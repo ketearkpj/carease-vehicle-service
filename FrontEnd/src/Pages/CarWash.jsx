@@ -151,7 +151,22 @@ const CarWash = () => {
       packageId: formData.package || '',
       location: formData.location || ''
     });
-    navigate(`${ROUTES.BOOKING}?${params.toString()}`);
+    navigate(`${ROUTES.BOOKING}?${params.toString()}`, {
+      state: {
+        bookingPrefill: {
+          serviceType: 'car_wash',
+          packageId: selectedPackage?.id || formData.package,
+          packageName: selectedPackage?.name || '',
+          listedPrice: Number(price || selectedPackage?.price || 0),
+          startDate: formData.date,
+          endDate: formData.date,
+          time: formData.time,
+          pickupLocation: formData.location,
+          extras: formData.extras,
+          specialRequests: formData.specialRequests
+        }
+      }
+    });
     addNotification('Continue to payment to confirm your booking.', 'info');
   };
 
