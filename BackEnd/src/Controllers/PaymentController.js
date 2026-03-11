@@ -9,7 +9,7 @@ const paypalService = require('../Services/paypalService');
 const mpesaService = require('../Services/mpesaService');
 const squareService = require('../Services/squareService');
 const flutterwaveService = require('../Services/flutterwaveService');
-const { sendEmail } = require('../Services/emailService');
+const { sendEmail, sendPaymentReceipt, sendRefundNotification } = require('../Services/emailService');
 const { generateReceipt } = require('../Utils/ReceiptGenerator');
 
 // ===== PROCESS PAYMENT =====
@@ -122,7 +122,7 @@ exports.processPayment = catchAsync(async (req, res, next) => {
     await booking.save();
 
     // Send receipt
-    await sendPaymentReceipt(payment, booking);
+    await sendPaymentReceipt(payment, booking, req.user);
 
     // Save payment method if requested
     if (savePaymentMethod && result.paymentMethodId) {
@@ -267,7 +267,11 @@ exports.confirmPayment = catchAsync(async (req, res, next) => {
       booking.depositPaid = true;
       await booking.save();
 
-      await sendPaymentReceipt(payment, booking);
+      // Get user for email notification
+      const user = await User.findByPk(payment.userId);
+      if (user) {
+        await sendPaymentReceipt(payment, booking, user);
+      }
     }
   }
 
@@ -343,7 +347,16 @@ exports.processRefund = catchAsync(async (req, res, next) => {
   }
 
   // Send refund notification
-  await sendRefundNotification(payment, refundAmount, reason);
+  const user = await User.findByPk(payment.userId);
+  if (user) {
+    const refund = {
+      refundId: payment.id,
+      amount: refundAmount,
+      originalPaymentMethod: payment.method,
+      processedAt: new Date()
+    };
+    await sendRefundNotification(user, refund);
+  }
 
   res.status(200).json({
     status: 'success',
@@ -587,34 +600,6 @@ const generatePaymentNumber = async () => {
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   
   return `PAY${year}${month}${day}-${random}`;
-};
-
-const sendPaymentReceipt = async (payment, booking) => {
-  const user = await User.findByPk(payment.userId);
-  if (!user?.email) return;
-
-  const receipt = await generateReceipt(payment, booking);
-
-  await sendEmail({
-    to: user.email,
-    subject: `CAR EASE - Payment Receipt #${payment.paymentNumber}`,
-    html: generateReceiptEmail(payment, booking),
-    attachments: [{
-      filename: `receipt-${payment.paymentNumber}.pdf`,
-      content: receipt
-    }]
-  });
-};
-
-const sendRefundNotification = async (payment, amount, reason) => {
-  const user = await User.findByPk(payment.userId);
-  if (!user?.email) return;
-
-  await sendEmail({
-    to: user.email,
-    subject: `CAR EASE - Refund Processed #${payment.paymentNumber}`,
-    html: generateRefundEmail(payment, amount, reason)
-  });
 };
 
 const saveUserPaymentMethod = async (userId, methodData) => {

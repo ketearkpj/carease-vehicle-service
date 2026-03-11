@@ -1,0 +1,30 @@
+// This is a log file - content is generated dynamically
+// Example structure of error.log entries:
+
+/*
+2024-01-15 10:25:12 [ERROR]: Uncaught Exception - TypeError: Cannot read property 'id' of undefined
+    at BookingController.getBooking (/app/src/controllers/bookingController.js:124:23)
+    at processTicksAndRejections (internal/process/task_queues.js:95:5)
+Stack: Error: Booking not found
+    at /app/src/controllers/bookingController.js:121:11
+    at catchAsync (/app/src/utils/catchAsync.js:6:14)
+User: 5f8d0d8b9a1e4c2d8f9a1e4c
+URL: /api/v1/bookings/5f8d0d8b9a1e4c2d8f9a1e4d
+Method: GET
+IP: 192.168.1.106
+
+2024-01-15 10:26:34 [ERROR]: Database Connection Error - MongoNetworkError: failed to connect to server [localhost:27017] on first connect
+Stack: MongoNetworkError: connect ECONNREFUSED 127.0.0.1:27017
+    at connectionFailureError (/app/node_modules/mongodb/lib/cmap/connect.js:387:20)
+    at Socket.<anonymous> (/app/node_modules/mongodb/lib/cmap/connect.js:310:22)
+Service: MongoDB
+Retry Attempt: 3
+
+2024-01-15 10:27:45 [ERROR]: Payment Processing Failed - StripeError: Your card was declined
+    at stripeService.processPayment (/app/src/services/stripeService.js:89:11)
+Payment ID: 5f8d0d8b9a1e4c2d8f9a1e4e
+Amount: $899.00
+Method: card
+User: 5f8d0d8b9a1e4c2d8f9a1e4f
+IP: 192.168.1.107
+*/

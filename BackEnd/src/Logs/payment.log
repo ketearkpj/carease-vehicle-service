@@ -1,0 +1,16 @@
+// This is a log file - content is generated dynamically
+// Example structure of payment.log entries:
+
+/*
+2024-01-15 10:30:12 [INFO]: Payment Intent Created - ID: pi_3Oc2d8F9a1e4c2d8f9a1e4c, Amount: $899.00, Method: card, User: 5f8d0d8b9a1e4c2d8f9a1e4c
+2024-01-15 10:30:15 [INFO]: Payment Succeeded - ID: pi_3Oc2d8F9a1e4c2d8f9a1e4c, Amount: $899.00, Method: card, User: 5f8d0d8b9a1e4c2d8f9a1e4c, Booking: BK240115-1234
+2024-01-15 10:31:22 [INFO]: PayPal Order Created - ID: 8FJ12345678901234, Amount: $1299.00, User: 5f8d0d8b9a1e4c2d8f9a1e4d
+2024-01-15 10:31:28 [INFO]: PayPal Order Captured - ID: 8FJ12345678901234, Amount: $1299.00, Status: COMPLETED
+2024-01-15 10:32:45 [INFO]: M-PESA STK Push Sent - CheckoutRequestID: ws_CO_1501202410324512345678, Phone: 254712345678, Amount: KES 15000
+2024-01-15 10:33:12 [INFO]: M-PESA Payment Confirmed - CheckoutRequestID: ws_CO_1501202410324512345678, Receipt: NEL1234567, Amount: KES 15000
+2024-01-15 10:34:56 [INFO]: Refund Processed - Payment: pi_3Oc2d8F9a1e4c2d8f9a1e4c, Amount: $899.00, Reason: "Customer cancelled booking", Refund ID: re_3Oc2d8F9a1e4c2d8f9a1e4c
+
+2024-01-15 10:35:23 [ERROR]: Payment Failed - ID: pi_3Oc2d8F9a1e4c2d8f9a1e4g, Amount: $549.00, Method: card, Error: "Your card was declined", Code: card_declined
+2024-01-15 10:36:45 [ERROR]: M-PESA STK Push Failed - Phone: 254712345679, Amount: KES 20000, Error: "Request cancelled by user"
+2024-01-15 10:37:12 [ERROR]: Webhook Verification Failed - Gateway: stripe, Signature: invalid, Error: "No signatures found matching the expected signature"
+*/

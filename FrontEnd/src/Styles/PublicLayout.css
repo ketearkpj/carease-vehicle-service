@@ -1,0 +1,127 @@
+/* ===== src/Styles/PublicLayout.css ===== */
+@import './Variables.css';
+@import './Global.css';
+@import './LayoutResponsive.css';
+/* ============================================
+   PUBLIC LAYOUT STYLES
+   ============================================ */
+
+.public-layout {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-deep);
+  overflow-x: hidden;
+}
+
+.public-layout-main {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+.public-layout-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Layout Particles */
+.layout-particles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.layout-particles .particle {
+  position: absolute;
+  background: var(--gold-glow);
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: particleFloat 20s ease-in-out infinite;
+}
+
+.layout-particles .particle:nth-child(1) {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  left: 5%;
+  opacity: 0.1;
+  animation-delay: 0s;
+}
+
+.layout-particles .particle:nth-child(2) {
+  width: 400px;
+  height: 400px;
+  bottom: 10%;
+  right: 5%;
+  opacity: 0.1;
+  animation-delay: -5s;
+}
+
+.layout-particles .particle:nth-child(3) {
+  width: 250px;
+  height: 250px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.05;
+  animation-delay: -10s;
+}
+
+.layout-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 50% 50%, var(--gold-glow) 0%, transparent 70%);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(0) translateX(20px);
+  }
+  75% {
+    transform: translateY(20px) translateX(10px);
+  }
+}
+
+@keyframes rotateSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .layout-particles .particle,
+  .auth-glow,
+  .nav-link::before,
+  .notification-btn,
+  .profile-btn,
+  .sidebar-toggle,
+  .logout-btn,
+  .dropdown-arrow {
+    transition: none !important;
+    animation: none !important;
+  }
+}

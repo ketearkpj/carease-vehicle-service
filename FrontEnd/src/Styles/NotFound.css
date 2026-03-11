@@ -1,0 +1,318 @@
+/* ===== src/Styles/NotFound.css ===== */
+@import './Variables.css';
+@import './Animations.css';
+@import './Responsive.css';
+
+/* ============================================
+   NOT FOUND PAGE - ULTIMATE GOD MODE
+   ============================================ */
+
+.not-found-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+  padding: var(--space-16) 0;
+}
+
+/* Background Particles */
+.error-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.error-particles .particle {
+  position: absolute;
+  background: var(--gold-glow);
+  border-radius: 50%;
+  filter: blur(30px);
+  animation: particleFloat 20s ease-in-out infinite;
+}
+
+.error-particles .particle:nth-child(1) {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  left: 5%;
+  opacity: 0.1;
+  animation-delay: 0s;
+}
+
+.error-particles .particle:nth-child(2) {
+  width: 400px;
+  height: 400px;
+  bottom: 10%;
+  right: 5%;
+  opacity: 0.1;
+  animation-delay: -5s;
+}
+
+.error-particles .particle:nth-child(3) {
+  width: 250px;
+  height: 250px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.05;
+  animation-delay: -10s;
+}
+
+.error-particles .particle:nth-child(4) {
+  width: 200px;
+  height: 200px;
+  top: 20%;
+  right: 20%;
+  opacity: 0.08;
+  animation-delay: -7s;
+}
+
+.error-particles .particle:nth-child(5) {
+  width: 350px;
+  height: 350px;
+  bottom: 20%;
+  left: 15%;
+  opacity: 0.06;
+  animation-delay: -12s;
+}
+
+/* Main Content */
+.not-found-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--space-8);
+}
+
+/* Error Code */
+.error-code {
+  font-family: var(--font-heading);
+  font-size: 12rem;
+  font-weight: var(--weight-black);
+  line-height: 1;
+  background: linear-gradient(135deg, var(--gold-primary) 0%, var(--white) 50%, var(--gold-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: var(--space-4);
+  position: relative;
+  display: inline-block;
+  text-shadow: 0 0 30px var(--gold-glow);
+  animation: float 3s ease-in-out infinite;
+}
+
+.error-code::before {
+  content: '404';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: blur(10px);
+  opacity: 0.5;
+}
+
+/* Error Title */
+.error-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  color: var(--white);
+  margin-bottom: var(--space-4);
+  line-height: 1.2;
+}
+
+.error-title .gold-text {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Error Message */
+.error-message {
+  font-size: var(--text-lg);
+  color: var(--silver-dark);
+  margin-bottom: var(--space-8);
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.6;
+}
+
+/* Error Actions */
+.error-actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  position: relative;
+  z-index: 3;
+}
+
+/* Decorative Elements */
+.error-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.decoration-circle {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--gold-glow);
+  filter: blur(40px);
+  opacity: 0.1;
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+.circle-1 {
+  width: 400px;
+  height: 400px;
+  top: -100px;
+  left: -100px;
+  animation-delay: 0s;
+}
+
+.circle-2 {
+  width: 300px;
+  height: 300px;
+  bottom: -50px;
+  right: -50px;
+  animation-delay: -1s;
+}
+
+.circle-3 {
+  width: 200px;
+  height: 200px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -2s;
+}
+
+.decoration-line {
+  position: absolute;
+  background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
+  height: 1px;
+  width: 100%;
+  opacity: 0.2;
+  animation: slideLine 8s linear infinite;
+}
+
+.line-1 {
+  top: 20%;
+  animation-delay: 0s;
+}
+
+.line-2 {
+  bottom: 30%;
+  animation-delay: -4s;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    transform: translate(20px, -20px) scale(1.1);
+  }
+  50% {
+    transform: translate(30px, 20px) scale(0.9);
+  }
+  75% {
+    transform: translate(-20px, 30px) scale(1.05);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.15;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes slideLine {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ===== ANIMATION DELAYS ===== */
+.animate-delay-1 { animation-delay: 0.2s; }
+.animate-delay-2 { animation-delay: 0.4s; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .error-code {
+    font-size: 8rem;
+  }
+
+  .error-title {
+    font-size: var(--text-3xl);
+  }
+
+  .error-message {
+    font-size: var(--text-base);
+  }
+
+  .error-actions {
+    flex-direction: column;
+    max-width: 300px;
+    margin: 0 auto;
+  }
+
+  .decoration-circle {
+    filter: blur(20px);
+  }
+}
+
+@media (max-width: 480px) {
+  .error-code {
+    font-size: 6rem;
+  }
+
+  .error-title {
+    font-size: var(--text-2xl);
+  }
+
+  .error-particles .particle {
+    filter: blur(20px);
+  }
+}
+
+/* ===== HIGH PERFORMANCE MODE ===== */
+@media (prefers-reduced-motion: reduce) {
+  .error-code,
+  .error-particles .particle,
+  .decoration-circle,
+  .decoration-line,
+  .animate-float,
+  .animate-fade-up {
+    animation: none !important;
+  }
+}

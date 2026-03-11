@@ -1,0 +1,11 @@
+// This is a log file - content is generated dynamically
+// Example structure of access.log entries:
+
+/*
+2024-01-15 10:23:45 [INFO]: GET /api/v1/vehicles - 200 - 156ms - 192.168.1.100
+2024-01-15 10:23:47 [INFO]: POST /api/v1/bookings - 201 - 234ms - 192.168.1.101 - user: 5f8d0d8b9a1e4c2d8f9a1e4c
+2024-01-15 10:23:50 [WARN]: GET /api/v1/admin/dashboard - 403 - 45ms - 192.168.1.102 - "Admin access attempted without proper role"
+2024-01-15 10:23:52 [ERROR]: GET /api/v1/users/unknown - 404 - 23ms - 192.168.1.103 - "User not found"
+2024-01-15 10:23:55 [INFO]: POST /api/v1/auth/login - 200 - 567ms - 192.168.1.104 - user: john@example.com
+2024-01-15 10:24:00 [INFO]: GET /api/v1/vehicles/featured - 200 - 89ms - 192.168.1.105
+*/

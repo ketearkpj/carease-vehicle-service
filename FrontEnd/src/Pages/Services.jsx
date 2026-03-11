@@ -1,451 +1,597 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// ===== src/Pages/Services.jsx =====
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+import { SERVICE_TYPES, SERVICE_CATEGORIES } from '../Utils/constants';
+
+// Components
+import Button from '../Components/Common/Button';
+import Card from '../Components/Common/Card';
+import LoadingSpinner from '../Components/Common/LoadingSpinner';
+import ServiceCard from '../Components/Features/ServiceCard';
+
+// Services
+import { getServices } from '../Services/Service.Service';
+
+// Hooks
+import { useApp } from '../Context/AppContext';
+
+// Styles
 import '../Styles/Services.css';
 
 const Services = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('all');
+  const [services, setServices] = useState([]);
+  const [filteredServices, setFilteredServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [activeService, setActiveService] = useState(null);
+  const [hoveredCategory, setHoveredCategory] = useState(null);
+  
+  const heroRef = useRef(null);
+  const particlesRef = useRef(null);
+  const { addNotification } = useApp();
 
+  // Mouse move effect for 3D parallax
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const handleMouseMove = (e) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth - 0.5) * 20,
+        y: (e.clientY / window.innerHeight - 0.5) * 20
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const services = [
-    {
-      id: 'rentals',
-      icon: '🚗',
-      title: 'Luxury Car Rentals',
-      subtitle: 'EXOTIC FLEET',
-      shortDescription: 'Access our exclusive fleet of premium vehicles, from exotic supercars to luxury sedans.',
-      description: 'Experience the thrill of driving the world\'s finest automobiles with our premium rental service. Whether you need a sophisticated sedan for business, a powerful SUV for a family getaway, or an exotic supercar for a special occasion, we have the perfect vehicle for you.',
-      longDescription: 'Our rental fleet consists of meticulously maintained vehicles from the world\'s most prestigious manufacturers. Each car undergoes rigorous inspection before every rental to ensure peak performance and safety. With flexible rental periods, comprehensive insurance coverage, and 24/7 roadside assistance, we provide a seamless and luxurious experience from start to finish.',
-      badge: 'Starting $199/day',
-      image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800',
-      features: [
-        'Unlimited mileage',
-        'Comprehensive insurance',
-        '24/7 roadside assistance',
-        'GPS navigation included',
-        'Free cancellation (48h)',
-        'Airport delivery available',
-        'Additional driver option',
-        'Child seat available'
-      ],
-      pricing: [
-        { period: 'Daily', price: '$199' },
-        { period: 'Weekly', price: '$1,199' },
-        { period: 'Monthly', price: '$3,999' },
-        { period: 'Corporate', price: 'Custom' }
-      ],
-      faq: [
-        { q: 'What is the minimum age to rent?', a: 'You must be at least 21 years old with a valid driver\'s license.' },
-        { q: 'What insurance is included?', a: 'Basic liability insurance is included. Additional coverage is available.' },
-        { q: 'Is there a mileage limit?', a: 'No, all rentals include unlimited mileage.' }
-      ],
-      link: '/rentals',
-      color: '#d4af37'
-    },
-    {
-      id: 'wash',
-      icon: '🧼',
-      title: 'Elite Car Wash & Detailing',
-      subtitle: 'DETAILING EXPERTS',
-      shortDescription: 'Premium hand wash, ceramic coating, and interior detailing for the perfect finish.',
-      description: 'Experience the pinnacle of automotive care with our comprehensive detailing services. From express washes to full ceramic coatings, we treat every vehicle with the utmost care and precision using only eco-friendly products.',
-      longDescription: 'Our state-of-the-art detailing facility uses the latest techniques and highest quality products to restore and protect your vehicle\'s finish. Whether you need a quick refresh or a complete concours-level detail, our certified technicians deliver exceptional results. We also offer mobile detailing services, bringing our expertise directly to your location.',
-      badge: 'From $49',
-      image: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=800',
-      features: [
-        'Eco-friendly products',
-        'Hand wash only',
-        'Ceramic coating',
-        'Interior detailing',
-        'Engine bay cleaning',
-        'Paint correction',
-        'Headlight restoration',
-        'Mobile service available'
-      ],
-      packages: [
-        { name: 'Express Wash', price: '$49', duration: '30 min', includes: ['Exterior wash', 'Wheel cleaning', 'Tire shine'] },
-        { name: 'Premium Detail', price: '$149', duration: '2 hours', includes: ['Express Wash', 'Interior detail', 'Wax'] },
-        { name: 'Ultimate Ceramic', price: '$499', duration: '4 hours', includes: ['Premium Detail', 'Ceramic coating', 'Paint correction'] }
-      ],
-      faq: [
-        { q: 'How long does a wash take?', a: 'Express wash takes 30 minutes, premium detail takes 2 hours.' },
-        { q: 'Do you offer mobile service?', a: 'Yes, we offer mobile detailing at your location.' },
-        { q: 'Are your products eco-friendly?', a: 'Yes, we use only biodegradable, eco-friendly products.' }
-      ],
-      link: '/car-wash',
-      color: '#00ff88'
-    },
-    {
-      id: 'repairs',
-      icon: '🔧',
-      title: 'Expert Repairs & Maintenance',
-      subtitle: 'CERTIFIED MECHANICS',
-      shortDescription: 'Factory-trained technicians using genuine parts for your peace of mind.',
-      description: 'From routine maintenance to complex repairs, our certified technicians have the expertise to keep your vehicle performing at its best. We use state-of-the-art diagnostic equipment and genuine parts for all repairs.',
-      longDescription: 'Our service center is equipped with the latest diagnostic technology and staffed by factory-trained technicians who specialize in luxury and exotic vehicles. We perform everything from oil changes to major engine overhauls, always using genuine parts and following manufacturer specifications. Every repair comes with our comprehensive warranty for your peace of mind.',
-      badge: 'Free Inspection',
-      image: 'https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=800',
-      features: [
-        'Certified technicians',
-        'Genuine parts',
-        '24-month warranty',
-        'Free pickup/dropoff',
-        'Computer diagnostics',
-        'Performance tuning',
-        'AC service',
-        'Brake service'
-      ],
-      services: [
-        { name: 'Diagnostic', price: '$89', description: 'Complete vehicle diagnostics' },
-        { name: 'Oil Change', price: '$99', description: 'Synthetic oil and filter' },
-        { name: 'Brake Service', price: '$299', description: 'Pad replacement and rotor resurfacing' },
-        { name: 'Major Service', price: '$599', description: 'Comprehensive inspection and service' }
-      ],
-      faq: [
-        { q: 'Do you use genuine parts?', a: 'Yes, we only use OEM and genuine parts.' },
-        { q: 'What warranty do you offer?', a: 'All repairs come with a 24-month warranty.' },
-        { q: 'Do you offer pickup and delivery?', a: 'Yes, complimentary pickup and delivery is available.' }
-      ],
-      link: '/repairs',
-      color: '#33b5e5'
-    },
-    {
-      id: 'sales',
-      icon: '💰',
-      title: 'Premium Car Sales',
-      subtitle: 'CURATED COLLECTION',
-      shortDescription: 'Discover hand-selected pre-owned luxury vehicles, each thoroughly inspected and certified.',
-      description: 'Every vehicle in our sales inventory undergoes a rigorous 150-point inspection and comes with a complete vehicle history report. We stand behind every car we sell with comprehensive warranty options.',
-      longDescription: 'Our sales gallery features a constantly rotating selection of the finest pre-owned luxury and exotic vehicles. Each car is hand-selected by our expert team and thoroughly reconditioned to meet our exacting standards. We provide complete transparency with full vehicle history reports and offer flexible financing options to suit your needs.',
-      badge: 'Certified',
-      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800',
-      features: [
-        '150-point inspection',
-        'Vehicle history report',
-        'Financing available',
-        'Trade-ins welcome',
-        'Extended warranty',
-        'Test drives',
-        'Delivery options',
-        'Certified pre-owned'
-      ],
-      benefits: [
-        { icon: '🔍', text: 'Thoroughly inspected' },
-        { icon: '📋', text: 'Full history report' },
-        { icon: '💰', text: 'Financing options' },
-        { icon: '🔄', text: 'Trade-in accepted' }
-      ],
-      faq: [
-        { q: 'Are vehicles certified?', a: 'Yes, all vehicles undergo a rigorous certification process.' },
-        { q: 'Do you offer financing?', a: 'Yes, we work with multiple lenders to offer competitive rates.' },
-        { q: 'Can I trade in my vehicle?', a: 'Yes, we accept trade-ins and offer fair market value.' }
-      ],
-      link: '/sales',
-      color: '#ffbb33'
+  // Scroll progress
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (window.scrollY / totalScroll) * 100;
+      setScrollProgress(progress);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Particle animation
+  useEffect(() => {
+    if (!particlesRef.current) return;
+    
+    const particles = particlesRef.current.children;
+    let time = 0;
+    
+    const animateParticles = () => {
+      time += 0.002;
+      
+      for (let i = 0; i < particles.length; i++) {
+        const particle = particles[i];
+        const y = Math.sin(time + i) * 20;
+        const x = Math.cos(time + i) * 20;
+        particle.style.transform = `translate(${x}px, ${y}px)`;
+      }
+      
+      requestAnimationFrame(animateParticles);
+    };
+    
+    const animation = requestAnimationFrame(animateParticles);
+    return () => cancelAnimationFrame(animation);
+  }, []);
+
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  useEffect(() => {
+    filterServices();
+  }, [services, activeCategory, searchQuery]);
+
+  const fetchServices = async () => {
+    setLoading(true);
+    try {
+      const data = await getServices();
+      setServices(data);
+    } catch (error) {
+      console.error('Failed to fetch services:', error);
+      // Premium fallback data
+      setServices([
+        {
+          id: 'rentals',
+          title: 'Luxury Rentals',
+          description: 'Experience the finest collection of exotic and luxury vehicles. Choose from our curated fleet of supercars, luxury sedans, and premium SUVs.',
+          longDescription: 'Our luxury rental service offers an unparalleled driving experience. Each vehicle in our fleet is meticulously maintained and less than 2 years old. Choose from daily, weekly, or monthly rentals with flexible pickup and drop-off options.',
+          icon: '🚗',
+          image: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          features: ['Daily/Weekly Rates', 'Chauffeur Option', 'Insurance Included', 'Free Delivery', '24/7 Support'],
+          priceRange: '$299 - $2,999/day',
+          category: SERVICE_TYPES.RENTAL,
+          popular: true,
+          gradient: 'linear-gradient(135deg, #d4af37, #f5d742)',
+          lightEffect: 'radial-gradient(circle at 30% 30%, rgba(212,175,55,0.4) 0%, transparent 70%)'
+        },
+        {
+          id: 'car_wash',
+          title: 'Car Wash & Detailing',
+          description: 'Professional detailing and ceramic coating services to keep your vehicle in pristine condition.',
+          longDescription: 'Our premium car wash and detailing services go beyond the ordinary. Using only the finest products and techniques, we ensure your vehicle receives the care it deserves. From express washes to complete ceramic coating protection.',
+          icon: '🧼',
+          image: 'https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          features: ['Express Wash', 'Premium Detail', 'Ceramic Coating', 'Interior Cleaning', 'Paint Correction'],
+          priceRange: '$29 - $399',
+          category: SERVICE_TYPES.CAR_WASH,
+          popular: true,
+          gradient: 'linear-gradient(135deg, #00ff88, #00cc66)',
+          lightEffect: 'radial-gradient(circle at 70% 40%, rgba(0,255,136,0.3) 0%, transparent 70%)'
+        },
+        {
+          id: 'repairs',
+          title: 'Repairs & Maintenance',
+          description: 'Expert mechanical services for all luxury vehicles with certified technicians.',
+          longDescription: 'Our state-of-the-art service center is equipped to handle all makes and models of luxury vehicles. From routine maintenance to complex repairs, our certified technicians use only genuine parts and the latest diagnostic equipment.',
+          icon: '🔧',
+          image: 'https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          features: ['Diagnostics', 'Performance Tuning', 'Factory Repairs', 'Genuine Parts', 'Warranty'],
+          priceRange: '$89 - $2,500',
+          category: SERVICE_TYPES.REPAIR,
+          gradient: 'linear-gradient(135deg, #33b5e5, #0099cc)',
+          lightEffect: 'radial-gradient(circle at 40% 60%, rgba(51,181,229,0.3) 0%, transparent 70%)'
+        },
+        {
+          id: 'sales',
+          title: 'Vehicle Sales',
+          description: 'Curated collection of pre-owned luxury automobiles with full history and warranty.',
+          longDescription: 'Discover your dream car from our exclusive collection of pre-owned luxury vehicles. Each vehicle undergoes a rigorous 150-point inspection and comes with a comprehensive warranty. We also offer financing options and trade-ins.',
+          icon: '💰',
+          image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          features: ['Financing Options', 'Vehicle History', 'Warranty Included', 'Trade-ins', 'Nationwide Delivery'],
+          priceRange: '$45,000 - $350,000',
+          category: SERVICE_TYPES.SALES,
+          gradient: 'linear-gradient(135deg, #ffbb33, #ff8800)',
+          lightEffect: 'radial-gradient(circle at 60% 30%, rgba(255,187,51,0.3) 0%, transparent 70%)'
+        },
+        {
+          id: 'concierge',
+          title: 'Concierge Service',
+          description: 'Personalized automotive concierge for all your vehicle needs.',
+          longDescription: 'Our white-glove concierge service handles everything from vehicle registration to maintenance scheduling. Let us take care of the details while you enjoy the luxury of hassle-free ownership.',
+          icon: '👔',
+          image: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          features: ['Registration', 'Maintenance Scheduling', 'Insurance Management', 'Vehicle Sourcing', 'Event Planning'],
+          priceRange: 'Custom Pricing',
+          category: 'concierge',
+          gradient: 'linear-gradient(135deg, #aa80ff, #884dff)',
+          lightEffect: 'radial-gradient(circle at 50% 50%, rgba(170,128,255,0.3) 0%, transparent 70%)'
+        },
+        {
+          id: 'storage',
+          title: 'Vehicle Storage',
+          description: 'Secure, climate-controlled storage for your luxury vehicles.',
+          longDescription: 'Our state-of-the-art storage facility offers the ultimate protection for your prized possessions. With 24/7 security, climate control, and regular maintenance checks, your vehicle is in safe hands.',
+          icon: '🏢',
+          image: 'https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          features: ['Climate Controlled', '24/7 Security', 'Regular Maintenance', 'Vehicle Transport', 'Insurance Included'],
+          priceRange: '$299 - $899/month',
+          category: 'storage',
+          gradient: 'linear-gradient(135deg, #ff80ab, #ff4081)',
+          lightEffect: 'radial-gradient(circle at 30% 70%, rgba(255,128,171,0.3) 0%, transparent 70%)'
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  const stats = [
-    { number: '500+', label: 'Luxury Vehicles', icon: '🚗' },
-    { number: '50k+', label: 'Happy Clients', icon: '👤' },
-    { number: '98%', label: 'Satisfaction Rate', icon: '⭐' },
-    { number: '24/7', label: 'Concierge Support', icon: '🛎️' }
-  ];
+  const filterServices = () => {
+    let filtered = [...services];
 
-  const testimonials = [
-    {
-      name: 'James Donaldson',
-      role: 'CEO, TechCorp',
-      content: 'The most seamless luxury car rental experience I\'ve ever had. From booking to drop-off, everything was perfect.',
-      rating: 5,
-      service: 'Rentals',
-      image: 'https://randomuser.me/api/portraits/men/1.jpg'
-    },
-    {
-      name: 'Sarah Reynolds',
-      role: 'Investor',
-      content: 'Exceptional service and an incredible fleet. The concierge team anticipated every need. Truly five-star treatment.',
-      rating: 5,
-      service: 'Detailing',
-      image: 'https://randomuser.me/api/portraits/women/2.jpg'
-    },
-    {
-      name: 'Michael Wong',
-      role: 'Entrepreneur',
-      content: 'I\'ve used CAR EASE for both personal and business needs. They never disappoint. The vehicles are always immaculate.',
-      rating: 5,
-      service: 'Sales',
-      image: 'https://randomuser.me/api/portraits/men/3.jpg'
+    // Filter by category
+    if (activeCategory !== 'all') {
+      filtered = filtered.filter(service => service.category === activeCategory);
     }
+
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(service => 
+        service.title.toLowerCase().includes(query) ||
+        service.description.toLowerCase().includes(query) ||
+        service.features?.some(f => f.toLowerCase().includes(query))
+      );
+    }
+
+    setFilteredServices(filtered);
+  };
+
+  const categories = [
+    { id: 'all', label: 'All Services', icon: '✨', gradient: 'linear-gradient(135deg, #d4af37, #f5d742)', description: 'Discover our complete collection' },
+    { id: SERVICE_TYPES.RENTAL, label: 'Luxury Rentals', icon: '🚗', gradient: 'linear-gradient(135deg, #d4af37, #f5d742)', description: 'Exotic & luxury vehicles' },
+    { id: SERVICE_TYPES.CAR_WASH, label: 'Car Wash', icon: '🧼', gradient: 'linear-gradient(135deg, #00ff88, #00cc66)', description: 'Professional detailing' },
+    { id: SERVICE_TYPES.REPAIR, label: 'Repairs', icon: '🔧', gradient: 'linear-gradient(135deg, #33b5e5, #0099cc)', description: 'Expert maintenance' },
+    { id: SERVICE_TYPES.SALES, label: 'Sales', icon: '💰', gradient: 'linear-gradient(135deg, #ffbb33, #ff8800)', description: 'Premium vehicle sales' },
+    { id: 'concierge', label: 'Concierge', icon: '👔', gradient: 'linear-gradient(135deg, #aa80ff, #884dff)', description: 'White-glove service' },
+    { id: 'storage', label: 'Storage', icon: '🏢', gradient: 'linear-gradient(135deg, #ff80ab, #ff4081)', description: 'Climate-controlled storage' }
   ];
 
-  const filteredServices = activeTab === 'all' 
-    ? services 
-    : services.filter(s => s.id === activeTab);
+  const handleCategoryChange = (categoryId) => {
+    setActiveCategory(categoryId);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="services-page">
-      {/* ===== HERO SECTION ===== */}
-      <section className="services-hero">
-        <div className="services-hero-bg"></div>
-        <div className="services-hero-content">
-          <h1 className="services-hero-title animate-fade-up">
-            Our <span className="gold-text">Services</span>
+      {/* Scroll Progress Bar */}
+      <div className="scroll-progress" style={{ width: `${scrollProgress}%` }}></div>
+
+      {/* ===== CINEMATIC HERO SECTION ===== */}
+      <section ref={heroRef} className="services-hero-cinematic">
+        {/* 3D Parallax Layers */}
+        <div className="parallax-layer layer-1" style={{
+          transform: `translate3d(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px, 0)`
+        }}></div>
+        <div className="parallax-layer layer-2" style={{
+          transform: `translate3d(${mousePosition.x * -0.3}px, ${mousePosition.y * -0.3}px, 0)`
+        }}></div>
+        <div className="parallax-layer layer-3" style={{
+          transform: `translate3d(${mousePosition.x * 0.2}px, ${mousePosition.y * 0.2}px, 0)`
+        }}></div>
+
+        {/* Animated Particle Field */}
+        <div ref={particlesRef} className="particle-field">
+          {[...Array(30)].map((_, i) => (
+            <div key={i} className="particle" style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              width: `${Math.random() * 6 + 2}px`,
+              height: `${Math.random() * 6 + 2}px`,
+              animationDelay: `${Math.random() * 5}s`,
+              background: i % 3 === 0 ? 'var(--gold-primary)' : 
+                         i % 3 === 1 ? 'rgba(255,255,255,0.5)' : 'rgba(212,175,55,0.3)'
+            }}></div>
+          ))}
+        </div>
+
+        {/* Light Leaks */}
+        <div className="light-leak leak-1"></div>
+        <div className="light-leak leak-2"></div>
+        <div className="light-leak leak-3"></div>
+
+        {/* Floating Orbs */}
+        <div className="floating-orb orb-1"></div>
+        <div className="floating-orb orb-2"></div>
+        <div className="floating-orb orb-3"></div>
+        <div className="floating-orb orb-4"></div>
+
+        {/* Hero Content */}
+        <div className="hero-content-container">
+          <div className="hero-badge-wrapper">
+            <span className="hero-badge">✦ PREMIUM SERVICES ✦</span>
+            <div className="badge-glow"></div>
+          </div>
+          
+          <h1 className="hero-title">
+            <span className="title-line">Crafting</span>
+            <span className="title-gradient">Automotive</span>
+            <span className="title-line">Excellence</span>
           </h1>
-          <p className="services-hero-description animate-fade-up">
-            Comprehensive automotive excellence, tailored to your every need
-          </p>
+          
+          <div className="hero-description-wrapper">
+            <p className="hero-description">
+              Where precision meets passion. Each service is meticulously crafted 
+              to exceed the expectations of the world's most discerning drivers.
+            </p>
+            <div className="description-glow"></div>
+          </div>
+
+          {/* Floating Stats Cards */}
+          <div className="floating-stats">
+            <div className="stat-card stat-1">
+              <span className="stat-number">15+</span>
+              <span className="stat-label">Years</span>
+            </div>
+            <div className="stat-card stat-2">
+              <span className="stat-number">6</span>
+              <span className="stat-label">Services</span>
+            </div>
+            <div className="stat-card stat-3">
+              <span className="stat-number">24/7</span>
+              <span className="stat-label">Support</span>
+            </div>
+          </div>
+
+          {/* CTA Buttons with 3D Effect */}
+          <div className="hero-cta">
+            <Link to={ROUTES.BOOKING} className="cta-primary">
+              <span className="cta-text">Begin Journey</span>
+              <span className="cta-arrow">→</span>
+              <span className="cta-glow"></span>
+            </Link>
+            <Link to={ROUTES.CONTACT} className="cta-secondary">
+              <span className="cta-text">Talk to Concierge</span>
+              <span className="cta-glow"></span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="scroll-indicator-premium">
+          <div className="scroll-mouse">
+            <div className="scroll-wheel"></div>
+          </div>
+          <span className="scroll-text">Discover Services</span>
         </div>
       </section>
 
-      {/* ===== SERVICE TABS ===== */}
-      <section className="service-tabs-section">
+      {/* ===== IMMERSIVE CATEGORIES SECTION ===== */}
+      <section className="categories-immersive">
         <div className="container">
-          <div className="service-tabs">
-            <button 
-              className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveTab('all')}
-            >
-              All Services
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'rentals' ? 'active' : ''}`}
-              onClick={() => setActiveTab('rentals')}
-            >
-              🚗 Rentals
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'wash' ? 'active' : ''}`}
-              onClick={() => setActiveTab('wash')}
-            >
-              🧼 Car Wash
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'repairs' ? 'active' : ''}`}
-              onClick={() => setActiveTab('repairs')}
-            >
-              🔧 Repairs
-            </button>
-            <button 
-              className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`}
-              onClick={() => setActiveTab('sales')}
-            >
-              💰 Sales
-            </button>
+          <div className="categories-header">
+            <h2 className="categories-title">
+              <span className="title-accent">✦</span>
+              Explore by Category
+              <span className="title-accent">✦</span>
+            </h2>
+            <p className="categories-subtitle">Navigate through our specialized services</p>
+          </div>
+
+          <div className="categories-carousel">
+            {categories.map((category, index) => (
+              <button
+                key={category.id}
+                className={`category-card-3d ${activeCategory === category.id ? 'active' : ''}`}
+                onClick={() => handleCategoryChange(category.id)}
+                onMouseEnter={() => setHoveredCategory(category.id)}
+                onMouseLeave={() => setHoveredCategory(null)}
+                style={{
+                  '--gradient': category.gradient,
+                  transform: hoveredCategory === category.id ? 'translateY(-10px) rotateY(5deg)' : 'none',
+                  transitionDelay: `${index * 0.05}s`
+                }}
+              >
+                <div className="card-front">
+                  <span className="category-icon-large">{category.icon}</span>
+                  <span className="category-label-large">{category.label}</span>
+                  <span className="category-description">{category.description}</span>
+                </div>
+                <div className="card-glow"></div>
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ===== SERVICES SHOWCASE ===== */}
-      <section className="services-showcase-section">
+      {/* ===== SEARCH SECTION ===== */}
+      <section className="search-section-premium">
         <div className="container">
-          {filteredServices.map((service, index) => (
-            <div key={service.id} className="service-showcase">
-              <div className="service-showcase-header">
-                <div 
-                  className="service-showcase-icon"
-                  style={{ backgroundColor: `${service.color}20`, color: service.color }}
-                >
-                  {service.icon}
-                </div>
-                <div className="service-showcase-title">
-                  <span className="service-subtitle">{service.subtitle}</span>
-                  <h2>{service.title}</h2>
-                </div>
-                <div className="service-showcase-badge">{service.badge}</div>
+          <div className="search-container-premium">
+            <form onSubmit={handleSearch} className="search-form-premium">
+              <div className="search-wrapper-premium">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search by service, feature, or description..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input-premium"
+                />
+                {searchQuery && (
+                  <button 
+                    type="button" 
+                    className="search-clear-premium"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    ×
+                  </button>
+                )}
+                <div className="search-focus-glow"></div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SERVICES GRID SECTION ===== */}
+      <section className="services-grid-section-premium">
+        <div className="container">
+          {loading ? (
+            <div className="services-loading">
+              <LoadingSpinner size="lg" color="gold" text="Curating experiences..." />
+            </div>
+          ) : filteredServices.length === 0 ? (
+            <div className="no-results-premium">
+              <div className="no-results-icon">✨</div>
+              <h3>No Services Found</h3>
+              <p>Try adjusting your filters or explore other categories</p>
+              <Button 
+                variant="primary" 
+                onClick={() => {
+                  setActiveCategory('all');
+                  setSearchQuery('');
+                }}
+              >
+                Reset Filters
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="services-grid-premium">
+                {filteredServices.map((service, index) => (
+                  <div 
+                    key={service.id} 
+                    className="service-card-container"
+                    style={{ 
+                      '--delay': `${index * 0.1}s`,
+                      '--gradient': service.gradient,
+                      '--light-effect': service.lightEffect
+                    }}
+                    onMouseEnter={() => setActiveService(service.id)}
+                    onMouseLeave={() => setActiveService(null)}
+                  >
+                    <ServiceCard
+                      id={service.id}
+                      title={service.title}
+                      description={service.longDescription || service.description}
+                      icon={service.icon}
+                      image={service.image}
+                      features={service.features}
+                      price={service.priceRange ? { amount: service.priceRange } : null}
+                      badge={service.popular ? 'Popular' : null}
+                      linkTo={`${ROUTES.SERVICES}/${service.id}`}
+                      variant="premium"
+                    />
+                    <div className="card-background-glow"></div>
+                  </div>
+                ))}
               </div>
 
-              <div className="service-showcase-content">
-                <div className="service-showcase-main">
-                  <img 
-                    src={service.image} 
-                    alt={service.title}
-                    className="service-showcase-image"
-                  />
-                  <div className="service-showcase-info">
-                    <p className="service-description">{service.description}</p>
-                    <p className="service-long-description">{service.longDescription}</p>
-                    <div className="service-actions">
-                      <button 
-                        className="btn-gold"
-                        onClick={() => navigate(service.link)}
-                      >
-                        Explore {service.title.split(' ')[0]}
-                      </button>
-                      <Link to="/contact" className="btn-outline">
-                        Inquire Now
+              {/* Results Count */}
+              <div className="results-count-premium">
+                <span className="count-number">{filteredServices.length}</span>
+                <span className="count-text">exceptional services</span>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ===== POPULAR SERVICES SHOWCASE ===== */}
+      {!loading && filteredServices.length > 0 && filteredServices.some(s => s.popular) && (
+        <section className="popular-showcase">
+          <div className="container">
+            <div className="showcase-header">
+              <span className="showcase-tag">✦ MOST REQUESTED ✦</span>
+              <h2 className="showcase-title">Client Favorites</h2>
+              <p className="showcase-description">Experience our most sought-after services</p>
+            </div>
+
+            <div className="showcase-grid">
+              {filteredServices.filter(s => s.popular).slice(0, 3).map((service, index) => (
+                <div 
+                  key={service.id} 
+                  className="showcase-card"
+                  style={{ 
+                    '--delay': `${index * 0.2}s`,
+                    '--gradient': service.gradient 
+                  }}
+                >
+                  <div className="showcase-card-inner">
+                    <div className="showcase-image">
+                      <img src={service.image} alt={service.title} />
+                      <div className="image-overlay"></div>
+                    </div>
+                    <div className="showcase-content">
+                      <h3>{service.title}</h3>
+                      <p>{service.description}</p>
+                      <div className="showcase-features">
+                        {service.features.slice(0, 3).map((feature, idx) => (
+                          <span key={idx} className="feature-tag">{feature}</span>
+                        ))}
+                      </div>
+                      <Link to={`${ROUTES.SERVICES}/${service.id}`} className="showcase-link">
+                        Discover Experience
+                        <span className="link-arrow">→</span>
                       </Link>
                     </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-                <div className="service-showcase-details">
-                  <div className="details-column">
-                    <h3>Key Features</h3>
-                    <ul className="features-list">
-                      {service.features.map((feature, i) => (
-                        <li key={i}>{feature}</li>
-                      ))}
-                    </ul>
-                  </div>
+      {/* ===== EXPERIENCE TIMELINE ===== */}
+      <section className="experience-timeline">
+        <div className="container">
+          <div className="timeline-header">
+            <h2 className="timeline-title">The CAR EASE Journey</h2>
+            <p className="timeline-subtitle">From vision to excellence</p>
+          </div>
 
-                  <div className="details-column">
-                    {service.pricing && (
-                      <>
-                        <h3>Pricing</h3>
-                        <div className="pricing-list">
-                          {service.pricing.map((item, i) => (
-                            <div key={i} className="pricing-item">
-                              <span className="pricing-period">{item.period}</span>
-                              <span className="pricing-price">{item.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {service.packages && (
-                      <>
-                        <h3>Packages</h3>
-                        <div className="packages-list">
-                          {service.packages.map((pkg, i) => (
-                            <div key={i} className="package-item">
-                              <h4>{pkg.name}</h4>
-                              <p className="package-price">{pkg.price}</p>
-                              <p className="package-duration">⏱️ {pkg.duration}</p>
-                              <ul className="package-includes">
-                                {pkg.includes.map((item, j) => (
-                                  <li key={j}>{item}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {service.services && (
-                      <>
-                        <h3>Services</h3>
-                        <div className="services-list">
-                          {service.services.map((item, i) => (
-                            <div key={i} className="service-item">
-                              <div>
-                                <h4>{item.name}</h4>
-                                <p>{item.description}</p>
-                              </div>
-                              <span className="service-price">{item.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-
-                    {service.benefits && (
-                      <>
-                        <h3>Benefits</h3>
-                        <div className="benefits-grid">
-                          {service.benefits.map((benefit, i) => (
-                            <div key={i} className="benefit-item">
-                              <span className="benefit-icon">{benefit.icon}</span>
-                              <span>{benefit.text}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-
-                  <div className="details-column">
-                    <h3>FAQ</h3>
-                    <div className="faq-list">
-                      {service.faq.map((item, i) => (
-                        <div key={i} className="faq-item">
-                          <h4>{item.q}</h4>
-                          <p>{item.a}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+          <div className="timeline-grid">
+            <div className="timeline-item">
+              <div className="timeline-year">2018</div>
+              <div className="timeline-content">
+                <h4>Foundation</h4>
+                <p>CAR EASE established with a vision to redefine luxury automotive services</p>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ===== STATS SECTION ===== */}
-      <section className="services-stats">
-        <div className="container">
-          <div className="stats-grid">
-            {stats.map((stat, index) => (
-              <div key={index} className="stat-card">
-                <span className="stat-icon">{stat.icon}</span>
-                <span className="stat-number">{stat.number}</span>
-                <span className="stat-label">{stat.label}</span>
+            <div className="timeline-item">
+              <div className="timeline-year">2020</div>
+              <div className="timeline-content">
+                <h4>Expansion</h4>
+                <p>Launched nationwide services with fleet expansion</p>
               </div>
-            ))}
+            </div>
+            <div className="timeline-item">
+              <div className="timeline-year">2022</div>
+              <div className="timeline-content">
+                <h4>Innovation</h4>
+                <p>Introduced concierge and storage services</p>
+              </div>
+            </div>
+            <div className="timeline-item">
+              <div className="timeline-year">2024</div>
+              <div className="timeline-content">
+                <h4>Excellence</h4>
+                <p>Serving over 10,000 distinguished clients</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ===== TESTIMONIALS SECTION ===== */}
-      <section className="services-testimonials">
+      {/* ===== CINEMATIC CTA ===== */}
+      <section className="cinematic-cta">
+        <div className="cta-background">
+          <div className="cta-grid"></div>
+          <div className="cta-particles"></div>
+        </div>
+        
         <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">TESTIMONIALS</span>
-            <h2 className="section-title">
-              What Our <span className="gold-text">Clients</span> Say
+          <div className="cta-content-cinematic">
+            <h2 className="cta-title-cinematic">
+              <span className="title-word">Begin</span>
+              <span className="title-word gold">Your</span>
+              <span className="title-word">Journey</span>
             </h2>
-          </div>
-          <div className="testimonials-grid">
-            {testimonials.map((testimonial, index) => (
-              <div key={index} className="testimonial-card">
-                <div className="testimonial-rating">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <span key={i} className="star">★</span>
-                  ))}
-                </div>
-                <p className="testimonial-content">"{testimonial.content}"</p>
-                <div className="testimonial-author">
-                  <img src={testimonial.image} alt={testimonial.name} />
-                  <div>
-                    <h4>{testimonial.name}</h4>
-                    <p>{testimonial.role} • {testimonial.service}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== CTA SECTION ===== */}
-      <section className="services-cta">
-        <div className="container">
-          <div className="cta-content">
-            <h2>Ready to Experience Excellence?</h2>
-            <p>Choose from our premium services and let us exceed your expectations</p>
-            <div className="cta-buttons">
-              <button 
-                className="btn-gold btn-large"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setActiveTab('all');
-                }}
-              >
-                Browse All Services
-              </button>
-              <Link to="/contact" className="btn-outline-light btn-large">
-                Contact Concierge
+            <p className="cta-description-cinematic">
+              Let our concierge team craft a personalized experience tailored to your desires
+            </p>
+            <div className="cta-actions-cinematic">
+              <Link to={ROUTES.CONTACT} className="cta-primary-cinematic">
+                <span>Contact Concierge</span>
+                <span className="cta-arrow">→</span>
+              </Link>
+              <Link to={ROUTES.BOOKING} className="cta-secondary-cinematic">
+                <span>Book Now</span>
               </Link>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Back to Top Button */}
+      <button 
+        className={`back-to-top-premium ${scrollProgress > 30 ? 'visible' : ''}`}
+        onClick={scrollToTop}
+        aria-label="Back to top"
+      >
+        <span className="arrow-up">↑</span>
+        <span className="btn-ring"></span>
+        <span className="btn-ring-2"></span>
+      </button>
     </div>
   );
 };

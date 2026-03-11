@@ -1,0 +1,45 @@
+/* ===== src/Styles/AdminLayout.css ===== */
+@import './Variables.css';
+@import './Global.css';
+/* Admin Loading */
+.admin-loading {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+}
+
+/* Admin Unauthorized */
+.admin-unauthorized {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  padding: var(--space-8);
+}
+
+.unauthorized-content {
+  text-align: center;
+  max-width: 400px;
+}
+
+.unauthorized-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: var(--space-4);
+}
+
+.unauthorized-content h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--white);
+  margin-bottom: var(--space-2);
+}
+
+.unauthorized-content p {
+  color: var(--silver-dark);
+  margin-bottom: var(--space-6);
+}
+

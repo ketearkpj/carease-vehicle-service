@@ -1,0 +1,456 @@
+/* ===== src/Styles/BookingConfirmation.css ===== */
+@import './Variables.css';
+@import './Animations.css';
+@import './Responsive.css';
+
+/* ============================================
+   BOOKING CONFIRMATION PAGE - ULTIMATE GOD MODE
+   ============================================ */
+
+.confirmation-page {
+  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+  min-height: 100vh;
+  padding: var(--space-16) 0;
+}
+
+.confirmation-loading,
+.confirmation-error {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-8);
+}
+
+.confirmation-error .error-icon {
+  font-size: 4rem;
+  margin-bottom: var(--space-4);
+}
+
+.confirmation-error h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xl);
+  color: var(--white);
+  margin-bottom: var(--space-2);
+}
+
+.confirmation-error p {
+  color: var(--silver-dark);
+  margin-bottom: var(--space-6);
+}
+
+/* ===== HEADER ===== */
+.confirmation-header {
+  text-align: center;
+  margin-bottom: var(--space-12);
+}
+
+.success-animation {
+  margin-bottom: var(--space-6);
+}
+
+.success-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  animation: scaleIn 0.5s ease, pulseGlow 2s ease-in-out infinite;
+  box-shadow: 0 0 30px var(--success);
+}
+
+.success-check {
+  color: var(--white);
+  font-size: 3rem;
+  font-weight: bold;
+  animation: fadeIn 0.5s ease 0.3s both;
+}
+
+.confirmation-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-black);
+  color: var(--white);
+  margin-bottom: var(--space-2);
+}
+
+.confirmation-title .gold-text {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.confirmation-subtitle {
+  color: var(--silver-dark);
+  font-size: var(--text-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* ===== CONTENT ===== */
+.confirmation-content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Cards */
+.details-card,
+.service-card,
+.customer-card,
+.steps-card {
+  padding: var(--space-8);
+  background: var(--glass-bg);
+  border: var(--border-fine);
+  border-radius: var(--radius-3xl);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--white);
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+/* Details Grid */
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-base);
+}
+
+.detail-item:hover {
+  transform: translateY(-2px);
+  background: rgba(212, 175, 55, 0.05);
+  border-color: var(--gold-primary);
+}
+
+.detail-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 10px var(--gold-glow));
+}
+
+.detail-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  color: var(--silver-dark);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.detail-value {
+  color: var(--white);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.detail-value.total {
+  color: var(--gold-primary);
+  font-size: var(--text-lg);
+}
+
+/* Service Details */
+.service-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.service-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.service-icon {
+  font-size: 3rem;
+  filter: drop-shadow(0 0 20px var(--gold-glow));
+}
+
+.service-info {
+  flex: 1;
+}
+
+.service-name {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  color: var(--white);
+  margin-bottom: var(--space-1);
+}
+
+.service-description {
+  color: var(--silver-dark);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.service-extras {
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-xl);
+}
+
+.extras-title {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  color: var(--gold-primary);
+  margin-bottom: var(--space-3);
+}
+
+.extras-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2);
+}
+
+.extras-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--silver);
+  font-size: var(--text-sm);
+}
+
+.extra-check {
+  color: var(--success);
+  font-weight: bold;
+}
+
+/* Customer Details */
+.customer-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.customer-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-lg);
+}
+
+.customer-icon {
+  font-size: 1.5rem;
+  min-width: 40px;
+  text-align: center;
+}
+
+.customer-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-label {
+  color: var(--silver-dark);
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.customer-value {
+  color: var(--white);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+}
+
+/* Next Steps */
+.steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.step-item {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--gold-gradient);
+  color: var(--bg-deep);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-gold);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h4 {
+  font-family: var(--font-heading);
+  font-size: var(--text-lg);
+  color: var(--white);
+  margin-bottom: 4px;
+}
+
+.step-content p {
+  color: var(--silver-dark);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Action Buttons */
+.confirmation-actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  margin-top: var(--space-4);
+}
+
+/* Support Info */
+.support-info {
+  text-align: center;
+  padding: var(--space-6);
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-2xl);
+}
+
+.support-info p {
+  color: var(--silver);
+  font-size: var(--text-base);
+  margin-bottom: var(--space-3);
+}
+
+.support-links {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-6);
+}
+
+.support-links a {
+  color: var(--silver-dark);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  transition: color var(--transition-base);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.support-links a:hover {
+  color: var(--gold-primary);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .confirmation-page {
+    padding: var(--space-8) 0;
+  }
+
+  .confirmation-title {
+    font-size: var(--text-3xl);
+  }
+
+  .confirmation-subtitle {
+    font-size: var(--text-base);
+  }
+
+  .details-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+
+  .extras-list {
+    grid-template-columns: 1fr;
+  }
+
+  .confirmation-actions {
+    flex-direction: column;
+  }
+
+  .support-links {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .support-links a {
+    justify-content: center;
+  }
+
+  .details-card,
+  .service-card,
+  .customer-card,
+  .steps-card {
+    padding: var(--space-4);
+  }
+
+  .step-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .confirmation-title {
+    font-size: var(--text-2xl);
+  }
+
+  .success-circle {
+    width: 80px;
+    height: 80px;
+  }
+
+  .success-check {
+    font-size: 2.5rem;
+  }
+
+  .service-header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .detail-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .customer-item {
+    flex-direction: column;
+    text-align: center;
+  }
+}

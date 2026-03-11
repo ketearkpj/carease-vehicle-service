@@ -1,30 +1,217 @@
+/* ===== src/Styles/Global.css ===== */
 @import './Variables.css';
 @import './Animations.css';
-@import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Inter:wght=300;400;500;600;700;800&display=swap');
 
-* {
+/* ===== PREMIUM FONT IMPORTS ===== */
+/* SF Pro Display (Apple's system font) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Montserrat - For headings */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+
+/* Playfair Display - For accent gold text */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+
+/* JetBrains Mono - For prices and technical specs */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* Fallback for SF Pro Display */
+@font-face {
+  font-family: 'SF Pro Display';
+  src: local('SF Pro Display'), local('SFProDisplay-Regular'),
+       local('-apple-system'), local('BlinkMacSystemFont'),
+       local('Segoe UI'), local('Roboto');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: local('SF Pro Display Bold'), local('SFProDisplay-Bold'),
+       local('-apple-system'), local('BlinkMacSystemFont'),
+       local('Segoe UI Bold'), local('Roboto Bold');
+  font-weight: 700;
+  font-style: normal;
+}
+
+/* ===== RESET & BASE ===== */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-size: 16px;
+  min-height: 100%;
+  background: var(--bg-deep);
+}
+
 body {
   font-family: var(--font-primary);
-  background: var(--bg-deep);
+  font-weight: var(--weight-regular);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
   color: var(--silver);
-  line-height: 1.6;
+  background: var(--bg-deep);
   overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+  letter-spacing: var(--tracking-normal);
 }
 
-.container {
-  max-width: var(--container-max);
-  margin: 0 auto;
-  padding: 0 var(--space-xl);
+#root {
+  min-height: 100vh;
+  background: var(--bg-deep);
 }
 
+.app {
+  min-height: 100vh;
+  background: var(--bg-deep);
+}
+
+/* ===== PREMIUM TYPOGRAPHY SCALE ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--white);
+  letter-spacing: var(--tracking-tight);
+}
+
+h1 {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-black);
+  letter-spacing: var(--tracking-tighter);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-extrabold);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+}
+
+h4 {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+}
+
+h5 {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+}
+
+h6 {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+p {
+  margin-bottom: var(--space-4);
+  line-height: var(--leading-relaxed);
+}
+
+/* ===== PREMIUM GOLD TEXT ===== */
 .gold-text {
   background: var(--gold-gradient);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  font-family: var(--font-heading);
+  font-weight: var(--weight-black);
+  letter-spacing: var(--tracking-tight);
+  display: inline-block;
+  position: relative;
 }
+
+/* Optional accent font for gold text */
+.gold-text-accent {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: var(--weight-bold);
+}
+
+/* ===== TEXT UTILITIES ===== */
+.text-xs { font-size: var(--text-xs); line-height: var(--leading-normal); }
+.text-sm { font-size: var(--text-sm); line-height: var(--leading-normal); }
+.text-base { font-size: var(--text-base); line-height: var(--leading-relaxed); }
+.text-md { font-size: var(--text-md); line-height: var(--leading-snug); }
+.text-lg { font-size: var(--text-lg); line-height: var(--leading-snug); }
+.text-xl { font-size: var(--text-xl); line-height: var(--leading-tight); }
+.text-2xl { font-size: var(--text-2xl); line-height: var(--leading-tight); }
+.text-3xl { font-size: var(--text-3xl); line-height: var(--leading-tight); }
+.text-4xl { font-size: var(--text-4xl); line-height: var(--leading-tighter); }
+
+.font-light { font-weight: var(--weight-light); }
+.font-regular { font-weight: var(--weight-regular); }
+.font-medium { font-weight: var(--weight-medium); }
+.font-semibold { font-weight: var(--weight-semibold); }
+.font-bold { font-weight: var(--weight-bold); }
+.font-extrabold { font-weight: var(--weight-extrabold); }
+.font-black { font-weight: var(--weight-black); }
+
+/* ===== LINKS ===== */
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  font-weight: var(--weight-medium);
+}
+
+a:hover {
+  color: var(--gold-primary);
+}
+
+/* ===== SELECTION ===== */
+::selection {
+  background: var(--gold-primary);
+  color: var(--bg-deep);
+}
+
+::-moz-selection {
+  background: var(--gold-primary);
+  color: var(--bg-deep);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gold-primary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold-light);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-primary) var(--bg-deep);
+}
+
+
+
+
+/* Add to src/Styles/Global.css */
+

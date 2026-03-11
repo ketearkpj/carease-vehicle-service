@@ -1,12 +1,27 @@
-import React, { useEffect, useState } from 'react';
+// ===== src/Pages/Contact.jsx =====
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+import { APP_CONFIG, COMPANY_INFO, LOCATIONS } from '../Utils/constants';
+
+// Components
+import Button from '../Components/Common/Button';
+import Input from '../Components/Common/Input';
+import Card from '../Components/Common/Card';
+import LoadingSpinner from '../Components/Common/LoadingSpinner';
+
+// Services
+import { sendContactFormEmail } from '../Services/EmailService';
+
+// Hooks
+import { useApp } from '../Context/AppContext';
+
+// Styles
 import '../Styles/Contact.css';
 
 const Contact = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -14,417 +29,512 @@ const Contact = () => {
     subject: '',
     message: '',
     preferredContact: 'email',
-    urgency: 'normal'
+    newsletter: false
   });
 
   const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [touched, setTouched] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
+  const [activeLocation, setActiveLocation] = useState(0);
+
+  const { addNotification } = useApp();
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear error for this field when user types
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+
+    // Clear error for this field
     if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: null }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
+  };
+
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, formData[name]);
+  };
+
+  const validateField = (name, value) => {
+    let error = '';
+
+    switch (name) {
+      case 'name':
+        if (!value || value.trim().length < 2) {
+          error = 'Name must be at least 2 characters';
+        } else if (value.trim().length > 50) {
+          error = 'Name cannot exceed 50 characters';
+        } else if (!/^[a-zA-Z\s\-']+$/.test(value)) {
+          error = 'Name can only contain letters, spaces, hyphens, and apostrophes';
+        }
+        break;
+
+      case 'email':
+        if (!value) {
+          error = 'Email is required';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          error = 'Please enter a valid email address';
+        }
+        break;
+
+      case 'phone':
+        if (value && !/^\+?[1-9]\d{1,14}$/.test(value.replace(/[\s\-\(\)]/g, ''))) {
+          error = 'Please enter a valid phone number';
+        }
+        break;
+
+      case 'subject':
+        if (!value) {
+          error = 'Subject is required';
+        } else if (value.length < 3) {
+          error = 'Subject must be at least 3 characters';
+        } else if (value.length > 100) {
+          error = 'Subject cannot exceed 100 characters';
+        }
+        break;
+
+      case 'message':
+        if (!value) {
+          error = 'Message is required';
+        } else if (value.length < 10) {
+          error = 'Message must be at least 10 characters';
+        } else if (value.length > 1000) {
+          error = 'Message cannot exceed 1000 characters';
+        }
+        break;
+    }
+
+    setErrors(prev => ({ ...prev, [name]: error }));
+    return !error;
   };
 
   const validateForm = () => {
+    const fields = ['name', 'email', 'subject', 'message'];
     const newErrors = {};
+    let isValid = true;
 
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-    } else if (formData.name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
-    }
-
-    if (formData.phone && !/^\+?[\d\s-]{10,}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number is invalid';
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
-    } else if (formData.message.trim().length < 10) {
-      newErrors.message = 'Message must be at least 10 characters';
-    }
+    fields.forEach(field => {
+      const value = formData[field];
+      if (!value || value.trim() === '') {
+        newErrors[field] = 'This field is required';
+        isValid = false;
+      } else {
+        const fieldValid = validateField(field, value);
+        if (!fieldValid) isValid = false;
+      }
+    });
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (validateForm()) {
-      setIsSubmitting(true);
-      
-      // Simulate form submission
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setSubmitSuccess(true);
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          subject: '',
-          message: '',
-          preferredContact: 'email',
-          urgency: 'normal'
-        });
-        
-        // Reset success message after 5 seconds
-        setTimeout(() => setSubmitSuccess(false), 5000);
-      }, 1500);
+
+    if (!validateForm()) {
+      // Scroll to first error
+      const firstError = Object.keys(errors)[0];
+      const element = document.querySelector(`[name="${firstError}"]`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      return;
+    }
+
+    setLoading(true);
+    setSubmitStatus(null);
+
+    try {
+      await sendContactFormEmail(formData);
+      setSubmitStatus('success');
+      addNotification('Message sent successfully! We\'ll respond within 24 hours.', 'success');
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: '',
+        preferredContact: 'email',
+        newsletter: false
+      });
+      setTouched({});
+    } catch (error) {
+      setSubmitStatus('error');
+      addNotification(error.message || 'Failed to send message. Please try again.', 'error');
+    } finally {
+      setLoading(false);
+
+      // Clear status after 5 seconds
+      setTimeout(() => setSubmitStatus(null), 5000);
     }
   };
 
-  const contactInfo = [
-    {
-      icon: '📍',
-      title: 'Visit Us',
-      details: ['123 Luxury Lane', 'Beverly Hills, CA 90210', 'United States']
-    },
+  const contactMethods = [
     {
       icon: '📞',
-      title: 'Call Us',
-      details: ['+1 (800) 555-0123', '+1 (310) 555-4567', '24/7 Concierge']
+      title: 'Phone',
+      details: COMPANY_INFO.phone,
+      action: `tel:${COMPANY_INFO.phone.replace(/\s/g, '')}`,
+      description: 'Mon-Fri 9am-8pm, Sat 10am-6pm'
     },
     {
       icon: '✉️',
-      title: 'Email Us',
-      details: ['concierge@carease.com', 'support@carease.com', 'sales@carease.com']
+      title: 'Email',
+      details: COMPANY_INFO.email,
+      action: `mailto:${COMPANY_INFO.email}`,
+      description: '24/7 support, responses within 24h'
     },
     {
-      icon: '⏰',
-      title: 'Business Hours',
-      details: ['Mon-Fri: 9am - 8pm', 'Sat: 10am - 6pm', 'Sun: By Appointment']
-    }
-  ];
-
-  const locations = [
-    {
-      id: 'beverly-hills',
-      city: 'Beverly Hills',
-      address: '123 Luxury Lane, Beverly Hills, CA 90210',
-      phone: '+1 (310) 555-0123',
-      hours: 'Mon-Sun: 9am - 8pm',
-      coordinates: { lat: 34.0736, lng: -118.4004 }
+      icon: '💬',
+      title: 'Live Chat',
+      details: 'Chat with us',
+      action: '#',
+      description: 'Available during business hours'
     },
     {
-      id: 'miami',
-      city: 'Miami',
-      address: '456 Ocean Drive, Miami Beach, FL 33139',
-      phone: '+1 (305) 555-0456',
-      hours: 'Mon-Sun: 10am - 7pm',
-      coordinates: { lat: 25.7907, lng: -80.1300 }
-    },
-    {
-      id: 'new-york',
-      city: 'New York',
-      address: '789 Park Avenue, New York, NY 10022',
-      phone: '+1 (212) 555-0789',
-      hours: 'Mon-Fri: 9am - 8pm, Sat: 10am-6pm',
-      coordinates: { lat: 40.7614, lng: -73.9776 }
+      icon: '📍',
+      title: 'Visit Us',
+      details: COMPANY_INFO.city,
+      action: '#locations',
+      description: 'Three locations nationwide'
     }
   ];
 
   const faqs = [
     {
-      question: 'How do I book a vehicle?',
-      answer: 'You can book directly through our website, call our concierge, or visit any showroom. Instant confirmation available 24/7.'
+      question: 'How quickly do you respond to inquiries?',
+      answer: 'We typically respond within 2-4 hours during business hours. For urgent matters, we recommend calling our direct line.'
     },
     {
-      question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards, PayPal, Mobile Money, and bank transfers. For rentals, a security deposit is required.'
+      question: 'Do you offer virtual consultations?',
+      answer: 'Yes, we offer video consultations for vehicle viewings and service discussions. Please mention this in your message.'
     },
     {
-      question: 'Is there a cancellation policy?',
-      answer: 'Free cancellation up to 48 hours before your booking. Late cancellations may incur a 50% fee.'
+      question: 'What is your cancellation policy?',
+      answer: 'Cancellations must be made at least 24 hours in advance for a full refund. Please refer to our terms for specific service policies.'
     },
     {
-      question: 'Do you offer airport delivery?',
-      answer: 'Yes, we offer complimentary delivery to major airports in LA, Miami, and NYC with 24-hour notice.'
-    },
-    {
-      question: 'Are your vehicles insured?',
-      answer: 'All rentals include comprehensive insurance coverage. Additional coverage options are available.'
-    },
-    {
-      question: 'What is the minimum age to rent?',
-      answer: 'The minimum age to rent is 21 years with a valid driver\'s license and credit card.'
+      question: 'Do you have weekend support?',
+      answer: 'Yes, our team is available Saturday 10am-6pm and Sunday 11am-5pm for phone and chat support.'
     }
-  ];
-
-  const subjectOptions = [
-    { value: 'general', label: 'General Inquiry' },
-    { value: 'booking', label: 'Booking Assistance' },
-    { value: 'rental', label: 'Rental Questions' },
-    { value: 'sales', label: 'Sales Inquiry' },
-    { value: 'service', label: 'Service Appointment' },
-    { value: 'finance', label: 'Financing' },
-    { value: 'feedback', label: 'Feedback' },
-    { value: 'other', label: 'Other' }
   ];
 
   return (
     <div className="contact-page">
-      {/* ===== HERO SECTION ===== */}
+      {/* Hero Section */}
       <section className="contact-hero">
-        <div className="contact-hero-bg"></div>
-        <div className="contact-hero-content">
-          <h1 className="contact-hero-title animate-fade-up">
-            Get In <span className="gold-text">Touch</span>
-          </h1>
-          <p className="contact-hero-description animate-fade-up">
-            Our luxury concierge team is here to assist you 24/7
-          </p>
+        <div className="container">
+          <div className="hero-content animate-fade-up">
+            <h1 className="hero-title">
+              Get in <span className="gold-text">Touch</span>
+            </h1>
+            <p className="hero-subtitle">
+              We're here to assist you with any questions or service needs
+            </p>
+          </div>
+        </div>
+        <div className="hero-background">
+          <div className="hero-particles"></div>
+          <div className="hero-glow"></div>
         </div>
       </section>
 
-      {/* ===== CONTACT INFO CARDS ===== */}
-      <section className="contact-info-section">
+      {/* Contact Methods */}
+      <section className="methods-section">
         <div className="container">
-          <div className="info-grid">
-            {contactInfo.map((info, index) => (
-              <div key={index} className="info-card animate-fade-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="info-icon">{info.icon}</div>
-                <h3>{info.title}</h3>
-                {info.details.map((detail, i) => (
-                  <p key={i}>{detail}</p>
-                ))}
-              </div>
+          <div className="methods-grid">
+            {contactMethods.map((method, index) => (
+              <a
+                key={index}
+                href={method.action}
+                className={`method-card animate-fade-up animate-delay-${index + 1}`}
+              >
+                <div className="method-icon-wrapper">
+                  <span className="method-icon">{method.icon}</span>
+                  <div className="method-icon-glow"></div>
+                </div>
+                <h3 className="method-title">{method.title}</h3>
+                <p className="method-details">{method.details}</p>
+                <p className="method-description">{method.description}</p>
+              </a>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== CONTACT FORM SECTION ===== */}
-      <section className="contact-form-section">
+      {/* Contact Form Section */}
+      <section className="form-section">
         <div className="container">
           <div className="form-grid">
-            <div className="form-content animate-fade-left">
-              <span className="section-subtitle">SEND A MESSAGE</span>
-              <h2 className="section-title">
-                We'd Love to <span className="gold-text">Hear From You</span>
-              </h2>
-              <p className="form-description">
-                Whether you have a question about our services, need assistance with a booking, 
-                or want to discuss your luxury automotive needs, our team is ready to help.
-              </p>
-
-              {submitSuccess && (
-                <div className="success-message">
-                  <span className="success-icon">✓</span>
-                  <div>
-                    <h4>Message Sent Successfully!</h4>
-                    <p>Thank you for contacting us. Our team will respond within 24 hours.</p>
-                  </div>
-                </div>
-              )}
+            {/* Left Column - Form */}
+            <div className="form-container animate-fade-right">
+              <div className="form-header">
+                <span className="form-badge">SEND A MESSAGE</span>
+                <h2 className="form-title">We'd Love to <span className="gold-text">Hear From You</span></h2>
+                <p className="form-description">
+                  Fill out the form below and we'll get back to you within 24 hours
+                </p>
+              </div>
 
               <form onSubmit={handleSubmit} className="contact-form">
                 <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="name" className="form-label">
-                      Your Name <span className="required">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="name"
-                      name="name"
-                      value={formData.name}
-                      onChange={handleChange}
-                      className={`form-input ${errors.name ? 'error' : ''}`}
-                      placeholder="John Doe"
-                    />
-                    {errors.name && <span className="error-message">{errors.name}</span>}
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="email" className="form-label">
-                      Email Address <span className="required">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      value={formData.email}
-                      onChange={handleChange}
-                      className={`form-input ${errors.email ? 'error' : ''}`}
-                      placeholder="john@example.com"
-                    />
-                    {errors.email && <span className="error-message">{errors.email}</span>}
-                  </div>
+                  <Input
+                    label="Your Name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.name && errors.name}
+                    required
+                    icon="👤"
+                    placeholder="John Doe"
+                  />
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group">
-                    <label htmlFor="phone" className="form-label">Phone Number</label>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleChange}
-                      className={`form-input ${errors.phone ? 'error' : ''}`}
-                      placeholder="(555) 123-4567"
-                    />
-                    {errors.phone && <span className="error-message">{errors.phone}</span>}
-                  </div>
-
-                  <div className="form-group">
-                    <label htmlFor="subject" className="form-label">Subject</label>
-                    <select
-                      id="subject"
-                      name="subject"
-                      value={formData.subject}
-                      onChange={handleChange}
-                      className="form-select"
-                    >
-                      <option value="">Select a topic</option>
-                      {subjectOptions.map(option => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Input
+                    label="Email Address"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.email && errors.email}
+                    required
+                    icon="✉️"
+                    placeholder="john@example.com"
+                  />
                 </div>
 
-                <div className="form-group">
-                  <label htmlFor="message" className="form-label">
-                    Message <span className="required">*</span>
-                  </label>
+                <div className="form-row">
+                  <Input
+                    label="Phone Number (Optional)"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.phone && errors.phone}
+                    icon="📞"
+                    placeholder="+1 (555) 123-4567"
+                    helper="Include country code for international numbers"
+                  />
+                </div>
+
+                <div className="form-row">
+                  <Input
+                    label="Subject"
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    error={touched.subject && errors.subject}
+                    required
+                    icon="📝"
+                    placeholder="What is this regarding?"
+                  />
+                </div>
+
+                <div className="form-row">
+                  <label className="textarea-label">Message</label>
                   <textarea
-                    id="message"
                     name="message"
-                    rows="6"
                     value={formData.message}
                     onChange={handleChange}
-                    className={`form-textarea ${errors.message ? 'error' : ''}`}
-                    placeholder="How can we help you?"
+                    onBlur={handleBlur}
+                    placeholder="Please provide details about your inquiry..."
+                    rows="6"
+                    className={`form-textarea ${touched.message && errors.message ? 'error' : ''}`}
                   />
-                  {errors.message && <span className="error-message">{errors.message}</span>}
-                  <div className="character-count">
-                    {formData.message.length}/500 characters
+                  {touched.message && errors.message && (
+                    <div className="error-message">{errors.message}</div>
+                  )}
+                </div>
+
+                <div className="form-row">
+                  <label className="preferred-contact-label">Preferred Contact Method</label>
+                  <div className="contact-options">
+                    <label className="contact-option">
+                      <input
+                        type="radio"
+                        name="preferredContact"
+                        value="email"
+                        checked={formData.preferredContact === 'email'}
+                        onChange={handleChange}
+                      />
+                      <span className="option-content">
+                        <span className="option-icon">✉️</span>
+                        <span className="option-text">Email</span>
+                      </span>
+                    </label>
+                    <label className="contact-option">
+                      <input
+                        type="radio"
+                        name="preferredContact"
+                        value="phone"
+                        checked={formData.preferredContact === 'phone'}
+                        onChange={handleChange}
+                      />
+                      <span className="option-content">
+                        <span className="option-icon">📞</span>
+                        <span className="option-text">Phone</span>
+                      </span>
+                    </label>
                   </div>
                 </div>
 
                 <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Preferred Contact Method</label>
-                    <div className="radio-group">
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name="preferredContact"
-                          value="email"
-                          checked={formData.preferredContact === 'email'}
-                          onChange={handleChange}
-                        />
-                        <span>Email</span>
-                      </label>
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name="preferredContact"
-                          value="phone"
-                          checked={formData.preferredContact === 'phone'}
-                          onChange={handleChange}
-                        />
-                        <span>Phone</span>
-                      </label>
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name="preferredContact"
-                          value="either"
-                          checked={formData.preferredContact === 'either'}
-                          onChange={handleChange}
-                        />
-                        <span>Either</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Urgency</label>
-                    <div className="urgency-options">
-                      <button
-                        type="button"
-                        className={`urgency-btn ${formData.urgency === 'low' ? 'active' : ''}`}
-                        onClick={() => setFormData(prev => ({ ...prev, urgency: 'low' }))}
-                      >
-                        Low
-                      </button>
-                      <button
-                        type="button"
-                        className={`urgency-btn ${formData.urgency === 'normal' ? 'active' : ''}`}
-                        onClick={() => setFormData(prev => ({ ...prev, urgency: 'normal' }))}
-                      >
-                        Normal
-                      </button>
-                      <button
-                        type="button"
-                        className={`urgency-btn ${formData.urgency === 'urgent' ? 'active' : ''}`}
-                        onClick={() => setFormData(prev => ({ ...prev, urgency: 'urgent' }))}
-                      >
-                        Urgent
-                      </button>
-                    </div>
-                  </div>
+                  <label className="newsletter-checkbox">
+                    <input
+                      type="checkbox"
+                      name="newsletter"
+                      checked={formData.newsletter}
+                      onChange={handleChange}
+                    />
+                    <span className="checkbox-text">
+                      Subscribe to receive exclusive offers and updates
+                    </span>
+                  </label>
                 </div>
 
-                <button 
-                  type="submit" 
-                  className={`btn-gold btn-large ${isSubmitting ? 'submitting' : ''}`}
-                  disabled={isSubmitting}
+                {submitStatus === 'success' && (
+                  <div className="form-success-message">
+                    <span className="success-icon">✓</span>
+                    <span>Thank you! Your message has been sent successfully.</span>
+                  </div>
+                )}
+
+                {submitStatus === 'error' && (
+                  <div className="form-error-message">
+                    <span className="error-icon">⚠️</span>
+                    <span>Failed to send message. Please try again.</span>
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  loading={loading}
+                  disabled={loading}
                 >
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
-                </button>
+                  {loading ? 'Sending...' : 'Send Message'}
+                </Button>
               </form>
             </div>
 
-            <div className="form-sidebar animate-fade-right">
-              <div className="sidebar-card">
-                <h3>Concierge Service</h3>
-                <p>For immediate assistance, our VIP concierge team is available 24/7.</p>
-                <a href="tel:+18005550123" className="concierge-phone">📞 +1 (800) 555-0123</a>
-                <a href="mailto:concierge@carease.com" className="concierge-email">✉️ concierge@carease.com</a>
+            {/* Right Column - Additional Info */}
+            <div className="info-container animate-fade-left">
+              {/* Locations */}
+              <div className="locations-preview">
+                <h3 className="info-title">Our Locations</h3>
+                <div className="location-tabs">
+                  {LOCATIONS.map((loc, index) => (
+                    <button
+                      key={index}
+                      className={`location-tab ${activeLocation === index ? 'active' : ''}`}
+                      onClick={() => setActiveLocation(index)}
+                    >
+                      {loc.name.split(' ')[0]}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="active-location">
+                  <div className="location-image">
+                    <img src={LOCATIONS[activeLocation].image} alt={LOCATIONS[activeLocation].name} />
+                  </div>
+                  <h4 className="location-name">{LOCATIONS[activeLocation].name}</h4>
+                  <p className="location-address">{LOCATIONS[activeLocation].address}</p>
+                  <div className="location-contact">
+                    <a href={`tel:${LOCATIONS[activeLocation].phone}`}>
+                      <span className="contact-icon">📞</span>
+                      {LOCATIONS[activeLocation].phone}
+                    </a>
+                    <a href={`mailto:${LOCATIONS[activeLocation].email}`}>
+                      <span className="contact-icon">✉️</span>
+                      {LOCATIONS[activeLocation].email}
+                    </a>
+                  </div>
+                  <p className="location-hours">
+                    <span className="hours-icon">🕒</span>
+                    {LOCATIONS[activeLocation].hours}
+                  </p>
+                </div>
               </div>
 
-              <div className="sidebar-card">
-                <h3>Quick Links</h3>
-                <ul className="quick-links">
-                  <li><Link to="/services">Services</Link></li>
-                  <li><Link to="/rentals">Rentals</Link></li>
-                  <li><Link to="/car-wash">Car Wash</Link></li>
-                  <li><Link to="/repairs">Repairs</Link></li>
-                  <li><Link to="/sales">Sales</Link></li>
-                </ul>
+              {/* FAQ Preview */}
+              <div className="faq-preview">
+                <h3 className="info-title">Quick Answers</h3>
+                <div className="faq-list">
+                  {faqs.map((faq, index) => (
+                    <details key={index} className="faq-item">
+                      <summary className="faq-question">
+                        <span className="question-text">{faq.question}</span>
+                        <span className="question-icon">▼</span>
+                      </summary>
+                      <p className="faq-answer">{faq.answer}</p>
+                    </details>
+                  ))}
+                </div>
+                <div className="faq-more">
+                  <Link to={ROUTES.FAQ}>
+                    <Button variant="ghost" size="sm">
+                      View All FAQs →
+                    </Button>
+                  </Link>
+                </div>
               </div>
 
-              <div className="sidebar-card">
-                <h3>Follow Us</h3>
-                <div className="social-links-vertical">
-                  <a href="https://facebook.com/carease" target="_blank" rel="noopener noreferrer" className="social-link-vertical">
-                    📘 Facebook
+              {/* Business Hours */}
+              <div className="hours-card">
+                <h3 className="info-title">Business Hours</h3>
+                <div className="hours-list">
+                  <div className="hours-item">
+                    <span className="day">Monday - Friday</span>
+                    <span className="time">9:00 AM - 8:00 PM</span>
+                  </div>
+                  <div className="hours-item">
+                    <span className="day">Saturday</span>
+                    <span className="time">10:00 AM - 6:00 PM</span>
+                  </div>
+                  <div className="hours-item">
+                    <span className="day">Sunday</span>
+                    <span className="time">11:00 AM - 5:00 PM</span>
+                  </div>
+                  <div className="hours-item holiday">
+                    <span className="day">Holidays</span>
+                    <span className="time">Limited hours, call ahead</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="social-card">
+                <h3 className="info-title">Connect With Us</h3>
+                <div className="social-links">
+                  <a href={APP_CONFIG.socialMedia.facebook} className="social-link" target="_blank" rel="noopener noreferrer">
+                    <span className="social-icon">f</span>
+                    <span className="social-name">Facebook</span>
                   </a>
-                  <a href="https://instagram.com/carease" target="_blank" rel="noopener noreferrer" className="social-link-vertical">
-                    📷 Instagram
+                  <a href={APP_CONFIG.socialMedia.instagram} className="social-link" target="_blank" rel="noopener noreferrer">
+                    <span className="social-icon">📷</span>
+                    <span className="social-name">Instagram</span>
                   </a>
-                  <a href="https://twitter.com/carease" target="_blank" rel="noopener noreferrer" className="social-link-vertical">
-                    🐦 Twitter
+                  <a href={APP_CONFIG.socialMedia.twitter} className="social-link" target="_blank" rel="noopener noreferrer">
+                    <span className="social-icon">𝕏</span>
+                    <span className="social-name">Twitter</span>
                   </a>
-                  <a href="https://linkedin.com/company/carease" target="_blank" rel="noopener noreferrer" className="social-link-vertical">
-                    💼 LinkedIn
+                  <a href={APP_CONFIG.socialMedia.linkedin} className="social-link" target="_blank" rel="noopener noreferrer">
+                    <span className="social-icon">in</span>
+                    <span className="social-name">LinkedIn</span>
                   </a>
                 </div>
               </div>
@@ -433,82 +543,20 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* ===== LOCATIONS SECTION ===== */}
-      <section className="locations-section">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">OUR LOCATIONS</span>
-            <h2 className="section-title">
-              Visit Our <span className="gold-text">Showrooms</span>
-            </h2>
-          </div>
-
-          <div className="locations-grid">
-            {locations.map((location, index) => (
-              <div 
-                key={index} 
-                className="location-card animate-fade-up"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <h3>{location.city}</h3>
-                <p className="location-address">{location.address}</p>
-                <p className="location-phone">{location.phone}</p>
-                <p className="location-hours">{location.hours}</p>
-                <div className="location-actions">
-                  <a 
-                    href={`https://www.google.com/maps/search/?api=1&query=${location.coordinates.lat},${location.coordinates.lng}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-outline-small"
-                  >
-                    Get Directions
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FAQ SECTION ===== */}
-      <section className="faq-section">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">FAQ</span>
-            <h2 className="section-title">
-              Frequently Asked <span className="gold-text">Questions</span>
-            </h2>
-          </div>
-
-          <div className="faq-grid">
-            {faqs.map((faq, index) => (
-              <div key={index} className="faq-item animate-fade-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                <h3>{faq.question}</h3>
-                <p>{faq.answer}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== MAP SECTION ===== */}
+      {/* Map Section */}
       <section className="map-section">
         <div className="container">
           <div className="map-container">
-            <div className="map-placeholder">
-              <div className="map-overlay">
-                <h3>Interactive Map</h3>
-                <p>Find our showrooms and get directions</p>
-                <a 
-                  href="https://www.google.com/maps/search/CAR+EASE"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-gold"
-                >
-                  Open in Google Maps
-                </a>
-              </div>
-            </div>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d423283.4355635425!2d-118.69191985!3d34.0207305!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x80c2c75ddc27da13%3A0xe22fdf6f254608f4!2sBeverly%20Hills%2C%20CA!5e0!3m2!1sen!2sus!4v1645567890123!5m2!1sen!2sus"
+              width="100%"
+              height="450"
+              style={{ border: 0 }}
+              allowFullScreen=""
+              loading="lazy"
+              title="CAR EASE Locations"
+              className="map-iframe"
+            ></iframe>
           </div>
         </div>
       </section>

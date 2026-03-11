@@ -1,0 +1,305 @@
+ESLint Report
+=============
+Total: 145 errors, 34 warnings
+
+src/App.jsx
+  [ERROR] 63:9 no-undef - 'process' is not defined.
+
+src/Components/Admin/AdminSidebar.jsx
+  [ERROR] 31:29 react-hooks/immutability - Error: Cannot access variable before it is declared `navigation` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. 29 | // Find active menu item based on current path 30 | const findActiveItem = () => { > 31 | for (const section of navigation) { | ^^^^^^^^^^ `navigation` accessed before it is declared 32 | const item = section.items.find(item => 33 | location.pathname === item.path || 34 | (item.path !== ROUTES.ADMIN_DASHBOARD && location.pathname.startsWith(item.path)) 42 | }, [location]); 43 | > 44 | const navigation = [ | ^^^^^^^^^^^^^^^^^^^^ > 45 | { | ^^^^^ > 46 | id: 'dashboard', … | ^^^^^ > 154 | } | ^^^^^ > 155 | ]; | ^^^^^ `navigation` is declared here 156 | 157 | const handleItemClick = (itemId) => { 158 | setActiveItem(itemId);
+  [WARN] 42:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'navigation'. Either include it or remove the dependency array.
+
+src/Components/Admin/AdminTable.jsx
+  [ERROR] 2:27 no-unused-vars - 'useMemo' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+src/Components/Admin/AnalyticsChart.jsx
+  [ERROR] 21:3 no-unused-vars - 'options' is assigned a value but never used.
+  [ERROR] 481:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+
+src/Components/Common/Input.jsx
+  [ERROR] 67:10 no-unused-vars - 'touched' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 73:7 react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes. Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect). 71 | useEffect(() => { 72 | if (value) { > 73 | setCharCount(value.length); | ^^^^^^^^^^^^ Avoid calling setState() directly within an effect 74 | } 75 | }, [value]); 76 |
+
+src/Components/Common/LoadingSpinner.jsx
+  [ERROR] 31:6 no-unused-vars - 'props' is defined but never used.
+  [ERROR] 52:9 no-unused-vars - 'spinnerClasses' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+src/Components/Common/Modal.jsx
+  [ERROR] 49:3 no-unused-vars - 'closeButtonText' is assigned a value but never used.
+  [ERROR] 96:9 react-hooks/immutability - Error: Cannot access variable before it is declared `handleClose` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. 94 | const handleKeyDown = (e) => { 95 | if (closeOnEsc && e.key === 'Escape' && !preventClose) { > 96 | handleClose(); | ^^^^^^^^^^^ `handleClose` accessed before it is declared 97 | } 98 | 99 | // Trap focus inside modal 130 | 131 | // Handle close with animation > 132 | const handleClose = () => { | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 133 | if (preventClose) return; | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 134 | | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 135 | setIsExiting(true); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 136 | setTimeout(() => { | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 137 | onClose(); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 138 | setIsExiting(false); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 139 | if (afterClose) afterClose(); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 140 | }, 300); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 141 | }; | ^^^^^ `handleClose` is declared here 142 | 143 | // Handle confirm 144 | const handleConfirm = () => {
+  [WARN] 122:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array.
+
+src/Components/Common/Select.jsx
+  [ERROR] 57:6 no-unused-vars - 'props' is defined but never used.
+  [ERROR] 62:10 no-unused-vars - 'touched' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 95:11 no-case-declarations - Unexpected lexical declaration in case block.
+
+src/Components/Features/BookingForm.jsx
+  [WARN] 48:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchLocations'. Either include it or remove the dependency array.
+  [WARN] 54:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchAvailableSlots'. Either include it or remove the dependency array.
+  [WARN] 62:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'getRequiredFields'. Either include it or remove the dependency array.
+
+src/Components/Features/DeliveryForm.jsx
+  [ERROR] 7:10 no-unused-vars - 'validateAddress' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 72:6 react-hooks/exhaustive-deps - React Hook useEffect has missing dependencies: 'calculateEstimate' and 'isAddressComplete'. Either include them or remove the dependency array.
+  [ERROR] 129:9 no-case-declarations - Unexpected lexical declaration in case block.
+
+src/Components/Features/EmailStatusAlert.jsx
+  [ERROR] 47:11 react-hooks/immutability - Error: Cannot access variable before it is declared `handleClose` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. 45 | if (prev <= 0) { 46 | clearInterval(timer); > 47 | handleClose(); | ^^^^^^^^^^^ `handleClose` accessed before it is declared 48 | return 0; 49 | } 50 | return prev - decrement; 55 | }, [autoClose, isVisible]); 56 | > 57 | const handleClose = () => { | ^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 58 | setIsExiting(true); | ^^^^^^^^^^^^^^^^^^^^^^^ > 59 | setTimeout(() => { | ^^^^^^^^^^^^^^^^^^^^^^^ > 60 | setIsVisible(false); | ^^^^^^^^^^^^^^^^^^^^^^^ > 61 | if (onClose) onClose(); | ^^^^^^^^^^^^^^^^^^^^^^^ > 62 | }, 300); | ^^^^^^^^^^^^^^^^^^^^^^^ > 63 | }; | ^^^^^ `handleClose` is declared here 64 | 65 | const getStatusIcon = () => { 66 | switch (status) {
+  [WARN] 55:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'handleClose'. Either include it or remove the dependency array.
+
+src/Components/Features/HeroSection.jsx
+  [ERROR] 25:5 react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes. Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect). 23 | 24 | useEffect(() => { > 25 | setIsVisible(true); | ^^^^^^^^^^^^ Avoid calling setState() directly within an effect 26 | }, []); 27 | 28 | useEffect(() => {
+
+src/Components/Features/LocationPicker.jsx
+  [ERROR] 58:16 no-unused-vars - 'error' is defined but never used.
+
+src/Components/Features/PaymentOptions.jsx
+  [ERROR] 41:14 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 110:14 no-unused-vars - 'error' is defined but never used.
+
+src/Components/Features/ServiceCard.jsx
+  [ERROR] 26:3 no-unused-vars - 'id' is defined but never used.
+
+src/Components/Features/StatsSection.jsx
+  [ERROR] 73:29 react-hooks/immutability - Error: Cannot access variable before it is declared `easeOutCubic` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. 71 | 72 | const progress = Math.min((timestamp - startTimeRef.current) / duration, 1); > 73 | const easedProgress = easeOutCubic(progress); | ^^^^^^^^^^^^ `easeOutCubic` accessed before it is declared 74 | 75 | const newValues = {}; 76 | stats.forEach(stat => { 101 | }, [isVisible, stats, animate, duration]); 102 | > 103 | const easeOutCubic = (t) => { | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 104 | return 1 - Math.pow(1 - t, 3); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 105 | }; | ^^^^^ `easeOutCubic` is declared here 106 | 107 | const getGridColumns = () => { 108 | switch (columns) {
+
+src/Components/Layout/AuthLayout.jsx
+  [ERROR] 35:5 react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes. Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect). 33 | // Close mobile menu on route change 34 | useEffect(() => { > 35 | setMobileMenuOpen(false); | ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect 36 | }, [location]); 37 | 38 | const navigation = [
+
+src/Components/Layout/DashboardLayout.jsx
+  [ERROR] 39:25 no-unused-vars - 'setNotifications' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 49:5 react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes. Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect). 47 | 48 | useEffect(() => { > 49 | setMobileMenuOpen(false); | ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect 50 | }, [location]); 51 | 52 | const handleLogout = () => {
+
+src/Components/Layout/Footer.jsx
+  [ERROR] 91:14 no-unused-vars - 'error' is defined but never used.
+
+src/Components/Layout/NavBar.jsx
+  [ERROR] 51:5 react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes. Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect). 49 | // Close menus on route change 50 | useEffect(() => { > 51 | setIsMobileMenuOpen(false); | ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect 52 | setIsServicesDropdownOpen(false); 53 | setIsSearchOpen(false); 54 | }, [location]);
+  [ERROR] 74:5 react-hooks/set-state-in-effect - Error: Calling setState synchronously within an effect can trigger cascading renders Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following: * Update external systems with the latest state from React. * Subscribe for updates from some external system, calling setState in a callback function when external state changes. Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect). 72 | useEffect(() => { 73 | const cart = JSON.parse(localStorage.getItem(STORAGE_KEYS.CART) || '[]'); > 74 | setCartCount(cart.length); | ^^^^^^^^^^^^ Avoid calling setState() directly within an effect 75 | }, []); 76 | 77 | // Handle escape key
+
+src/Config/API.js
+  [ERROR] 8:29 no-undef - 'process' is not defined.
+
+src/Context/AdminAuthContext.jsx
+  [WARN] 30:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'checkExistingSession'. Either include it or remove the dependency array.
+  [WARN] 47:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'handleSessionExpiry'. Either include it or remove the dependency array.
+  [WARN] 80:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'handleInactivityLogout'. Either include it or remove the dependency array.
+  [ERROR] 298:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+
+src/Context/AppContext.jsx
+  [ERROR] 8:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+  [ERROR] 16:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+  [ERROR] 70:7 react-hooks/immutability - Error: Cannot access variable before it is declared `addNotification` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. 68 | const handleOffline = () => { 69 | setOnlineStatus(false); > 70 | addNotification('You are offline. Some features may be unavailable.', NOTIFICATION_TYPES.WARNING); | ^^^^^^^^^^^^^^^ `addNotification` accessed before it is declared 71 | }; 72 | 73 | window.addEventListener('online', handleOnline); 94 | * @returns {string} - Notification ID 95 | */ > 96 | const addNotification = useCallback((message, type = NOTIFICATION_TYPES.INFO, duration = 5000) => { | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 97 | const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`; | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 98 | … | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 117 | return id; | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 118 | }, []); | ^^^^^^^^^^ `addNotification` is declared here 119 | 120 | /** 121 | * Remove a notification
+  [WARN] 80:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'addNotification'. Either include it or remove the dependency array.
+  [ERROR] 113:9 react-hooks/immutability - Error: Cannot access variable before it is declared `removeNotification` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time. 111 | if (duration > 0) { 112 | setTimeout(() => { > 113 | removeNotification(id); | ^^^^^^^^^^^^^^^^^^ `removeNotification` accessed before it is declared 114 | }, duration); 115 | } 116 | 122 | * @param {string} id - Notification ID 123 | */ > 124 | const removeNotification = useCallback((id) => { | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 125 | setNotifications(prev => prev.filter(notif => notif.id !== id)); | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ > 126 | }, []); | ^^^^^^^^^^ `removeNotification` is declared here 127 | 128 | /** 129 | * Clear all notifications
+  [WARN] 118:6 react-hooks/exhaustive-deps - React Hook useCallback has a missing dependency: 'removeNotification'. Either include it or remove the dependency array.
+  [ERROR] 321:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+  [ERROR] 332:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+  [ERROR] 337:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+  [ERROR] 342:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+
+src/Context/BookingContext.jsx
+  [ERROR] 304:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+
+src/Context/PaymentContext.jsx
+  [ERROR] 298:14 react-refresh/only-export-components - Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components.
+
+src/Hooks/useAdminAuth.js
+  [WARN] 28:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'checkExistingSession'. Either include it or remove the dependency array.
+  [WARN] 45:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'handleSessionExpiry'. Either include it or remove the dependency array.
+
+src/Hooks/useAuth.js
+  [WARN] 34:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'checkAuth'. Either include it or remove the dependency array.
+
+src/Hooks/useLocation.js
+  [ERROR] 15:5 no-unused-vars - 'watchPosition' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 41:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'checkPermission'. Either include it or remove the dependency array.
+  [WARN] 50:6 react-hooks/exhaustive-deps - React Hook useEffect has missing dependencies: 'startTracking' and 'stopTracking'. Either include them or remove the dependency array.
+
+src/Hooks/usePayment.js
+  [ERROR] 13:21 no-unused-vars - 'initialConfig' is assigned a value but never used.
+
+src/Pages/AdminDashboard.jsx
+  [WARN] 43:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchDashboardData'. Either include it or remove the dependency array.
+
+src/Pages/AdminLogin.jsx
+  [ERROR] 14:10 no-unused-vars - 'adminLogin' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+src/Pages/Booking.jsx
+  [ERROR] 19:10 no-unused-vars - 'createBooking' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 56:10 no-unused-vars - 'errors' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 60:11 no-unused-vars - 'processNewPayment' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 66:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'checkServiceAvailability'. Either include it or remove the dependency array.
+  [WARN] 72:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'calculatePricing'. Either include it or remove the dependency array.
+  [ERROR] 148:14 no-unused-vars - 'error' is defined but never used.
+
+src/Pages/BookingConfirmation.jsx
+  [WARN] 48:6 react-hooks/exhaustive-deps - React Hook useEffect has missing dependencies: 'fetchBooking' and 'navigate'. Either include them or remove the dependency array.
+
+src/Pages/CarWash.jsx
+  [WARN] 69:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'calculatePrice'. Either include it or remove the dependency array.
+
+src/Pages/Checkout.jsx
+  [ERROR] 18:10 no-unused-vars - 'processPayment' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 46:10 no-unused-vars - 'selectedMethod' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 46:26 no-unused-vars - 'setSelectedMethod' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 58:11 no-unused-vars - 'processNewPayment' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 67:6 react-hooks/exhaustive-deps - React Hook useEffect has missing dependencies: 'fetchBooking' and 'navigate'. Either include them or remove the dependency array.
+  [ERROR] 111:39 no-unused-vars - 'paymentResult' is defined but never used.
+  [ERROR] 119:14 no-unused-vars - 'error' is defined but never used.
+
+src/Pages/Contact.jsx
+  [ERROR] 92:69 no-useless-escape - Unnecessary escape character: \(.
+  [ERROR] 92:71 no-useless-escape - Unnecessary escape character: \).
+
+src/Pages/Home.jsx
+  [WARN] 64:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'testimonials.length'. Either include it or remove the dependency array.
+
+src/Pages/ManageBookings.jsx
+  [ERROR] 19:47 no-unused-vars - 'getBookingDetails' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 63:11 no-unused-vars - 'admin' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 68:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchBookings'. Either include it or remove the dependency array.
+  [ERROR] 111:14 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 186:45 no-unused-vars - 'key' is defined but never used.
+  [ERROR] 422:63 no-unused-vars - 'key' is defined but never used.
+
+src/Pages/ManagePayments.jsx
+  [ERROR] 26:10 no-unused-vars - 'formatDate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 69:11 no-unused-vars - 'admin' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 74:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchPayments'. Either include it or remove the dependency array.
+  [ERROR] 117:14 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 145:14 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 208:45 no-unused-vars - 'key' is defined but never used.
+  [ERROR] 216:46 no-unused-vars - 'key' is defined but never used.
+
+src/Pages/ManageVehicles.jsx
+  [ERROR] 79:11 no-unused-vars - 'admin' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 84:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchVehicles'. Either include it or remove the dependency array.
+  [ERROR] 180:14 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 191:14 no-unused-vars - 'error' is defined but never used.
+
+src/Pages/Rentals.jsx
+  [WARN] 61:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchVehicles'. Either include it or remove the dependency array.
+  [WARN] 65:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'filterVehicles'. Either include it or remove the dependency array.
+  [ERROR] 386:14 no-unused-vars - 'error' is defined but never used.
+
+src/Pages/Repairs.jsx
+  [ERROR] 53:25 no-unused-vars - 'setDiagnosticFee' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 72:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'calculateEstimate'. Either include it or remove the dependency array.
+  [ERROR] 454:36 no-unused-vars - 'e' is defined but never used.
+
+src/Pages/Reports.jsx
+  [ERROR] 24:26 no-unused-vars - 'formatDate' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 24:38 no-unused-vars - 'formatCompactNumber' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 46:10 no-unused-vars - 'analytics' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 48:11 no-unused-vars - 'admin' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 53:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchReports'. Either include it or remove the dependency array.
+  [ERROR] 125:14 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 151:24 no-unused-vars - 'e' is defined but never used.
+
+src/Pages/Sales.jsx
+  [ERROR] 19:28 no-unused-vars - 'getVehicleById' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 67:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'fetchVehicles'. Either include it or remove the dependency array.
+  [WARN] 71:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'filterVehicles'. Either include it or remove the dependency array.
+  [ERROR] 450:14 no-unused-vars - 'error' is defined but never used.
+
+src/Pages/Services.jsx
+  [ERROR] 38:11 no-unused-vars - 'addNotification' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [WARN] 46:6 react-hooks/exhaustive-deps - React Hook useEffect has a missing dependency: 'filterServices'. Either include it or remove the dependency array.
+
+src/Services/AdminService.js
+  [ERROR] 11:22 no-undef - 'process' is not defined.
+  [ERROR] 66:12 no-unused-vars - 'error' is defined but never used.
+
+src/Services/AuthService.js
+  [ERROR] 12:22 no-undef - 'process' is not defined.
+
+src/Services/BookingService.js
+  [ERROR] 11:22 no-undef - 'process' is not defined.
+
+src/Services/DeliveryService.js
+  [ERROR] 12:22 no-undef - 'process' is not defined.
+  [ERROR] 257:12 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 360:12 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 536:12 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 554:12 no-unused-vars - 'error' is defined but never used.
+
+src/Services/EmailService.js
+  [ERROR] 15:14 no-undef - 'process' is not defined.
+  [ERROR] 16:15 no-undef - 'process' is not defined.
+  [ERROR] 17:14 no-undef - 'process' is not defined.
+  [ERROR] 20:19 no-undef - 'process' is not defined.
+  [ERROR] 25:11 no-undef - 'process' is not defined.
+  [ERROR] 26:11 no-undef - 'process' is not defined.
+  [ERROR] 29:13 no-undef - 'process' is not defined.
+  [ERROR] 30:13 no-undef - 'process' is not defined.
+
+src/Services/LocationService.js
+  [ERROR] 11:29 no-undef - 'process' is not defined.
+  [ERROR] 12:22 no-undef - 'process' is not defined.
+  [ERROR] 48:23 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 137:14 no-unused-vars - 'fallbackError' is defined but never used.
+  [ERROR] 176:14 no-unused-vars - 'fallbackError' is defined but never used.
+  [ERROR] 263:14 no-unused-vars - 'fallbackError' is defined but never used.
+  [ERROR] 295:34 no-unused-vars - 'reject' is defined but never used.
+  [ERROR] 366:14 no-unused-vars - 'fallbackError' is defined but never used.
+  [ERROR] 440:12 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 458:12 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 487:12 no-unused-vars - 'error' is defined but never used.
+  [ERROR] 527:34 no-unused-vars - 'reject' is defined but never used.
+  [ERROR] 566:14 no-unused-vars - 'fallbackError' is defined but never used.
+
+src/Services/PaymentService.js
+  [ERROR] 16:21 no-undef - 'process' is not defined.
+  [ERROR] 17:16 no-undef - 'process' is not defined.
+  [ERROR] 18:20 no-undef - 'process' is not defined.
+  [ERROR] 23:15 no-undef - 'process' is not defined.
+  [ERROR] 24:13 no-undef - 'process' is not defined.
+  [ERROR] 25:18 no-undef - 'process' is not defined.
+  [ERROR] 30:18 no-undef - 'process' is not defined.
+  [ERROR] 31:21 no-undef - 'process' is not defined.
+  [ERROR] 32:14 no-undef - 'process' is not defined.
+  [ERROR] 33:16 no-undef - 'process' is not defined.
+  [ERROR] 34:18 no-undef - 'process' is not defined.
+  [ERROR] 39:20 no-undef - 'process' is not defined.
+  [ERROR] 40:17 no-undef - 'process' is not defined.
+  [ERROR] 41:18 no-undef - 'process' is not defined.
+  [ERROR] 46:16 no-undef - 'process' is not defined.
+  [ERROR] 47:16 no-undef - 'process' is not defined.
+  [ERROR] 48:20 no-undef - 'process' is not defined.
+  [ERROR] 287:13 no-unused-vars - 'merchantRequestId' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 287:51 no-unused-vars - 'responseDescription' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 329:15 no-unused-vars - 'statusCode' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+src/Services/Service.Service.js
+  [ERROR] 11:22 no-undef - 'process' is not defined.
+
+src/Services/VehicleService.js
+  [ERROR] 11:22 no-undef - 'process' is not defined.
+
+src/Utils/calculatePrice.js
+  [ERROR] 81:5 no-unused-vars - 'location' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 218:5 no-unused-vars - 'location' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+  [ERROR] 313:5 no-unused-vars - 'location' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+src/Utils/generalInvoice.js
+  [ERROR] 8:38 no-unused-vars - 'formatDateTime' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+src/Utils/helpers.js
+  [ERROR] 139:13 no-prototype-builtins - Do not access Object.prototype method 'hasOwnProperty' from target object.
+
+src/Utils/validations.js
+  [ERROR] 25:46 no-useless-escape - Unnecessary escape character: \(.
+  [ERROR] 25:48 no-useless-escape - Unnecessary escape character: \).
+  [ERROR] 30:39 no-useless-escape - Unnecessary escape character: \(.
+  [ERROR] 30:41 no-useless-escape - Unnecessary escape character: \).
+  [ERROR] 105:36 no-unused-vars - 'field' is assigned a value but never used.
+
+src/Validations/PaymentValidation.js
+  [ERROR] 12:3 no-unused-vars - 'validatePhone' is defined but never used. Allowed unused vars must match /^[A-Z_]/u.
+
+Build Errors
+===========
+1) src/Pages/Booking.jsx:12:50 - Could not resolve ../Services/booking.service
+2) src/Components/Features/BookingForm.jsx:6:60 - Could not resolve ../../Utils/validation

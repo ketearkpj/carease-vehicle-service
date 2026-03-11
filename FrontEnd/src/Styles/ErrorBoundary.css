@@ -1,0 +1,49 @@
+@import './Variables.css';
+
+.error-boundary {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-deep);
+  padding: var(--space-6);
+}
+
+.error-boundary-card {
+  width: min(900px, 100%);
+  background: var(--bg-dark);
+  border: var(--border-gold-light);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  color: var(--silver);
+}
+
+.error-boundary-card h1 {
+  margin-bottom: var(--space-2);
+}
+
+.error-boundary-message,
+.error-boundary-details pre {
+  margin-top: var(--space-3);
+  background: #111;
+  color: #ffb4b4;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.error-boundary-details {
+  margin-top: var(--space-3);
+}
+
+.error-boundary-card button {
+  margin-top: var(--space-4);
+  border: var(--border-gold-light);
+  background: var(--gold-gradient);
+  color: var(--bg-deep);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  font-weight: var(--weight-semibold);
+}

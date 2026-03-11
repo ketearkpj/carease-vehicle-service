@@ -1,53 +1,65 @@
-// src/pages/Shared/NotFound.jsx
+// ===== src/Pages/NotFound.jsx =====
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Layout from '../Components/Layout/Layout';
-import '../Styles/Global.css';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+
+// Components
+import Button from '../Components/Common/Button';
+
+// Styles
+import '../Styles/NotFound.css';
 
 const NotFound = () => {
   return (
-    <Layout>
-      <div className="not-found-page">
+    <div className="not-found-page">
+      <div className="container">
         <div className="not-found-content">
-          <div className="not-found-animation">
-            <span className="not-found-number">4</span>
-            <span className="not-found-zero">0</span>
-            <span className="not-found-number">4</span>
-          </div>
+          <div className="error-code animate-float">404</div>
           
-          <h1 className="not-found-title">Page Not Found</h1>
+          <h1 className="error-title animate-fade-up">
+            Page Not <span className="gold-text">Found</span>
+          </h1>
           
-          <p className="not-found-description">
+          <p className="error-message animate-fade-up animate-delay-1">
             The page you're looking for doesn't exist or has been moved.
-            Let's get you back on track.
           </p>
-
-          <div className="not-found-actions">
-            <Link to="/">
-              <button className="btn btn-gold btn-lg">
-                Return Home
-              </button>
+          
+          <div className="error-actions animate-fade-up animate-delay-2">
+            <Link to={ROUTES.HOME}>
+              <Button variant="primary" size="lg">
+                Go to Homepage
+              </Button>
             </Link>
             
-            <Link to="/rentals">
-              <button className="btn btn-outline btn-lg">
-                Browse Vehicles
-              </button>
+            <Link to={ROUTES.CONTACT}>
+              <Button variant="outline" size="lg">
+                Contact Support
+              </Button>
             </Link>
           </div>
 
-          <div className="not-found-suggestions">
-            <h3>Popular Destinations</h3>
-            <div className="suggestion-links">
-              <Link to="/services">Services</Link>
-              <Link to="/rentals">Rentals</Link>
-              <Link to="/about">About Us</Link>
-              <Link to="/contact">Contact</Link>
-            </div>
+          {/* Decorative Elements */}
+          <div className="error-decoration">
+            <div className="decoration-circle circle-1"></div>
+            <div className="decoration-circle circle-2"></div>
+            <div className="decoration-circle circle-3"></div>
+            <div className="decoration-line line-1"></div>
+            <div className="decoration-line line-2"></div>
           </div>
         </div>
       </div>
-    </Layout>
+
+      {/* Background Particles */}
+      <div className="error-particles">
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+      </div>
+    </div>
   );
 };
 

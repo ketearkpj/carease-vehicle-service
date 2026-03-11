@@ -1,9 +1,28 @@
-import React from 'react';
+// ===== src/Components/Layout/Footer.jsx =====
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import '../../Styles/Layout.css';
+import { APP_CONFIG, COMPANY_INFO } from '../../Utils/constants';
+import { ROUTES } from '../../Config/Routes';
+import Button from '../Common/Button';
+import Input from '../Common/Input';
+import { subscribeToNewsletter } from '../../Services/EmailService';
+import '../../Styles/Footer.css';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] = useState(null);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Handle scroll to show/hide scroll top button
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 500);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const socialLinks = [
     { 
@@ -33,49 +52,63 @@ const Footer = () => {
   ];
 
   const quickLinks = [
-    { path: '/services', label: 'Services' },
-    { path: '/about', label: 'About Us' },
-    { path: '/contact', label: 'Contact' },
-    { path: '/booking', label: 'Book Now' }
+    { path: ROUTES.SERVICES, label: 'Services' },
+    { path: ROUTES.ABOUT, label: 'About Us' },
+    { path: ROUTES.CONTACT, label: 'Contact' },
+    { path: ROUTES.BOOKING, label: 'Book Now' }
   ];
 
   const supportLinks = [
     { path: '/faq', label: 'FAQ' },
-    { path: '/terms', label: 'Terms of Service' },
-    { path: '/privacy', label: 'Privacy Policy' },
-    { path: '/support', label: '24/7 Support' }
+    { path: '/terms', label: 'Terms' },
+    { path: '/privacy', label: 'Privacy' },
+    { path: ROUTES.CONTACT, label: '24/7 Support' }
   ];
+
+  const handleNewsletterSubmit = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+
+    setIsSubscribing(true);
+    setSubscribeStatus(null);
+
+    try {
+      await subscribeToNewsletter(email);
+      setSubscribeStatus('success');
+      setEmail('');
+      setTimeout(() => setSubscribeStatus(null), 5000);
+    } catch (error) {
+      setSubscribeStatus('error');
+      setTimeout(() => setSubscribeStatus(null), 5000);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <footer className="footer">
-      {/* Newsletter Section - UI Only (EmailService will handle later) */}
-      <div className="footer-newsletter">
-        <div className="container">
-          <div className="newsletter-content">
-            <h3>Join the CAR EASE Community</h3>
-            <p>Subscribe to receive exclusive offers and luxury automotive insights</p>
-            <form 
-              className="newsletter-form"
-              onSubmit={(e) => {
-                e.preventDefault();
-                // This will be handled by EmailService.js later
-                alert('Thank you for subscribing! You will receive our newsletter soon.');
-                e.target.reset();
-              }}
-            >
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                className="newsletter-input"
-                aria-label="Email for newsletter"
-                required
-              />
-              <button type="submit" className="newsletter-btn">
-                Subscribe
-              </button>
-            </form>
-          </div>
-        </div>
+      {/* Premium Animated Background */}
+      <div className="footer-gradient"></div>
+      <div className="footer-overlay"></div>
+      
+      {/* Animated Particles */}
+      <div className="footer-particles">
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+        <div className="particle"></div>
+      </div>
+
+      {/* Floating Gold Orbs */}
+      <div className="footer-orbs">
+        <div className="orb orb-1"></div>
+        <div className="orb orb-2"></div>
+        <div className="orb orb-3"></div>
       </div>
 
       {/* Main Footer Content */}
@@ -84,13 +117,16 @@ const Footer = () => {
           <div className="footer-grid">
             {/* Brand Section */}
             <div className="footer-section brand">
-              <Link to="/" className="footer-logo" onClick={() => window.scrollTo(0, 0)}>
+              <Link to="/" className="footer-logo" onClick={scrollToTop}>
                 <span className="logo-text">CAR<span className="gold-text">EASE</span></span>
+                <span className="logo-glow"></span>
               </Link>
               <p className="footer-description">
                 Experience the pinnacle of automotive luxury. From bespoke rentals 
                 to elite maintenance, we provide a seamless journey for the driven.
               </p>
+              
+              {/* Social Links with Premium Effects */}
               <div className="social-links">
                 {socialLinks.map((social, index) => (
                   <a 
@@ -100,80 +136,170 @@ const Footer = () => {
                     rel="noopener noreferrer"
                     className="social-link"
                     aria-label={social.label}
+                    style={{ '--social-delay': `${index * 0.1}s` }}
                   >
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d={social.svg} />
                     </svg>
+                    <span className="social-tooltip">{social.label}</span>
                   </a>
                 ))}
               </div>
             </div>
 
-            {/* Quick Links */}
+            {/* Quick Links with Animated Underlines */}
             <div className="footer-section">
-              <h4 className="footer-heading">Quick Links</h4>
+              <h4 className="footer-heading">
+                <span className="heading-text">Quick Links</span>
+                <span className="heading-line"></span>
+              </h4>
               <ul className="footer-links">
                 {quickLinks.map((link, index) => (
                   <li key={index}>
-                    <Link to={link.path} onClick={() => window.scrollTo(0, 0)}>
-                      {link.label}
+                    <Link to={link.path} onClick={scrollToTop}>
+                      <span className="link-text">{link.label}</span>
+                      <span className="link-glow"></span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Support */}
+            {/* Support with Animated Icons */}
             <div className="footer-section">
-              <h4 className="footer-heading">Support</h4>
+              <h4 className="footer-heading">
+                <span className="heading-text">Support</span>
+                <span className="heading-line"></span>
+              </h4>
               <ul className="footer-links">
                 {supportLinks.map((link, index) => (
                   <li key={index}>
-                    <Link to={link.path} onClick={() => window.scrollTo(0, 0)}>
-                      {link.label}
+                    <Link to={link.path} onClick={scrollToTop}>
+                      <span className="link-text">{link.label}</span>
+                      <span className="link-glow"></span>
                     </Link>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Contact Info */}
+            {/* Contact Info with Animated Icons */}
             <div className="footer-section">
-              <h4 className="footer-heading">Contact</h4>
+              <h4 className="footer-heading">
+                <span className="heading-text">Contact</span>
+                <span className="heading-line"></span>
+              </h4>
               <ul className="footer-contact">
                 <li>
                   <span className="contact-icon">📍</span>
-                  <span>123 Luxury Lane, Beverly Hills, CA 90210</span>
+                  <span className="contact-text">Beverly Hills, CA</span>
                 </li>
                 <li>
                   <span className="contact-icon">📞</span>
-                  <a href="tel:+18005550123">+1 (800) 555-0123</a>
+                  <a href="tel:+18005550123" className="contact-text">+1 (800) 555-0123</a>
                 </li>
                 <li>
                   <span className="contact-icon">✉️</span>
-                  <a href="mailto:concierge@carease.com">concierge@carease.com</a>
-                </li>
-                <li>
-                  <span className="contact-icon">⏰</span>
-                  <span>Mon-Sun: 9am - 8pm</span>
+                  <a href="mailto:concierge@carease.com" className="contact-text">concierge@carease.com</a>
                 </li>
               </ul>
+            </div>
+          </div>
+
+          {/* Premium Newsletter Section */}
+          <div className="footer-newsletter-premium">
+            <div className="newsletter-glow"></div>
+            <div className="newsletter-content">
+              <div className="newsletter-text">
+                <h4 className="newsletter-title">Join the Community</h4>
+                <p className="newsletter-subtitle">Get exclusive offers & updates</p>
+              </div>
+              <form className="newsletter-form" onSubmit={handleNewsletterSubmit}>
+                <div className="newsletter-input-wrapper">
+                  <input 
+                    type="email" 
+                    placeholder="Your email address" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="newsletter-input"
+                    required
+                    disabled={isSubscribing}
+                  />
+                  <span className="input-focus-glow"></span>
+                </div>
+                <button 
+                  type="submit" 
+                  className="newsletter-btn"
+                  disabled={isSubscribing || !email}
+                >
+                  {isSubscribing ? (
+                    <span className="btn-loader"></span>
+                  ) : (
+                    <>
+                      <span className="btn-text">Subscribe</span>
+                      <span className="btn-arrow">→</span>
+                    </>
+                  )}
+                </button>
+              </form>
+              {subscribeStatus === 'success' && (
+                <div className="newsletter-message success">
+                  <span className="message-icon">✓</span>
+                  <span>Thank you for subscribing!</span>
+                </div>
+              )}
+              {subscribeStatus === 'error' && (
+                <div className="newsletter-message error">
+                  <span className="message-icon">⚠️</span>
+                  <span>Subscription failed</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
+      {/* Bottom Bar with Premium Badges */}
       <div className="footer-bottom">
         <div className="container">
           <div className="footer-bottom-content">
-            <p>&copy; {currentYear} CAR EASE. All rights reserved.</p>
+            <p className="copyright">
+              © {currentYear} <span className="copyright-gold">CAR EASE</span>. All rights reserved.
+            </p>
             <div className="footer-badges">
-              <span className="footer-badge">EST. 2018</span>
-              <span className="footer-badge">LUXURY AUTOMOTIVE</span>
+              <span className="footer-badge">
+                <span className="badge-icon">⚡</span>
+                <span className="badge-text">EST. 2018</span>
+                <span className="badge-glow"></span>
+              </span>
+              <span className="footer-badge">
+                <span className="badge-icon">⭐</span>
+                <span className="badge-text">LUXURY</span>
+                <span className="badge-glow"></span>
+              </span>
+              <span className="footer-badge">
+                <span className="badge-icon">🔒</span>
+                <span className="badge-text">SECURE</span>
+                <span className="badge-glow"></span>
+              </span>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Centered Scroll to Top Button with Premium Effects */}
+      <div className="scroll-top-container">
+        <button 
+          className={`scroll-top-btn ${showScrollTop ? 'visible' : ''}`}
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+        >
+          <span className="arrow-up">↑</span>
+          <span className="btn-ring"></span>
+          <span className="btn-ring-2"></span>
+          <span className="btn-glow"></span>
+        </button>
+        <span className="scroll-top-text">Back to Top</span>
       </div>
     </footer>
   );

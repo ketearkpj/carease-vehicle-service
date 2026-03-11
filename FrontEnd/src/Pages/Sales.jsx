@@ -1,849 +1,970 @@
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// ===== src/Pages/Sales.jsx =====
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+import { VEHICLE_CATEGORIES, CURRENCY } from '../Utils/constants';
+
+// Components
+import Button from '../Components/Common/Button';
+import Card from '../Components/Common/Card';
+import Input from '../Components/Common/Input';
+import Select from '../Components/Common/Select';
+import LoadingSpinner from '../Components/Common/LoadingSpinner';
+import VehicleCard from '../Components/Features/VehicleCard';
+import HeroSection from '../Components/Features/HeroSection';
+
+// Services
+import { getSalesVehicles, getVehicleById } from '../Services/VehicleService';
+
+// Hooks
+import { useApp } from '../Context/AppContext';
+import { useBooking } from '../Hooks/useBooking';
+
+// Styles
 import '../Styles/Sales.css';
 
 const Sales = () => {
-  const navigate = useNavigate();
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [inquiryStep, setInquiryStep] = useState(1);
-  const [inquiryData, setInquiryData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-    testDrive: false,
-    financing: false,
-    tradeIn: false
+  const [vehicles, setVehicles] = useState([]);
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    category: 'all',
+    make: 'all',
+    priceRange: 'all',
+    yearRange: 'all',
+    sortBy: 'recommended',
+    search: ''
   });
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0
+  });
+  const [viewMode, setViewMode] = useState('grid');
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [financing, setFinancing] = useState({
+    enabled: false,
+    downPayment: 20,
+    term: 60,
+    interestRate: 4.5
+  });
+
+  const { addNotification } = useApp();
+  const { createNewBooking } = useBooking();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    fetchVehicles();
   }, []);
 
-  // Vehicle Data
-  const vehicles = [
-    {
-      id: 1,
-      name: 'Lamborghini Urus',
-      year: 2023,
-      price: 245000,
-      mileage: 1200,
-      condition: 'Like New',
-      image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
-      images: [
-        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
-        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800',
-        'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800'
-      ],
-      specs: {
-        engine: '4.0L V8 Twin-Turbo',
-        horsepower: '641 hp',
-        transmission: '8-Speed Auto',
-        drivetrain: 'AWD',
-        acceleration: '3.6s 0-60',
-        topSpeed: '190 mph'
-      },
-      features: [
-        'Carbon Ceramic Brakes',
-        'Panoramic Roof',
-        'B&O Sound System',
-        'Massage Seats',
-        'Night Vision',
-        '22" Wheels'
-      ],
-      color: 'Orange',
-      interior: 'Black Leather',
-      history: 'Clean Carfax',
-      warranty: 'Remaining factory warranty',
-      certified: true,
-      location: 'Beverly Hills'
-    },
-    {
-      id: 2,
-      name: 'Ferrari F8 Tributo',
-      year: 2022,
-      price: 295000,
-      mileage: 3500,
-      condition: 'Excellent',
-      image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800',
-      images: [
-        'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800',
-        'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800',
-        'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800'
-      ],
-      specs: {
-        engine: '3.9L V8 Twin-Turbo',
-        horsepower: '710 hp',
-        transmission: '7-Speed DCT',
-        drivetrain: 'RWD',
-        acceleration: '2.9s 0-60',
-        topSpeed: '211 mph'
-      },
-      features: [
-        'Rosso Corsa Paint',
-        'Carbon Fiber Package',
-        'Racing Seats',
-        'Telemetry System',
-        'Front Lift',
-        '20" Forged Wheels'
-      ],
-      color: 'Red',
-      interior: 'Alcantara',
-      history: 'Clean Carfax',
-      warranty: 'Extended warranty available',
-      certified: true,
-      location: 'Miami'
-    },
-    {
-      id: 3,
-      name: 'Rolls-Royce Ghost',
-      year: 2023,
-      price: 385000,
-      mileage: 800,
-      condition: 'New',
-      image: 'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?w=800',
-      images: [
-        'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?w=800',
-        'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?w=800',
-        'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?w=800'
-      ],
-      specs: {
-        engine: '6.75L V12',
-        horsepower: '563 hp',
-        transmission: '8-Speed Auto',
-        drivetrain: 'AWD',
-        acceleration: '4.6s 0-60',
-        topSpeed: '155 mph'
-      },
-      features: [
-        'Starlight Headliner',
-        'Rear Theater System',
-        'Massage Seats',
-        'Refrigerator',
-        'Umbrella Set',
-        '21" Polished Wheels'
-      ],
-      color: 'Arctic White',
-      interior: 'Tan Leather',
-      history: 'New Vehicle',
-      warranty: 'Full factory warranty',
-      certified: true,
-      location: 'New York'
-    },
-    {
-      id: 4,
-      name: 'Porsche 911 Turbo S',
-      year: 2023,
-      price: 215000,
-      mileage: 500,
-      condition: 'New',
-      image: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800',
-      images: [
-        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800',
-        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800',
-        'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800'
-      ],
-      specs: {
-        engine: '3.8L Flat-6 Twin-Turbo',
-        horsepower: '640 hp',
-        transmission: '8-Speed PDK',
-        drivetrain: 'AWD',
-        acceleration: '2.6s 0-60',
-        topSpeed: '205 mph'
-      },
-      features: [
-        'GT Silver Metallic',
-        'Carbon Buckets',
-        'Ceramic Brakes',
-        'Sport Exhaust',
-        'Rear Axle Steering',
-        '20/21" Wheels'
-      ],
-      color: 'Silver',
-      interior: 'Black/Bordeaux',
-      history: 'New Vehicle',
-      warranty: 'Full factory warranty',
-      certified: true,
-      location: 'Beverly Hills'
-    },
-    {
-      id: 5,
-      name: 'Bentley Continental GT',
-      year: 2022,
-      price: 198000,
-      mileage: 4200,
-      condition: 'Excellent',
-      image: 'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800',
-      images: [
-        'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800',
-        'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800',
-        'https://images.unsplash.com/photo-1603584173870-7f23fdae1b7a?w=800'
-      ],
-      specs: {
-        engine: '6.0L W12',
-        horsepower: '626 hp',
-        transmission: '8-Speed DCT',
-        drivetrain: 'AWD',
-        acceleration: '3.5s 0-60',
-        topSpeed: '207 mph'
-      },
-      features: [
-        'Diamond Stitching',
-        'Naim Audio',
-        'Rotating Display',
-        'Mulliner Package',
-        '22" Wheels',
-        'Night Vision'
-      ],
-      color: 'Beluga Black',
-      interior: 'Hotspur Red',
-      history: 'Clean Carfax',
-      warranty: '2-year extended warranty',
-      certified: true,
-      location: 'Miami'
-    },
-    {
-      id: 6,
-      name: 'McLaren 720S',
-      year: 2021,
-      price: 265000,
-      mileage: 5800,
-      condition: 'Excellent',
-      image: 'https://images.unsplash.com/photo-1580414057403-c5f451f30e1c?w=800',
-      images: [
-        'https://images.unsplash.com/photo-1580414057403-c5f451f30e1c?w=800',
-        'https://images.unsplash.com/photo-1580414057403-c5f451f30e1c?w=800',
-        'https://images.unsplash.com/photo-1580414057403-c5f451f30e1c?w=800'
-      ],
-      specs: {
-        engine: '4.0L V8 Twin-Turbo',
-        horsepower: '710 hp',
-        transmission: '7-Speed SSG',
-        drivetrain: 'RWD',
-        acceleration: '2.7s 0-60',
-        topSpeed: '212 mph'
-      },
-      features: [
-        'McLaren Orange',
-        'Carbon Fiber Monocage',
-        'Senna Seats',
-        'Track Telemetry',
-        'Hydraulic Lift',
-        'Ceramic Brakes'
-      ],
-      color: 'Papaya Spark',
-      interior: 'Black Alcantara',
-      history: 'Clean Carfax',
-      warranty: '1-year warranty',
-      certified: true,
-      location: 'New York'
+  useEffect(() => {
+    filterVehicles();
+  }, [vehicles, filters]);
+
+  const fetchVehicles = async () => {
+    setLoading(true);
+    try {
+      const data = await getSalesVehicles({
+        page: pagination.page,
+        limit: pagination.limit,
+        ...filters
+      });
+      setVehicles(data.vehicles);
+      setPagination(prev => ({
+        ...prev,
+        total: data.total,
+        totalPages: data.totalPages
+      }));
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error);
+      // Fallback data
+      setVehicles([
+        {
+          id: 1,
+          name: 'Lamborghini Huracán EVO',
+          make: 'Lamborghini',
+          model: 'Huracán EVO',
+          year: 2022,
+          price: 289000,
+          mileage: 1200,
+          category: 'supercar',
+          image: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '6.5L V10',
+            power: '640 hp',
+            acceleration: '2.9s 0-60',
+            topSpeed: '202 mph',
+            transmission: '7-speed dual clutch',
+            drivetrain: 'AWD'
+          },
+          features: ['Carbon Ceramic Brakes', 'Lift System', 'Apple CarPlay', 'Backup Camera'],
+          color: 'Verde Mantis',
+          interior: 'Black Alcantara',
+          vin: 'ZHWUE4ZF4NLA12345',
+          condition: 'Excellent',
+          owners: 1,
+          serviceHistory: 'Full service history',
+          warranty: 'Remaining factory warranty',
+          location: 'Beverly Hills',
+          featured: true
+        },
+        {
+          id: 2,
+          name: 'Ferrari F8 Tributo',
+          make: 'Ferrari',
+          model: 'F8 Tributo',
+          year: 2021,
+          price: 315000,
+          mileage: 3500,
+          category: 'supercar',
+          image: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '3.9L V8',
+            power: '710 hp',
+            acceleration: '2.9s 0-60',
+            topSpeed: '211 mph',
+            transmission: '7-speed dual clutch',
+            drivetrain: 'RWD'
+          },
+          features: ['Carbon Fiber Package', 'Racing Seats', 'Telemetry System', 'JBL Audio'],
+          color: 'Rosso Corsa',
+          interior: 'Black Leather',
+          vin: 'ZFF90HLA7N0246810',
+          condition: 'Excellent',
+          owners: 1,
+          serviceHistory: 'Full Ferrari service history',
+          warranty: 'Certified Pre-Owned',
+          location: 'Miami Beach',
+          featured: true
+        },
+        {
+          id: 3,
+          name: 'Rolls-Royce Ghost',
+          make: 'Rolls-Royce',
+          model: 'Ghost',
+          year: 2023,
+          price: 425000,
+          mileage: 500,
+          category: 'luxury',
+          image: 'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '6.75L V12',
+            power: '563 hp',
+            acceleration: '4.6s 0-60',
+            topSpeed: '155 mph',
+            transmission: '8-speed automatic',
+            drivetrain: 'AWD'
+          },
+          features: ['Starlight Headliner', 'Massage Seats', 'Champagne Cooler', 'Theater System'],
+          color: 'Arctic White',
+          interior: 'Arctic White Leather',
+          vin: 'SCA665L03NUX12345',
+          condition: 'New',
+          owners: 0,
+          serviceHistory: 'New vehicle',
+          warranty: 'Full factory warranty',
+          location: 'Manhattan',
+          featured: true
+        },
+        {
+          id: 4,
+          name: 'Porsche 911 Turbo S',
+          make: 'Porsche',
+          model: '911 Turbo S',
+          year: 2022,
+          price: 245000,
+          mileage: 2200,
+          category: 'sports',
+          image: 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '3.7L Flat-6',
+            power: '640 hp',
+            acceleration: '2.6s 0-60',
+            topSpeed: '205 mph',
+            transmission: '8-speed dual clutch',
+            drivetrain: 'AWD'
+          },
+          features: ['Sport Chrono Package', 'PDK Transmission', 'Sport Exhaust', 'Carbon Buckets'],
+          color: 'GT Silver',
+          interior: 'Black/Bordeaux Red',
+          vin: 'WP0AF2A99NS123456',
+          condition: 'Excellent',
+          owners: 1,
+          serviceHistory: 'Porsche dealer serviced',
+          warranty: 'CPO warranty',
+          location: 'Beverly Hills'
+        },
+        {
+          id: 5,
+          name: 'Bentley Continental GT',
+          make: 'Bentley',
+          model: 'Continental GT',
+          year: 2021,
+          price: 198000,
+          mileage: 8900,
+          category: 'grand_tourer',
+          image: 'https://images.unsplash.com/photo-1622194996008-2c22880c0b7b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1622194996008-2c22880c0b7b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '6.0L W12',
+            power: '650 hp',
+            acceleration: '3.5s 0-60',
+            topSpeed: '208 mph',
+            transmission: '8-speed dual clutch',
+            drivetrain: 'AWD'
+          },
+          features: ['Naim Audio', 'Rotating Display', 'Mulliner Package', 'Flying B'],
+          color: 'Beluga Black',
+          interior: 'Hotspur Red',
+          vin: 'SCBCG3ZA5MC123456',
+          condition: 'Excellent',
+          owners: 2,
+          serviceHistory: 'Complete service history',
+          warranty: '6 months remaining',
+          location: 'Miami Beach'
+        },
+        {
+          id: 6,
+          name: 'McLaren 720S',
+          make: 'McLaren',
+          model: '720S',
+          year: 2020,
+          price: 279000,
+          mileage: 5600,
+          category: 'supercar',
+          image: 'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '4.0L V8',
+            power: '710 hp',
+            acceleration: '2.7s 0-60',
+            topSpeed: '212 mph',
+            transmission: '7-speed dual clutch',
+            drivetrain: 'RWD'
+          },
+          features: ['Dihedral Doors', 'Track Mode', 'Carbon Monocoque', 'Active Suspension'],
+          color: 'Chicane Grey',
+          interior: 'Carbon Black Alcantara',
+          vin: 'SBM14SCA4LW123456',
+          condition: 'Excellent',
+          owners: 1,
+          serviceHistory: 'McLaren dealer serviced',
+          warranty: 'Extended warranty available',
+          location: 'Manhattan'
+        },
+        {
+          id: 7,
+          name: 'Range Rover Autobiography',
+          make: 'Range Rover',
+          model: 'Autobiography',
+          year: 2023,
+          price: 159000,
+          mileage: 800,
+          category: 'suv',
+          image: 'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '4.4L V8',
+            power: '523 hp',
+            acceleration: '4.4s 0-60',
+            topSpeed: '155 mph',
+            transmission: '8-speed automatic',
+            drivetrain: 'AWD'
+          },
+          features: ['Executive Class Seats', 'Meridian Audio', 'Off-Road Package', 'Panoramic Roof'],
+          color: 'Santorini Black',
+          interior: 'Ebony Leather',
+          vin: 'SALGS3EF0PA123456',
+          condition: 'New',
+          owners: 0,
+          serviceHistory: 'New vehicle',
+          warranty: 'Full factory warranty',
+          location: 'Beverly Hills'
+        },
+        {
+          id: 8,
+          name: 'Aston Martin DBS',
+          make: 'Aston Martin',
+          model: 'DBS Superleggera',
+          year: 2022,
+          price: 335000,
+          mileage: 2100,
+          category: 'grand_tourer',
+          image: 'https://images.unsplash.com/photo-1603584173870-7f098fd2d1e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          images: [
+            'https://images.unsplash.com/photo-1603584173870-7f098fd2d1e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+          ],
+          specs: {
+            engine: '5.2L V12',
+            power: '715 hp',
+            acceleration: '3.2s 0-60',
+            topSpeed: '211 mph',
+            transmission: '8-speed automatic',
+            drivetrain: 'RWD'
+          },
+          features: ['Carbon Fiber Body', 'Bang & Olufsen Audio', 'Sports Exhaust', 'Q Customization'],
+          color: 'Q Xenon Grey',
+          interior: 'Obsidian Black',
+          vin: 'SCFRDMAZ8NGL12345',
+          condition: 'Excellent',
+          owners: 1,
+          serviceHistory: 'Aston Martin dealer serviced',
+          warranty: 'Remaining factory warranty',
+          location: 'Manhattan'
+        }
+      ]);
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  // Filters
-  const filters = [
-    { id: 'all', label: 'All Vehicles', icon: '🚗' },
-    { id: 'new', label: 'New Arrivals', icon: '✨' },
-    { id: 'certified', label: 'Certified', icon: '✓' },
-    { id: 'under-200k', label: 'Under $200k', icon: '💰' },
-    { id: '200k-300k', label: '$200k - $300k', icon: '💰' },
-    { id: 'over-300k', label: 'Over $300k', icon: '💰' }
-  ];
-
-  // Locations
-  const locations = [
-    { id: 'all', label: 'All Locations' },
-    { id: 'beverly-hills', label: 'Beverly Hills' },
-    { id: 'miami', label: 'Miami' },
-    { id: 'new-york', label: 'New York' }
-  ];
-
-  // Filter vehicles
-  const filteredVehicles = vehicles.filter(vehicle => {
-    switch(selectedFilter) {
-      case 'new':
-        return vehicle.condition === 'New';
-      case 'certified':
-        return vehicle.certified;
-      case 'under-200k':
-        return vehicle.price < 200000;
-      case '200k-300k':
-        return vehicle.price >= 200000 && vehicle.price <= 300000;
-      case 'over-300k':
-        return vehicle.price > 300000;
-      default:
-        return true;
-    }
-  });
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(price);
   };
 
-  // Inquiry steps
-  const inquirySteps = [
-    { number: 1, name: 'Contact Info', icon: '👤' },
-    { number: 2, name: 'Preferences', icon: '⚙️' },
-    { number: 3, name: 'Review', icon: '✓' }
+  const filterVehicles = () => {
+    let filtered = [...vehicles];
+
+    // Filter by category
+    if (filters.category !== 'all') {
+      filtered = filtered.filter(v => v.category === filters.category);
+    }
+
+    // Filter by make
+    if (filters.make !== 'all') {
+      filtered = filtered.filter(v => v.make.toLowerCase() === filters.make.toLowerCase());
+    }
+
+    // Filter by price range
+    if (filters.priceRange !== 'all') {
+      const [min, max] = filters.priceRange.split('-').map(Number);
+      filtered = filtered.filter(v => v.price >= min && v.price <= max);
+    }
+
+    // Filter by year range
+    if (filters.yearRange !== 'all') {
+      const [min, max] = filters.yearRange.split('-').map(Number);
+      filtered = filtered.filter(v => v.year >= min && v.year <= max);
+    }
+
+    // Filter by search
+    if (filters.search) {
+      const query = filters.search.toLowerCase();
+      filtered = filtered.filter(v => 
+        v.name.toLowerCase().includes(query) ||
+        v.make.toLowerCase().includes(query) ||
+        v.model.toLowerCase().includes(query)
+      );
+    }
+
+    // Sort
+    switch (filters.sortBy) {
+      case 'price_asc':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price_desc':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'year_desc':
+        filtered.sort((a, b) => b.year - a.year);
+        break;
+      case 'year_asc':
+        filtered.sort((a, b) => a.year - b.year);
+        break;
+      case 'mileage_asc':
+        filtered.sort((a, b) => a.mileage - b.mileage);
+        break;
+      default:
+        // featured - featured first then newest
+        filtered.sort((a, b) => {
+          if (a.featured && !b.featured) return -1;
+          if (!a.featured && b.featured) return 1;
+          return b.year - a.year;
+        });
+        break;
+    }
+
+    setFilteredVehicles(filtered);
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleViewDetails = (vehicle) => {
+    setSelectedVehicle(vehicle);
+    setShowDetails(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleInquirySubmit = async (type) => {
+    try {
+      await createNewBooking({
+        serviceType: 'sales',
+        vehicleId: selectedVehicle.id,
+        vehicleName: selectedVehicle.name,
+        inquiryType: type
+      });
+      addNotification('Thank you for your interest! A specialist will contact you soon.', 'success');
+      setShowDetails(false);
+    } catch (error) {
+      addNotification('Failed to submit inquiry. Please try again.', 'error');
+    }
+  };
+
+  const calculateFinancing = () => {
+    if (!selectedVehicle) return null;
+
+    const price = selectedVehicle.price;
+    const downPaymentAmount = price * (financing.downPayment / 100);
+    const loanAmount = price - downPaymentAmount;
+    const monthlyRate = financing.interestRate / 100 / 12;
+    const monthlyPayment = loanAmount * 
+      (monthlyRate * Math.pow(1 + monthlyRate, financing.term)) / 
+      (Math.pow(1 + monthlyRate, financing.term) - 1);
+
+    return {
+      downPaymentAmount,
+      loanAmount,
+      monthlyPayment: monthlyPayment.toFixed(2),
+      totalInterest: (monthlyPayment * financing.term - loanAmount).toFixed(2),
+      totalPayments: (monthlyPayment * financing.term).toFixed(2)
+    };
+  };
+
+  const makes = ['all', 'Lamborghini', 'Ferrari', 'Porsche', 'Rolls-Royce', 'Bentley', 'McLaren', 'Aston Martin', 'Range Rover'];
+  const categories = ['all', 'supercar', 'luxury', 'sports', 'suv', 'grand_tourer'];
+  const priceRanges = [
+    { value: 'all', label: 'All Prices' },
+    { value: '0-100000', label: 'Under $100k' },
+    { value: '100000-200000', label: '$100k - $200k' },
+    { value: '200000-300000', label: '$200k - $300k' },
+    { value: '300000-400000', label: '$300k - $400k' },
+    { value: '400000-999999', label: '$400k+' }
   ];
+  const yearRanges = [
+    { value: 'all', label: 'All Years' },
+    { value: '2023-2024', label: '2023-2024' },
+    { value: '2021-2022', label: '2021-2022' },
+    { value: '2019-2020', label: '2019-2020' },
+    { value: '2017-2018', label: '2017-2018' },
+    { value: '2015-2016', label: '2015-2016' },
+    { value: '2010-2014', label: '2010-2014' }
+  ];
+  const sortOptions = [
+    { value: 'recommended', label: 'Featured' },
+    { value: 'price_asc', label: 'Price: Low to High' },
+    { value: 'price_desc', label: 'Price: High to Low' },
+    { value: 'year_desc', label: 'Year: Newest First' },
+    { value: 'year_asc', label: 'Year: Oldest First' },
+    { value: 'mileage_asc', label: 'Mileage: Low to High' }
+  ];
+
+  const financingTerms = [36, 48, 60, 72];
 
   return (
     <div className="sales-page">
-      {/* ===== HERO SECTION ===== */}
-      <section className="sales-hero">
-        <div className="sales-hero-bg"></div>
-        <div className="sales-hero-content">
-          <h1 className="sales-hero-title animate-fade-up">
-            Premium <span className="gold-text">Sales</span>
-          </h1>
-          <p className="sales-hero-description animate-fade-up">
-            Discover hand-selected luxury vehicles, each thoroughly inspected and certified
-          </p>
-        </div>
-      </section>
+      {/* Hero Section */}
+      <HeroSection
+        title="Luxury Vehicle Sales"
+        subtitle="Discover your dream car from our exclusive collection"
+        ctaText="Browse Inventory"
+        ctaLink="#inventory"
+        secondaryCtaText="Why Buy From Us"
+        secondaryCtaLink="#why-us"
+        backgroundImage="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80"
+        alignment="center"
+        fullHeight={false}
+      />
 
-      {/* ===== FEATURES SECTION ===== */}
-      <section className="features-section">
+      {/* Why Buy From Us Section */}
+      <section className="why-buy-section" id="why-us">
         <div className="container">
-          <div className="features-grid">
-            <div className="feature-card">
-              <span className="feature-icon">🔍</span>
-              <h3>150-Point Inspection</h3>
-              <p>Meticulously inspected vehicles</p>
+          <div className="section-header">
+            <span className="section-subtitle">WHY CHOOSE US</span>
+            <h2 className="section-title">The CAR EASE <span className="gold-text">Advantage</span></h2>
+          </div>
+
+          <div className="advantages-grid">
+            <div className="advantage-card animate-fade-up animate-delay-1">
+              <div className="advantage-icon">🔍</div>
+              <h3 className="advantage-title">150-Point Inspection</h3>
+              <p className="advantage-description">Every vehicle undergoes rigorous inspection by certified technicians</p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">📋</span>
-              <h3>Vehicle History</h3>
-              <p>Complete Carfax reports</p>
+
+            <div className="advantage-card animate-fade-up animate-delay-2">
+              <div className="advantage-icon">📋</div>
+              <h3 className="advantage-title">Full History Report</h3>
+              <p className="advantage-description">Comprehensive vehicle history reports included with every sale</p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">💰</span>
-              <h3>Financing Options</h3>
-              <p>Competitive rates available</p>
+
+            <div className="advantage-card animate-fade-up animate-delay-3">
+              <div className="advantage-icon">🛡️</div>
+              <h3 className="advantage-title">Warranty Included</h3>
+              <p className="advantage-description">All vehicles come with comprehensive warranty coverage</p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">🔄</span>
-              <h3>Trade-ins Welcome</h3>
-              <p>Fair market value offered</p>
+
+            <div className="advantage-card animate-fade-up animate-delay-4">
+              <div className="advantage-icon">💰</div>
+              <h3 className="advantage-title">Financing Available</h3>
+              <p className="advantage-description">Competitive rates and flexible terms through our partners</p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">✓</span>
-              <h3>Certified Pre-Owned</h3>
-              <p>Rigorous certification process</p>
+
+            <div className="advantage-card animate-fade-up animate-delay-5">
+              <div className="advantage-icon">🚚</div>
+              <h3 className="advantage-title">Worldwide Delivery</h3>
+              <p className="advantage-description">Safe and insured delivery to your location</p>
             </div>
-            <div className="feature-card">
-              <span className="feature-icon">🚚</span>
-              <h3>Delivery Available</h3>
-              <p>Worldwide shipping</p>
+
+            <div className="advantage-card animate-fade-up animate-delay-6">
+              <div className="advantage-icon">🤝</div>
+              <h3 className="advantage-title">Trade-Ins Welcome</h3>
+              <p className="advantage-description">Fair market value for your current vehicle</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ===== FILTERS SECTION ===== */}
-      <section className="filters-section">
+      {/* Inventory Section */}
+      <section className="inventory-section" id="inventory">
         <div className="container">
-          <div className="filters-wrapper">
-            <div className="filter-tabs">
-              {filters.map(filter => (
+          <div className="section-header">
+            <span className="section-subtitle">OUR INVENTORY</span>
+            <h2 className="section-title">Featured <span className="gold-text">Vehicles</span></h2>
+            <p className="section-description">
+              Hand-picked luxury automobiles, each with verified history and certification
+            </p>
+          </div>
+
+          {/* Filters */}
+          <div className="inventory-filters">
+            <div className="filter-group">
+              <Select
+                value={filters.category}
+                onChange={(e) => handleFilterChange('category', e.target.value)}
+                options={[
+                  { value: 'all', label: 'All Categories' },
+                  ...categories.filter(c => c !== 'all').map(c => ({ 
+                    value: c, 
+                    label: c.charAt(0).toUpperCase() + c.slice(1) 
+                  }))
+                ]}
+                className="filter-select"
+              />
+
+              <Select
+                value={filters.make}
+                onChange={(e) => handleFilterChange('make', e.target.value)}
+                options={makes.map(m => ({ value: m, label: m === 'all' ? 'All Makes' : m }))}
+                className="filter-select"
+              />
+
+              <Select
+                value={filters.priceRange}
+                onChange={(e) => handleFilterChange('priceRange', e.target.value)}
+                options={priceRanges}
+                className="filter-select"
+              />
+
+              <Select
+                value={filters.yearRange}
+                onChange={(e) => handleFilterChange('yearRange', e.target.value)}
+                options={yearRanges}
+                className="filter-select"
+              />
+
+              <Select
+                value={filters.sortBy}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                options={sortOptions}
+                className="filter-select"
+              />
+            </div>
+
+            <div className="filter-actions">
+              <div className="search-wrapper">
+                <Input
+                  type="text"
+                  placeholder="Search vehicles..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
+                  icon="🔍"
+                  className="search-input"
+                />
+              </div>
+
+              <div className="view-toggle">
                 <button
-                  key={filter.id}
-                  className={`filter-tab ${selectedFilter === filter.id ? 'active' : ''}`}
-                  onClick={() => setSelectedFilter(filter.id)}
+                  className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                  onClick={() => setViewMode('grid')}
+                  aria-label="Grid view"
                 >
-                  <span className="filter-icon">{filter.icon}</span>
-                  <span className="filter-label">{filter.label}</span>
+                  <span className="view-icon">⊞</span>
                 </button>
+                <button
+                  className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                  onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                >
+                  <span className="view-icon">☰</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Results count */}
+          <div className="results-count">
+            <span>{filteredVehicles.length} vehicles available</span>
+          </div>
+
+          {/* Vehicle Grid/List */}
+          {loading ? (
+            <div className="vehicles-loading">
+              <LoadingSpinner size="lg" color="gold" text="Loading inventory..." />
+            </div>
+          ) : filteredVehicles.length === 0 ? (
+            <div className="no-results">
+              <span className="no-results-icon">🚗</span>
+              <h3>No Vehicles Found</h3>
+              <p>Try adjusting your filters or search criteria</p>
+              <Button 
+                variant="primary" 
+                onClick={() => setFilters({
+                  category: 'all',
+                  make: 'all',
+                  priceRange: 'all',
+                  yearRange: 'all',
+                  sortBy: 'recommended',
+                  search: ''
+                })}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <div className={`vehicles-container ${viewMode}`}>
+              {filteredVehicles.map((vehicle, index) => (
+                <div key={vehicle.id} className={`vehicle-wrapper animate-fade-up animate-delay-${index % 4 + 1}`}>
+                  <VehicleCard
+                    {...vehicle}
+                    onQuickView={() => handleViewDetails(vehicle)}
+                    variant={viewMode === 'list' ? 'horizontal' : 'featured'}
+                  />
+                </div>
               ))}
             </div>
+          )}
 
-            <div className="filter-options">
-              <select className="location-select">
-                {locations.map(loc => (
-                  <option key={loc.id}>{loc.label}</option>
-                ))}
-              </select>
-
-              <select className="sort-select">
-                <option>Sort by: Featured</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-                <option>Year: Newest First</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== RESULTS COUNT ===== */}
-      <div className="results-count">
-        <div className="container">
-          <p>
-            <span className="count-number">{filteredVehicles.length}</span> vehicles available
-          </p>
-        </div>
-      </div>
-
-      {/* ===== VEHICLES GRID ===== */}
-      <section className="vehicles-section">
-        <div className="container">
-          <div className="vehicles-grid">
-            {filteredVehicles.map((vehicle) => (
-              <div 
-                key={vehicle.id} 
-                className="vehicle-card"
-                onClick={() => {
-                  setSelectedVehicle(vehicle);
-                  setShowModal(true);
-                  setInquiryStep(1);
-                  setInquiryData({
-                    name: '',
-                    email: '',
-                    phone: '',
-                    message: `I'm interested in the ${vehicle.year} ${vehicle.name}. Please contact me with more information.`,
-                    testDrive: false,
-                    financing: false,
-                    tradeIn: false
-                  });
-                }}
+          {/* Pagination */}
+          {!loading && filteredVehicles.length > 0 && (
+            <div className="pagination">
+              <button
+                className="pagination-btn"
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page - 1 }))}
+                disabled={pagination.page === 1}
               >
-                {vehicle.certified && (
-                  <div className="certified-badge">✓ CERTIFIED</div>
-                )}
-                {vehicle.condition === 'New' && (
-                  <div className="new-badge">NEW ARRIVAL</div>
-                )}
-                <div className="vehicle-image">
-                  <img src={vehicle.image} alt={vehicle.name} />
-                </div>
-                <div className="vehicle-details">
-                  <div className="vehicle-header">
-                    <h3>{vehicle.name}</h3>
-                    <span className="vehicle-year">{vehicle.year}</span>
-                  </div>
-                  
-                  <p className="vehicle-subtitle">
-                    {vehicle.mileage.toLocaleString()} miles • {vehicle.condition} • {vehicle.location}
-                  </p>
-                  
-                  <div className="vehicle-specs">
-                    <div className="spec">
-                      <span className="spec-label">Engine</span>
-                      <span className="spec-value">{vehicle.specs.engine}</span>
-                    </div>
-                    <div className="spec">
-                      <span className="spec-label">Horsepower</span>
-                      <span className="spec-value">{vehicle.specs.horsepower}</span>
-                    </div>
-                    <div className="spec">
-                      <span className="spec-label">0-60</span>
-                      <span className="spec-value">{vehicle.specs.acceleration}</span>
-                    </div>
-                  </div>
-
-                  <div className="vehicle-features">
-                    {vehicle.features.slice(0, 4).map((feature, index) => (
-                      <span key={index} className="feature-tag">{feature}</span>
-                    ))}
-                  </div>
-
-                  <div className="vehicle-footer">
-                    <div className="vehicle-price">
-                      <span className="price-amount">{formatPrice(vehicle.price)}</span>
-                    </div>
-                    <button className="btn-inquire">Inquire</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                ←
+              </button>
+              
+              {[...Array(pagination.totalPages || 1)].map((_, i) => (
+                <button
+                  key={i}
+                  className={`pagination-btn ${pagination.page === i + 1 ? 'active' : ''}`}
+                  onClick={() => setPagination(prev => ({ ...prev, page: i + 1 }))}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              
+              <button
+                className="pagination-btn"
+                onClick={() => setPagination(prev => ({ ...prev, page: prev.page + 1 }))}
+                disabled={pagination.page === pagination.totalPages}
+              >
+                →
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ===== VEHICLE DETAILS MODAL ===== */}
-      {showModal && selectedVehicle && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content vehicle-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+      {/* Vehicle Details Modal */}
+      {showDetails && selectedVehicle && (
+        <div className="vehicle-details-modal">
+          <div className="modal-overlay" onClick={() => setShowDetails(false)}></div>
+          <div className="modal-content">
+            <button className="modal-close" onClick={() => setShowDetails(false)}>×</button>
             
-            <div className="modal-layout">
-              {/* Left Column - Vehicle Images */}
-              <div className="modal-left">
-                <div className="vehicle-gallery">
-                  <img src={selectedVehicle.image} alt={selectedVehicle.name} className="gallery-main" />
-                  <div className="gallery-thumbnails">
-                    {selectedVehicle.images.map((img, i) => (
-                      <img key={i} src={img} alt={`${selectedVehicle.name} ${i + 1}`} className="gallery-thumb" />
-                    ))}
-                  </div>
+            <div className="details-grid">
+              {/* Images Section */}
+              <div className="details-images">
+                <div className="main-image">
+                  <img src={selectedVehicle.image} alt={selectedVehicle.name} />
                 </div>
-              </div>
-
-              {/* Right Column - Vehicle Info & Inquiry */}
-              <div className="modal-right">
-                <div className="vehicle-info-header">
-                  <div>
-                    <h2>{selectedVehicle.name}</h2>
-                    <p className="vehicle-meta">
-                      {selectedVehicle.year} • {selectedVehicle.mileage.toLocaleString()} miles • {selectedVehicle.location}
-                    </p>
-                  </div>
-                  <div className="vehicle-price-large">
-                    {formatPrice(selectedVehicle.price)}
-                  </div>
-                </div>
-
-                {/* Inquiry Steps */}
-                <div className="inquiry-steps">
-                  {inquirySteps.map((step) => (
-                    <div 
-                      key={step.number}
-                      className={`step ${inquiryStep === step.number ? 'active' : ''} ${inquiryStep > step.number ? 'completed' : ''}`}
-                    >
-                      <div className="step-indicator">
-                        <span className="step-icon">{step.icon}</span>
-                        <span className="step-number">{step.number}</span>
-                      </div>
-                      <span className="step-name">{step.name}</span>
+                <div className="thumbnail-grid">
+                  {selectedVehicle.images?.map((img, idx) => (
+                    <div key={idx} className="thumbnail">
+                      <img src={img} alt={`${selectedVehicle.name} ${idx + 1}`} />
                     </div>
                   ))}
                 </div>
+              </div>
 
-                {/* Step 1: Contact Information */}
-                {inquiryStep === 1 && (
-                  <div className="inquiry-step-content">
-                    <h3>Contact Information</h3>
-                    
-                    <div className="form-group">
-                      <label>Full Name *</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="John Doe"
-                        value={inquiryData.name}
-                        onChange={(e) => setInquiryData({ ...inquiryData, name: e.target.value })}
-                      />
-                    </div>
+              {/* Details Section */}
+              <div className="details-info">
+                <div className="vehicle-header">
+                  <h2 className="vehicle-name">{selectedVehicle.name}</h2>
+                  <p className="vehicle-year">{selectedVehicle.year}</p>
+                </div>
 
-                    <div className="form-group">
-                      <label>Email Address *</label>
-                      <input
-                        type="email"
-                        className="form-input"
-                        placeholder="john@example.com"
-                        value={inquiryData.email}
-                        onChange={(e) => setInquiryData({ ...inquiryData, email: e.target.value })}
-                      />
-                    </div>
+                <div className="vehicle-price-tag">
+                  <span className="price-amount">${selectedVehicle.price.toLocaleString()}</span>
+                </div>
 
-                    <div className="form-group">
-                      <label>Phone Number *</label>
-                      <input
-                        type="tel"
-                        className="form-input"
-                        placeholder="(555) 123-4567"
-                        value={inquiryData.phone}
-                        onChange={(e) => setInquiryData({ ...inquiryData, phone: e.target.value })}
-                      />
-                    </div>
+                <div className="vehicle-highlights">
+                  <div className="highlight-item">
+                    <span className="highlight-label">Mileage</span>
+                    <span className="highlight-value">{selectedVehicle.mileage.toLocaleString()} miles</span>
+                  </div>
+                  <div className="highlight-item">
+                    <span className="highlight-label">Condition</span>
+                    <span className="highlight-value">{selectedVehicle.condition}</span>
+                  </div>
+                  <div className="highlight-item">
+                    <span className="highlight-label">Owners</span>
+                    <span className="highlight-value">{selectedVehicle.owners}</span>
+                  </div>
+                  <div className="highlight-item">
+                    <span className="highlight-label">Location</span>
+                    <span className="highlight-value">{selectedVehicle.location}</span>
+                  </div>
+                </div>
 
-                    <div className="step-actions">
-                      <button className="btn-next" onClick={() => setInquiryStep(2)}>
-                        Continue to Preferences
-                      </button>
+                {/* Tabs */}
+                <div className="details-tabs">
+                  <input type="radio" name="details-tab" id="tab-specs" defaultChecked />
+                  <label htmlFor="tab-specs" className="tab-label">Specifications</label>
+                  
+                  <input type="radio" name="details-tab" id="tab-features" />
+                  <label htmlFor="tab-features" className="tab-label">Features</label>
+                  
+                  <input type="radio" name="details-tab" id="tab-history" />
+                  <label htmlFor="tab-history" className="tab-label">History</label>
+                  
+                  <input type="radio" name="details-tab" id="tab-financing" />
+                  <label htmlFor="tab-financing" className="tab-label">Financing</label>
+
+                  <div className="tab-content" id="content-specs">
+                    <div className="specs-grid">
+                      {Object.entries(selectedVehicle.specs).map(([key, value]) => (
+                        <div key={key} className="spec-item">
+                          <span className="spec-key">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                          <span className="spec-value">{value}</span>
+                        </div>
+                      ))}
+                      <div className="spec-item">
+                        <span className="spec-key">Color</span>
+                        <span className="spec-value">{selectedVehicle.color}</span>
+                      </div>
+                      <div className="spec-item">
+                        <span className="spec-key">Interior</span>
+                        <span className="spec-value">{selectedVehicle.interior}</span>
+                      </div>
+                      <div className="spec-item">
+                        <span className="spec-key">VIN</span>
+                        <span className="spec-value vin">{selectedVehicle.vin}</span>
+                      </div>
                     </div>
                   </div>
-                )}
 
-                {/* Step 2: Preferences */}
-                {inquiryStep === 2 && (
-                  <div className="inquiry-step-content">
-                    <h3>Your Preferences</h3>
+                  <div className="tab-content" id="content-features">
+                    <ul className="features-list">
+                      {selectedVehicle.features.map((feature, idx) => (
+                        <li key={idx} className="feature-item">
+                          <span className="feature-check">✓</span>
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                    <div className="preferences-grid">
-                      <div className="preference-card">
-                        <label className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={inquiryData.testDrive}
-                            onChange={(e) => setInquiryData({ ...inquiryData, testDrive: e.target.checked })}
-                          />
-                          <span className="checkbox-custom"></span>
-                          <div className="preference-content">
-                            <span className="preference-icon">🚗</span>
-                            <div>
-                              <h4>Schedule Test Drive</h4>
-                              <p>Experience the vehicle in person</p>
-                            </div>
-                          </div>
-                        </label>
-                      </div>
-
-                      <div className="preference-card">
-                        <label className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={inquiryData.financing}
-                            onChange={(e) => setInquiryData({ ...inquiryData, financing: e.target.checked })}
-                          />
-                          <span className="checkbox-custom"></span>
-                          <div className="preference-content">
-                            <span className="preference-icon">💰</span>
-                            <div>
-                              <h4>Financing Options</h4>
-                              <p>Get pre-approved for financing</p>
-                            </div>
-                          </div>
-                        </label>
-                      </div>
-
-                      <div className="preference-card">
-                        <label className="checkbox-label">
-                          <input
-                            type="checkbox"
-                            checked={inquiryData.tradeIn}
-                            onChange={(e) => setInquiryData({ ...inquiryData, tradeIn: e.target.checked })}
-                          />
-                          <span className="checkbox-custom"></span>
-                          <div className="preference-content">
-                            <span className="preference-icon">🔄</span>
-                            <div>
-                              <h4>Trade-In Evaluation</h4>
-                              <p>Get value for your current vehicle</p>
-                            </div>
-                          </div>
-                        </label>
-                      </div>
+                  <div className="tab-content" id="content-history">
+                    <div className="history-item">
+                      <span className="history-label">Service History:</span>
+                      <span className="history-value">{selectedVehicle.serviceHistory}</span>
                     </div>
-
-                    <div className="form-group">
-                      <label>Additional Message (Optional)</label>
-                      <textarea
-                        className="form-textarea"
-                        rows="3"
-                        value={inquiryData.message}
-                        onChange={(e) => setInquiryData({ ...inquiryData, message: e.target.value })}
-                      />
+                    <div className="history-item">
+                      <span className="history-label">Warranty:</span>
+                      <span className="history-value">{selectedVehicle.warranty}</span>
                     </div>
-
-                    <div className="step-actions">
-                      <button className="btn-back" onClick={() => setInquiryStep(1)}>
-                        Back
-                      </button>
-                      <button 
-                        className="btn-next"
-                        onClick={() => setInquiryStep(3)}
-                        disabled={!inquiryData.name || !inquiryData.email || !inquiryData.phone}
-                      >
-                        Review Inquiry
-                      </button>
+                    <div className="history-item">
+                      <span className="history-label">Previous Owners:</span>
+                      <span className="history-value">{selectedVehicle.owners}</span>
+                    </div>
+                    <div className="history-item">
+                      <span className="history-label">Accident History:</span>
+                      <span className="history-value">Clean Carfax</span>
                     </div>
                   </div>
-                )}
 
-                {/* Step 3: Review */}
-                {inquiryStep === 3 && (
-                  <div className="inquiry-step-content">
-                    <h3>Review Your Inquiry</h3>
-
-                    <div className="inquiry-summary">
-                      <div className="summary-section">
-                        <h4>Vehicle</h4>
-                        <p><strong>{selectedVehicle.name}</strong></p>
-                        <p>{selectedVehicle.year} • {selectedVehicle.mileage.toLocaleString()} miles</p>
-                        <p className="summary-price">{formatPrice(selectedVehicle.price)}</p>
+                  <div className="tab-content" id="content-financing">
+                    <div className="financing-calculator">
+                      <h4 className="calculator-title">Estimate Your Payment</h4>
+                      
+                      <div className="calculator-row">
+                        <label>Down Payment</label>
+                        <div className="calculator-input">
+                          <span className="input-prefix">%</span>
+                          <input
+                            type="number"
+                            value={financing.downPayment}
+                            onChange={(e) => setFinancing(prev => ({ 
+                              ...prev, 
+                              downPayment: Math.min(50, Math.max(0, parseInt(e.target.value) || 0))
+                            }))}
+                            min="0"
+                            max="50"
+                          />
+                        </div>
                       </div>
 
-                      <div className="summary-section">
-                        <h4>Contact Information</h4>
-                        <p><strong>{inquiryData.name}</strong></p>
-                        <p>{inquiryData.email}</p>
-                        <p>{inquiryData.phone}</p>
+                      <div className="calculator-row">
+                        <label>Term (months)</label>
+                        <select
+                          value={financing.term}
+                          onChange={(e) => setFinancing(prev => ({ ...prev, term: parseInt(e.target.value) }))}
+                        >
+                          {financingTerms.map(term => (
+                            <option key={term} value={term}>{term} months</option>
+                          ))}
+                        </select>
                       </div>
 
-                      {inquiryData.testDrive && (
-                        <div className="summary-section">
-                          <h4>Test Drive Requested</h4>
+                      <div className="calculator-row">
+                        <label>Interest Rate (%)</label>
+                        <div className="calculator-input">
+                          <input
+                            type="number"
+                            value={financing.interestRate}
+                            onChange={(e) => setFinancing(prev => ({ 
+                              ...prev, 
+                              interestRate: parseFloat(e.target.value) || 0
+                            }))}
+                            step="0.1"
+                            min="0"
+                            max="20"
+                          />
                         </div>
-                      )}
-
-                      {inquiryData.financing && (
-                        <div className="summary-section">
-                          <h4>Financing Information Requested</h4>
-                        </div>
-                      )}
-
-                      {inquiryData.tradeIn && (
-                        <div className="summary-section">
-                          <h4>Trade-In Evaluation Requested</h4>
-                        </div>
-                      )}
-
-                      <div className="summary-section">
-                        <h4>Message</h4>
-                        <p className="summary-message">{inquiryData.message}</p>
                       </div>
-                    </div>
 
-                    <div className="terms-agreement">
-                      <label className="checkbox-label">
-                        <input type="checkbox" required />
-                        <span>I agree to be contacted by a sales representative</span>
-                      </label>
-                    </div>
-
-                    <div className="step-actions">
-                      <button className="btn-back" onClick={() => setInquiryStep(2)}>
-                        Back
-                      </button>
-                      <button 
-                        className="btn-confirm"
-                        onClick={() => {
-                          setShowModal(false);
-                          alert('Thank you for your interest! A sales representative will contact you within 24 hours.');
-                        }}
-                      >
-                        Submit Inquiry
-                      </button>
+                      {calculateFinancing() && (
+                        <div className="calculator-results">
+                          <div className="result-item">
+                            <span>Down Payment:</span>
+                            <span>${calculateFinancing().downPaymentAmount.toLocaleString()}</span>
+                          </div>
+                          <div className="result-item">
+                            <span>Loan Amount:</span>
+                            <span>${calculateFinancing().loanAmount.toLocaleString()}</span>
+                          </div>
+                          <div className="result-item highlight">
+                            <span>Monthly Payment:</span>
+                            <span>${calculateFinancing().monthlyPayment}</span>
+                          </div>
+                          <div className="result-item">
+                            <span>Total Interest:</span>
+                            <span>${calculateFinancing().totalInterest}</span>
+                          </div>
+                          <div className="result-item">
+                            <span>Total Payments:</span>
+                            <span>${calculateFinancing().totalPayments}</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
+
+                <div className="vehicle-actions">
+                  <Button 
+                    variant="primary" 
+                    size="lg" 
+                    fullWidth
+                    onClick={() => handleInquirySubmit('purchase')}
+                  >
+                    Inquire About This Vehicle
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg" 
+                    fullWidth
+                    onClick={() => handleInquirySubmit('test_drive')}
+                  >
+                    Schedule Test Drive
+                  </Button>
+                </div>
+
+                <p className="vehicle-disclaimer">
+                  *Price does not include tax, title, and license. Vehicle subject to prior sale.
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ===== WHY BUY SECTION ===== */}
-      <section className="why-buy-section">
-        <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">WHY BUY FROM US</span>
-            <h2 className="section-title">
-              The CAR EASE <span className="gold-text">Advantage</span>
-            </h2>
-          </div>
-
-          <div className="why-grid">
-            <div className="why-card">
-              <div className="why-icon">🔍</div>
-              <h3>150-Point Inspection</h3>
-              <p>Every vehicle undergoes rigorous inspection</p>
-            </div>
-            <div className="why-card">
-              <div className="why-icon">📋</div>
-              <h3>Complete History</h3>
-              <p>Full Carfax reports on every vehicle</p>
-            </div>
-            <div className="why-card">
-              <div className="why-icon">💰</div>
-              <h3>Best Price Guarantee</h3>
-              <p>We match any legitimate offer</p>
-            </div>
-            <div className="why-card">
-              <div className="why-icon">🏦</div>
-              <h3>Financing Available</h3>
-              <p>Competitive rates and flexible terms</p>
-            </div>
-            <div className="why-card">
-              <div className="why-icon">🔄</div>
-              <h3>Trade-ins Welcome</h3>
-              <p>Fair market value for your vehicle</p>
-            </div>
-            <div className="why-card">
-              <div className="why-icon">🚚</div>
-              <h3>Worldwide Delivery</h3>
-              <p>Ship to your location</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== FINANCING SECTION ===== */}
-      <section className="financing-section">
-        <div className="container">
-          <div className="financing-grid">
-            <div className="financing-content">
-              <span className="section-subtitle">FINANCING MADE EASY</span>
-              <h2 className="section-title">
-                Flexible <span className="gold-text">Payment Options</span>
-              </h2>
-              <p className="financing-description">
-                We work with multiple lenders to offer competitive rates and flexible terms. Get pre-approved in minutes with no impact to your credit score.
-              </p>
-              <ul className="financing-benefits">
-                <li>✓ Competitive interest rates</li>
-                <li>✓ Flexible term lengths</li>
-                <li>✓ Quick pre-approval</li>
-                <li>✓ No hidden fees</li>
-              </ul>
-              <button className="btn-gold">Get Pre-Approved</button>
-            </div>
-            <div className="financing-image">
-              <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800" alt="Financing" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== TRADE-IN SECTION ===== */}
-      <section className="tradein-section">
-        <div className="container">
-          <div className="tradein-grid">
-            <div className="tradein-image">
-              <img src="https://images.unsplash.com/photo-1580273916550-e323be2ae537?w=800" alt="Trade-in" />
-            </div>
-            <div className="tradein-content">
-              <span className="section-subtitle">TRADE-IN PROGRAM</span>
-              <h2 className="section-title">
-                Get Value for Your <span className="gold-text">Current Vehicle</span>
-              </h2>
-              <p className="tradein-description">
-                Looking to upgrade? We offer competitive trade-in values for your current vehicle. Get an instant online offer or visit us for a professional appraisal.
-              </p>
-              <div className="tradein-features">
-                <div className="tradein-feature">
-                  <span className="feature-icon">⚡</span>
-                  <span>Instant online offer</span>
-                </div>
-                <div className="tradein-feature">
-                  <span className="feature-icon">✓</span>
-                  <span>Professional appraisal</span>
-                </div>
-                <div className="tradein-feature">
-                  <span className="feature-icon">💰</span>
-                  <span>Fair market value</span>
-                </div>
-              </div>
-              <button className="btn-gold">Value Your Trade</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== CTA SECTION ===== */}
-      <section className="sales-cta">
+      {/* CTA Section */}
+      <section className="sales-cta-section">
         <div className="container">
           <div className="cta-content">
-            <h2>Ready to Find Your Dream Car?</h2>
-            <p>Browse our collection or speak with a sales specialist</p>
+            <h2 className="cta-title">Not Finding What You're Looking For?</h2>
+            <p className="cta-description">
+              Let our specialists help you find the perfect vehicle
+            </p>
             <div className="cta-buttons">
-              <button 
-                className="btn-gold btn-large"
-                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              >
-                Browse Inventory
-              </button>
-              <a href="tel:+18005550123" className="btn-outline-light btn-large">
-                Call Sales: +1 (800) 555-0123
-              </a>
+              <Link to={ROUTES.CONTACT}>
+                <Button variant="primary" size="lg">
+                  Contact a Specialist
+                </Button>
+              </Link>
+              <Link to="/inventory-request">
+                <Button variant="outline" size="lg">
+                  Submit Vehicle Request
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

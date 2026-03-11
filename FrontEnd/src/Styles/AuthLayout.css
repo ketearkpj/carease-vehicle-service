@@ -1,0 +1,128 @@
+/* ===== src/Styles/AuthLayout.css ===== */
+@import './Variables.css';
+@import './Global.css';
+@import './Responsive.css';
+
+.auth-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-deep);
+}
+
+.auth-form-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  position: relative;
+  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+}
+
+.auth-form-wrapper {
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-logo {
+  margin-bottom: var(--space-8);
+  text-align: center;
+}
+
+.auth-logo .logo-text {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  color: var(--white);
+  letter-spacing: -0.5px;
+}
+
+.auth-logo .gold-text {
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.auth-content {
+  background: var(--glass-bg);
+  border: var(--border-fine);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-pattern {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image:
+    radial-gradient(circle at 20% 20%, var(--gold-glow) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, var(--gold-glow) 0%, transparent 50%);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+.auth-glow {
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+  opacity: 0.1;
+  animation: rotateSlow 30s linear infinite;
+  pointer-events: none;
+}
+
+.auth-hero {
+  flex: 1;
+  position: relative;
+  background-size: cover;
+  background-position: center;
+  display: none;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(10, 12, 20, 0.9) 0%, rgba(212, 175, 55, 0.3) 100%);
+}
+
+@keyframes rotateSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (min-width: 1025px) {
+  .auth-hero {
+    display: block;
+  }
+}
+
+@media (max-width: 1024px) {
+  .auth-hero {
+    display: none;
+  }
+
+  .auth-form-container {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-content {
+    padding: var(--space-4);
+  }
+
+  .auth-logo .logo-text {
+    font-size: var(--text-2xl);
+  }
+}

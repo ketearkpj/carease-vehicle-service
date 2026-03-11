@@ -1,230 +1,541 @@
-// src/pages/Home.jsx
-import React, { useEffect, useRef } from 'react';
+// ===== src/Pages/Home.jsx =====
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+import { APP_CONFIG, SERVICE_TYPES } from '../Utils/constants';
+
+// Common Components
+import Button from '../Components/Common/Button';
+import LoadingSpinner from '../Components/Common/LoadingSpinner';
+import Card from '../Components/Common/Card';
+
+// Feature Components
+import ServiceCard from '../Components/Features/ServiceCard';
+import VehicleCard from '../Components/Features/VehicleCard';
+
+// Services
+import { getFeaturedVehicles } from '../Services/VehicleService';
+import { getServices } from '../Services/Service.Service';
+
+// Hooks
+import { useApp } from '../Context/AppContext';
+
+// Styles
 import '../Styles/Home.css';
 
 const Home = () => {
   const navigate = useNavigate();
-  const heroRef = useRef(null);
-  const featuresRef = useRef(null);
+  const [featuredVehicles, setFeaturedVehicles] = useState([]);
+  const [services, setServices] = useState([]);
+  const [isLoadingVehicles, setIsLoadingVehicles] = useState(true);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [scrollProgress, setScrollProgress] = useState(0);
 
+  const heroRef = useRef(null);
+  const statsRef = useRef(null);
+
+  const { addNotification } = useApp();
+
+  // Feature highlights - replaced newsletter section
+  const highlights = [
+    {
+      icon: '✨',
+      title: 'Bespoke Experiences',
+      description: 'Every journey is uniquely crafted to your preferences, from vehicle selection to personalized concierge service.',
+      color: '#d4af37'
+    },
+    {
+      icon: '🌍',
+      title: 'Global Access',
+      description: 'Access our premium fleet across multiple locations with seamless pickup and drop-off worldwide.',
+      color: '#00ff88'
+    },
+    {
+      icon: '👑',
+      title: 'VIP Treatment',
+      description: 'Enjoy priority booking, exclusive events, and white-glove service reserved for our distinguished clientele.',
+      color: '#33b5e5'
+    }
+  ];
+
+  // Stats data
+  const stats = [
+    { number: '500+', label: 'Luxury Vehicles', icon: '🚗' },
+    { number: '50k+', label: 'Happy Clients', icon: '👤' },
+    { number: '24/7', label: 'Concierge Support', icon: '⭐' },
+    { number: '15+', label: 'Years Excellence', icon: '🏆' }
+  ];
+
+  // Testimonials data
+  const testimonials = [
+    {
+      id: 1,
+      name: 'James Wilson',
+      role: 'CEO, Tech Corp',
+      content: 'The service at CAR EASE is unparalleled. I rented a Lamborghini for my wedding and the experience was flawless from start to finish.',
+      rating: 5,
+      image: 'https://randomuser.me/api/portraits/men/32.jpg'
+    },
+    {
+      id: 2,
+      name: 'Sarah Johnson',
+      role: 'Entrepreneur',
+      content: 'Their detailing service is absolutely incredible. My Ferrari looks better than the day I bought it. Highly recommended!',
+      rating: 5,
+      image: 'https://randomuser.me/api/portraits/women/44.jpg'
+    },
+    {
+      id: 3,
+      name: 'Michael Chen',
+      role: 'Investor',
+      content: 'I\'ve been using CAR EASE for all my vehicle needs for years. Professional, reliable, and always exceeding expectations.',
+      rating: 5,
+      image: 'https://randomuser.me/api/portraits/men/75.jpg'
+    }
+  ];
+
+  // Fetch data on mount
   useEffect(() => {
-    window.scrollTo(0, 0);
+    fetchFeaturedVehicles();
+    fetchServices();
   }, []);
 
-  // Parallax effect on scroll
+  // Auto-rotate testimonials
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Mouse move effect for parallax
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePosition({
+        x: (e.clientX / window.innerWidth - 0.5) * 10,
+        y: (e.clientY / window.innerHeight - 0.5) * 10
+      });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Scroll progress
   useEffect(() => {
     const handleScroll = () => {
-      const scrolled = window.scrollY;
-      if (heroRef.current) {
-        heroRef.current.style.transform = `translateY(${scrolled * 0.3}px)`;
-      }
+      const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = (window.scrollY / totalScroll) * 100;
+      setScrollProgress(progress);
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToFeatures = () => {
-    featuresRef.current?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'start'
-    });
+  const fetchFeaturedVehicles = async () => {
+    setIsLoadingVehicles(true);
+    try {
+      const vehicles = await getFeaturedVehicles(3);
+      setFeaturedVehicles(vehicles);
+    } catch (error) {
+      console.error('Failed to fetch vehicles:', error);
+      // Fallback data - only 3 for better spacing
+      setFeaturedVehicles([
+        {
+          id: 1,
+          name: 'Lamborghini Huracán',
+          price: 899,
+          image: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          category: 'Supercar',
+          specs: ['V10', '610hp', '2.9s 0-60'],
+          rating: 4.9,
+          available: true
+        },
+        {
+          id: 2,
+          name: 'Rolls-Royce Ghost',
+          price: 1299,
+          image: 'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          category: 'Luxury',
+          specs: ['V12', '563hp', '4.6s 0-60'],
+          rating: 5.0,
+          available: true
+        },
+        {
+          id: 3,
+          name: 'Porsche 911 Turbo S',
+          price: 749,
+          image: 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+          category: 'Sports',
+          specs: ['6-Cyl', '640hp', '2.6s 0-60'],
+          rating: 4.9,
+          available: true
+        }
+      ]);
+    } finally {
+      setIsLoadingVehicles(false);
+    }
   };
 
-  // Feature cards data
-  const features = [
-    {
-      icon: '🚗',
-      title: 'Premium Fleet',
-      description: 'Access to the finest luxury vehicles from world-renowned manufacturers',
-      stats: '500+ Vehicles',
-      link: '/rentals'
-    },
-    {
-      icon: '⭐',
-      title: '5-Star Service',
-      description: 'Exceptional customer experience with personalized concierge support',
-      stats: '50k+ Clients',
-      link: '/services'
-    },
-    {
-      icon: '🔒',
-      title: 'Secure Booking',
-      description: 'Safe and encrypted transactions with instant confirmation',
-      stats: '100% Secure',
-      link: '/booking'
-    },
-    {
-      icon: '⚡',
-      title: '24/7 Support',
-      description: 'Round-the-clock assistance for your peace of mind',
-      stats: 'Always Available',
-      link: '/contact'
+  const fetchServices = async () => {
+    setIsLoadingServices(true);
+    try {
+      const servicesData = await getServices({ featured: true });
+      setServices(servicesData);
+    } catch (error) {
+      console.error('Failed to fetch services:', error);
+      setServices([
+        {
+          id: 'rentals',
+          title: 'Luxury Rentals',
+          description: 'Experience the finest collection of exotic and luxury vehicles.',
+          icon: '🚗',
+          path: ROUTES.RENTALS,
+          features: ['Daily/Weekly Rates', 'Insurance Included', 'Free Delivery'],
+          price: { amount: 899, period: 'day', currency: '$' },
+          badge: 'Popular'
+        },
+        {
+          id: 'car_wash',
+          title: 'Car Wash & Detailing',
+          description: 'Professional detailing and ceramic coating services.',
+          icon: '🧼',
+          path: ROUTES.CAR_WASH,
+          features: ['Express Wash', 'Premium Detail', 'Ceramic Coating'],
+          price: { amount: 79, period: 'service', currency: '$' },
+          badge: 'Best Value'
+        },
+        {
+          id: 'repairs',
+          title: 'Repairs & Maintenance',
+          description: 'Expert mechanical services for all luxury vehicles.',
+          icon: '🔧',
+          path: ROUTES.REPAIRS,
+          features: ['Diagnostics', 'Performance Tuning', 'Genuine Parts'],
+          price: { amount: 199, period: 'hour', currency: '$' },
+          badge: 'Certified'
+        },
+        {
+          id: 'sales',
+          title: 'Vehicle Sales',
+          description: 'Curated collection of pre-owned luxury automobiles.',
+          icon: '💰',
+          path: ROUTES.SALES,
+          features: ['Financing', 'Vehicle History', 'Warranty'],
+          price: { amount: 'Market', period: 'value', currency: '' },
+          badge: 'Featured'
+        }
+      ]);
+    } finally {
+      setIsLoadingServices(false);
     }
-  ];
+  };
 
-  // Quick stats data
-  const stats = [
-    { number: '500+', label: 'Luxury Vehicles', icon: '🚗' },
-    { number: '50k+', label: 'Happy Clients', icon: '👤' },
-    { number: '1000+', label: 'Services Daily', icon: '⚡' },
-    { number: '98%', label: 'Satisfaction Rate', icon: '⭐' }
-  ];
+  const scrollToSection = (ref) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   return (
     <div className="home-page">
-      {/* ===== HERO SECTION ===== */}
-      <section className="hero-master">
-        {/* Advanced Background System */}
-        <div className="hero-background">
-          <div className="bg-grid"></div>
-          <div className="bg-orb primary"></div>
-          <div className="bg-orb secondary"></div>
-          <div className="bg-orb tertiary"></div>
-          <div className="bg-particles"></div>
-          <div className="bg-light-leak"></div>
+      {/* Scroll Progress Bar */}
+      <div className="scroll-progress" style={{ width: `${scrollProgress}%` }}></div>
+
+      {/* ===== HERO SECTION - PERFECT WITH CAR EASE & 2018 ===== */}
+      <section ref={heroRef} className="hero-elegant">
+        {/* Background with parallax */}
+        <div className="hero-backdrop" style={{
+          transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`
+        }}>
+          <div className="backdrop-grid"></div>
+          <div className="backdrop-orb primary"></div>
+          <div className="backdrop-orb secondary"></div>
         </div>
         
-        <div className="video-overlay"></div>
+        <div className="hero-overlay"></div>
         
-        {/* Hero Content with Parallax */}
-        <div className="hero-inner" ref={heroRef}>
-          <h3 className="gold-subtitle animate-fade-up">
-            <span className="year-badge">EST. 2018</span>
-          </h3>
-          
-          <h1 className="main-brand-title animate-fade-left">
-            CAR<span className="gold-text" data-text="EASE">EASE</span>
-            <div className="title-decoration">
-              <div className="deco-line left"></div>
-              <div className="deco-line right"></div>
-              <div className="deco-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
+        <div className="hero-container">
+          <div className="hero-content-left">
+            {/* EST. 2018 Badge - Restored exactly as you wanted */}
+            <div className="gold-subtitle">
+              <span className="year-badge">EST. {APP_CONFIG.established}</span>
             </div>
-          </h1>
-          
-          <div className="prestige-line animate-scale">
-            <span className="gold-dot"></span>
+            
+            {/* CAR EASE Title - Restored exactly as you wanted */}
+            <h1 className="main-brand-title">
+              CAR<span className="gold-text" data-text="EASE">EASE</span>
+              <div className="title-decoration">
+                <div className="deco-line left"></div>
+                <div className="deco-line right"></div>
+                <div className="deco-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </h1>
+            
+            <p className="hero-description">
+              Experience the pinnacle of automotive luxury with our exclusive collection 
+              of hand-picked vehicles and white-glove services.
+            </p>
+            
+            <div className="hero-actions-vertical">
+              <Link to={ROUTES.SERVICES} className="hero-btn-primary">
+                <span>View Collection</span>
+                <span className="btn-arrow">→</span>
+              </Link>
+              <Link to={ROUTES.ABOUT} className="hero-btn-secondary">
+                Discover Our Story
+              </Link>
+            </div>
           </div>
           
-          <p className="master-description animate-fade-right">
-            Experience the pinnacle of automotive luxury. From bespoke rentals 
-            to elite maintenance, we provide a seamless journey for the driven 
-            few who demand nothing but excellence.
-          </p>
-          
-          {/* CTA Buttons */}
-          <div className="cta-group animate-fade-up">
-            <Link to="/services" className="btn-gold btn-lg btn-arrow">
-              VIEW COLLECTION
-            </Link>
+          <div className="hero-content-right">
+            <div className="hero-stats-compact">
+              {stats.slice(0, 2).map((stat, index) => (
+                <div key={index} className="hero-stat-item">
+                  <span className="hero-stat-number">{stat.number}</span>
+                  <span className="hero-stat-label">{stat.label}</span>
+                </div>
+              ))}
+            </div>
             
-            <Link to="/about" className="btn-outline btn-lg">
-              OUR SERVICES
-            </Link>
+            {/* Experience Tray - Now with clickable items */}
+            <div className="hero-feature-tray">
+              <div className="tray-label">EXPERIENCES</div>
+              <div className="tray-items">
+                <span onClick={() => navigate(ROUTES.RENTALS)}>Rentals</span>
+                <span onClick={() => navigate(ROUTES.CAR_WASH)}>Detailing</span>
+                <span onClick={() => navigate(ROUTES.REPAIRS)}>Repairs</span>
+                <span onClick={() => navigate(ROUTES.SALES)}>Sales</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Feature Tray */}
+        {/* Exotic Fleet Tray - Added exactly as you wanted, just after explore */}
         <div className="feature-tray">
-          <div className="tray-item" onClick={() => navigate('/rentals')} role="button" tabIndex={0}>
+          <div className="tray-item" onClick={() => navigate(ROUTES.RENTALS)}>
             <span className="tray-number">01</span>
             <span className="tray-label">Exotic Fleet</span>
             <span className="tray-line"></span>
           </div>
-          <div className="tray-item" onClick={() => navigate('/services')} role="button" tabIndex={0}>
+          <div className="tray-item" onClick={() => navigate(ROUTES.SERVICES)}>
             <span className="tray-number">02</span>
             <span className="tray-label">VIP Concierge</span>
             <span className="tray-line"></span>
           </div>
-          <div className="tray-item" onClick={() => navigate('/about')} role="button" tabIndex={0}>
+          <div className="tray-item" onClick={() => navigate(ROUTES.ABOUT)}>
             <span className="tray-number">03</span>
             <span className="tray-label">Global Access</span>
             <span className="tray-line"></span>
           </div>
-          <div className="tray-item" onClick={() => navigate('/contact')} role="button" tabIndex={0}>
+          <div className="tray-item" onClick={() => navigate(ROUTES.CONTACT)}>
             <span className="tray-number">04</span>
             <span className="tray-label">24/7 Support</span>
             <span className="tray-line"></span>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="scroll-indicator" onClick={scrollToFeatures}>
-          <span className="scroll-text">DISCOVER</span>
-          <div className="scroll-line"></div>
+        {/* Minimal Scroll Indicator */}
+        <div className="scroll-minimal" onClick={() => scrollToSection(statsRef)}>
+          <span className="scroll-minimal-text">Explore</span>
+          <div className="scroll-minimal-line"></div>
         </div>
       </section>
 
-      {/* ===== STATS SECTION ===== */}
-      <section className="stats-section">
+      {/* ===== STATS BAR - CLEAN & MINIMAL ===== */}
+      <section ref={statsRef} className="stats-bar">
         <div className="container">
-          <div className="stats-grid">
+          <div className="stats-bar-grid">
             {stats.map((stat, index) => (
-              <div key={index} className="stat-card">
-                <span className="stat-icon">{stat.icon}</span>
-                <span className="stat-number">{stat.number}</span>
-                <span className="stat-label">{stat.label}</span>
+              <div key={index} className="stats-bar-item">
+                <span className="stats-bar-number">{stat.number}</span>
+                <span className="stats-bar-label">{stat.label}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== FEATURES SECTION ===== */}
-      <section className="features-section" ref={featuresRef}>
+      {/* ===== SERVICES SECTION - VERTICAL LAYOUT ===== */}
+      <section className="services-vertical">
         <div className="container">
-          <div className="section-header">
-            <span className="section-subtitle">WHY CHOOSE US</span>
-            <h2 className="section-title">
-              The <span className="gold-text">CAR EASE</span> Experience
+          <div className="services-vertical-header">
+            <span className="section-tag">WHAT WE OFFER</span>
+            <h2 className="section-title-large">
+              Curated <span className="gold-gradient">Services</span>
             </h2>
-            <p className="section-description">
-              Discover why discerning clients choose us for their automotive needs
+            <p className="section-description-wide">
+              From exotic rentals to expert maintenance, each service is delivered 
+              with the utmost attention to detail and luxury.
             </p>
           </div>
-          
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="feature-card"
-                onClick={() => navigate(feature.link)}
-                role="button"
-                tabIndex={0}
-                onKeyPress={(e) => e.key === 'Enter' && navigate(feature.link)}
-              >
-                <div className="feature-icon-wrapper">
-                  <span className="feature-icon">{feature.icon}</span>
-                  <div className="feature-icon-glow"></div>
+
+          {isLoadingServices ? (
+            <div className="services-loading">
+              <LoadingSpinner size="lg" color="gold" text="Loading services..." />
+            </div>
+          ) : (
+            <div className="services-vertical-grid">
+              {services.map((service, index) => (
+                <div key={service.id} className="service-vertical-card">
+                  <div className="service-vertical-icon">{service.icon}</div>
+                  <div className="service-vertical-content">
+                    <h3>{service.title}</h3>
+                    <p>{service.description}</p>
+                    <Link to={service.path} className="service-vertical-link">
+                      Learn More <span>→</span>
+                    </Link>
+                  </div>
                 </div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
-                <div className="feature-stats">{feature.stats}</div>
-                <div className="feature-link">
-                  Learn More <span className="feature-arrow">→</span>
+              ))}
+            </div>
+          )}
+
+          <div className="services-vertical-footer">
+            <Link to={ROUTES.SERVICES}>
+              <Button variant="outline" size="lg">
+                Explore All Services
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FEATURED VEHICLES - ELEGANT GRID ===== */}
+      <section className="featured-vehicles-elegant">
+        <div className="container">
+          <div className="section-header-elegant">
+            <span className="section-tag">THE FLEET</span>
+            <h2 className="section-title-large">
+              Featured <span className="gold-gradient">Vehicles</span>
+            </h2>
+          </div>
+
+          {isLoadingVehicles ? (
+            <div className="vehicles-loading">
+              <LoadingSpinner size="lg" color="gold" text="Loading vehicles..." />
+            </div>
+          ) : (
+            <>
+              <div className="vehicles-grid-elegant">
+                {featuredVehicles.map((vehicle, index) => (
+                  <div key={vehicle.id} className="vehicle-elegant-card">
+                    <div className="vehicle-elegant-image">
+                      <img src={vehicle.image} alt={vehicle.name} />
+                      <div className="vehicle-elegant-overlay">
+                        <span className="vehicle-category">{vehicle.category}</span>
+                      </div>
+                    </div>
+                    <div className="vehicle-elegant-info">
+                      <h3>{vehicle.name}</h3>
+                      <div className="vehicle-elegant-specs">
+                        {vehicle.specs.slice(0, 2).map((spec, idx) => (
+                          <span key={idx}>{spec}</span>
+                        ))}
+                      </div>
+                      <div className="vehicle-elegant-price">
+                        <span className="price-amount">${vehicle.price}</span>
+                        <span className="price-period">/day</span>
+                      </div>
+                      <Link to={`${ROUTES.RENTALS}/${vehicle.id}`} className="vehicle-elegant-link">
+                        View Details
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="vehicles-footer">
+                <Link to={ROUTES.RENTALS}>
+                  <Button variant="primary" size="lg">
+                    Browse Full Collection
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
+      </section>
+
+      {/* ===== HIGHLIGHTS SECTION - REPLACED NEWSLETTER ===== */}
+      <section className="highlights-section">
+        <div className="container">
+          <div className="highlights-grid">
+            {highlights.map((highlight, index) => (
+              <div key={index} className="highlight-card">
+                <div className="highlight-icon" style={{ background: `radial-gradient(circle at 30% 30%, ${highlight.color}20, transparent 70%)` }}>
+                  <span>{highlight.icon}</span>
                 </div>
-                <div className="feature-card-glow"></div>
+                <h3>{highlight.title}</h3>
+                <p>{highlight.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== CTA BANNER ===== */}
-      <section className="cta-banner">
+      {/* ===== TESTIMONIALS - ELEGANT SLIDER ===== */}
+      <section className="testimonials-elegant">
         <div className="container">
-          <div className="cta-banner-content">
-            <h2>Ready to Experience Excellence?</h2>
-            <p>Join thousands of satisfied clients who trust CAR EASE for their luxury automotive needs.</p>
-            <div className="cta-banner-buttons">
-              <Link to="/services" className="btn-gold btn-lg">Get Started</Link>
-              <Link to="/contact" className="btn-outline-light btn-lg">Contact Us</Link>
+          <div className="testimonials-elegant-content">
+            <span className="section-tag">CLIENT VOICES</span>
+            <h2 className="section-title-large">Trusted by <span className="gold-gradient">Discerning</span> Clients</h2>
+            
+            <div className="testimonials-elegant-slider">
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={testimonial.id}
+                  className={`testimonial-elegant-card ${index === activeTestimonial ? 'active' : ''}`}
+                >
+                  <div className="testimonial-elegant-quote">"</div>
+                  <p className="testimonial-elegant-text">{testimonial.content}</p>
+                  <div className="testimonial-elegant-author">
+                    <img src={testimonial.image} alt={testimonial.name} />
+                    <div>
+                      <h4>{testimonial.name}</h4>
+                      <p>{testimonial.role}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div className="testimonial-elegant-controls">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`testimonial-dot ${index === activeTestimonial ? 'active' : ''}`}
+                    onClick={() => setActiveTestimonial(index)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FINAL CTA - CLEAN & POWERFUL ===== */}
+      <section className="final-cta">
+        <div className="container">
+          <div className="final-cta-content">
+            <h2>Begin Your Journey</h2>
+            <p>Experience the difference of true automotive luxury.</p>
+            <div className="final-cta-actions">
+              <Link to={ROUTES.BOOKING}>
+                <Button variant="primary" size="lg">
+                  Book Now
+                </Button>
+              </Link>
+              <Link to={ROUTES.CONTACT}>
+                <Button variant="outline" size="lg">
+                  Contact Concierge
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

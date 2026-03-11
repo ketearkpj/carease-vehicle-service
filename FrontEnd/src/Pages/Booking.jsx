@@ -1,696 +1,382 @@
-import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+// ===== src/Pages/Booking.jsx =====
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+import { SERVICE_TYPES, BOOKING_LIMITS } from '../Utils/constants';
+
+// Components
+import Button from '../Components/Common/Button';
+import Card from '../Components/Common/Card';
+import Input from '../Components/Common/Input';
+import Select from '../Components/Common/Select';
+import BookingForm from '../Components/Features/BookingForm';
+import PaymentOptions from '../Components/Features/PaymentOptions';
+import LoadingSpinner from '../Components/Common/LoadingSpinner';
+
+// Services
+import { createBooking, checkAvailability } from '../Services/BookingService';
+import { getServicePricing } from '../Services/Service.Service';
+
+// Hooks
+import { useApp } from '../Context/AppContext';
+import { useBooking } from '../Hooks/useBooking';
+import { usePayment } from '../Hooks/usePayment';
+
+// Styles
 import '../Styles/Booking.css';
 
 const Booking = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const [bookingStep, setBookingStep] = useState(1);
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+
+  const [currentStep, setCurrentStep] = useState(1);
   const [bookingData, setBookingData] = useState({
-    // Service Type
-    serviceType: location.state?.service || 'rental',
-    
-    // Vehicle/Rental Info
-    vehicle: location.state?.vehicle || null,
-    servicePackage: location.state?.package || null,
-    repairService: location.state?.repairService || null,
-    
-    // Dates & Times
-    startDate: location.state?.date || '',
-    endDate: '',
-    startTime: location.state?.time || '',
-    endTime: '',
-    
-    // Location
-    location: location.state?.location || null,
-    deliveryAddress: location.state?.deliveryAddress || '',
-    
-    // Customer Info
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'USA',
-    
-    // Extras
-    extras: location.state?.extras || {},
-    addons: location.state?.addons || [],
-    issueDescription: location.state?.issueDescription || '',
-    vehicleInfo: location.state?.vehicleInfo || { make: '', model: '', year: '' },
-    
-    // Preferences
-    contactMethod: 'email',
-    specialRequests: '',
-    
-    // Price
-    priceBreakdown: location.state?.priceBreakdown || null
+    serviceType: queryParams.get('service') || 'rental',
+    vehicleId: queryParams.get('vehicle') || null,
+    date: queryParams.get('date') || '',
+    time: queryParams.get('time') || '',
+    duration: 1,
+    extras: [],
+    customerInfo: null,
+    paymentMethod: null
   });
+  const [pricing, setPricing] = useState(null);
+  const [availability, setAvailability] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  const { addNotification } = useApp();
+  const { createNewBooking } = useBooking();
+  const { processNewPayment } = usePayment();
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [bookingStep]);
+    if (bookingData.date && bookingData.time) {
+      checkServiceAvailability();
+    }
+  }, [bookingData.date, bookingData.time, bookingData.serviceType, bookingData.vehicleId]);
 
-  // Calculate rental price (if applicable)
-  const calculateRentalPrice = () => {
-    if (!bookingData.vehicle) return null;
-    
-    const days = 3; // This would be calculated from dates
-    const basePrice = bookingData.vehicle.price * days;
-    const extrasTotal = 0; // Calculate from selected extras
-    const deliveryFee = bookingData.location?.id === 'delivery' ? 49 : 0;
-    const subtotal = basePrice + extrasTotal + deliveryFee;
-    const tax = subtotal * 0.1;
-    const total = subtotal + tax;
-    
-    return { basePrice, extrasTotal, deliveryFee, subtotal, tax, total };
-  };
+  useEffect(() => {
+    if (bookingData.serviceType && bookingData.duration) {
+      calculatePricing();
+    }
+  }, [bookingData.serviceType, bookingData.vehicleId, bookingData.duration, bookingData.extras]);
 
-  // Calculate car wash price (if applicable)
-  const calculateWashPrice = () => {
-    if (!bookingData.servicePackage) return null;
-    return bookingData.priceBreakdown || { total: bookingData.servicePackage.price };
-  };
-
-  // Calculate repair price (if applicable)
-  const calculateRepairPrice = () => {
-    if (!bookingData.repairService) return null;
-    return bookingData.priceBreakdown || { total: bookingData.repairService.price };
-  };
-
-  // Get price based on service type
-  const getPrice = () => {
-    switch(bookingData.serviceType) {
-      case 'rental':
-        return calculateRentalPrice();
-      case 'car-wash':
-        return calculateWashPrice();
-      case 'repair':
-        return calculateRepairPrice();
-      default:
-        return null;
+  const checkServiceAvailability = async () => {
+    setLoading(true);
+    try {
+      const result = await checkAvailability({
+        serviceType: bookingData.serviceType,
+        date: bookingData.date,
+        time: bookingData.time,
+        vehicleId: bookingData.vehicleId
+      });
+      setAvailability(result);
+      if (!result.available) {
+        setErrors({ availability: result.message || 'Selected time slot is not available' });
+      } else {
+        setErrors(prev => ({ ...prev, availability: null }));
+      }
+    } catch (error) {
+      console.error('Availability check failed:', error);
+      setErrors({ availability: 'Failed to check availability' });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const price = getPrice();
+  const calculatePricing = async () => {
+    try {
+      const result = await getServicePricing(bookingData.serviceType, {
+        vehicleId: bookingData.vehicleId,
+        duration: bookingData.duration,
+        extras: bookingData.extras
+      });
+      setPricing(result);
+    } catch (error) {
+      console.error('Pricing calculation failed:', error);
+    }
+  };
 
-  // Booking steps
-  const bookingSteps = [
-    { number: 1, name: 'Service Details', icon: '📋' },
-    { number: 2, name: 'Personal Info', icon: '👤' },
-    { number: 3, name: 'Review', icon: '✓' }
+  const handleServiceSelect = (serviceType) => {
+    setBookingData(prev => ({
+      ...prev,
+      serviceType,
+      vehicleId: null,
+      date: '',
+      time: '',
+      duration: 1
+    }));
+    setCurrentStep(1);
+  };
+
+  const handleBookingFormSubmit = async (formData) => {
+    setBookingData(prev => ({
+      ...prev,
+      customerInfo: formData
+    }));
+    setCurrentStep(2);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePaymentSuccess = async (paymentResult) => {
+    setLoading(true);
+    try {
+      // Create final booking
+      const finalBookingData = {
+        ...bookingData,
+        paymentId: paymentResult.transactionId,
+        totalAmount: pricing?.total,
+        status: 'confirmed'
+      };
+
+      const result = await createNewBooking(finalBookingData);
+
+      if (result.success) {
+        addNotification('Booking confirmed! Check your email for details.', 'success');
+        navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${result.booking.id}`);
+      }
+    } catch (error) {
+      addNotification('Failed to complete booking. Please contact support.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    setCurrentStep(prev => prev - 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const serviceTypes = [
+    { id: SERVICE_TYPES.RENTAL, label: 'Rentals', icon: '🚗', description: 'Luxury vehicle rentals' },
+    { id: SERVICE_TYPES.CAR_WASH, label: 'Car Wash', icon: '🧼', description: 'Professional detailing' },
+    { id: SERVICE_TYPES.REPAIR, label: 'Repairs', icon: '🔧', description: 'Expert maintenance' },
+    { id: SERVICE_TYPES.SALES, label: 'Sales', icon: '💰', description: 'Vehicle purchases' }
   ];
 
-  // Handle input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setBookingData(prev => ({ ...prev, [name]: value }));
-  };
-
-  // Handle next step
-  const handleNext = () => {
-    if (bookingStep < 3) {
-      setBookingStep(bookingStep + 1);
-    }
-  };
-
-  // Handle back step
-  const handleBack = () => {
-    if (bookingStep > 1) {
-      setBookingStep(bookingStep - 1);
-    }
-  };
-
-  // Handle form submission
-  const handleSubmit = () => {
-    // Navigate to checkout with booking data
-    navigate('/checkout', {
-      state: {
-        bookingData,
-        price
-      }
-    });
-  };
-
-  // Validate step 1
-  const isStep1Valid = () => {
-    if (bookingData.serviceType === 'rental') {
-      return bookingData.startDate && bookingData.startTime && bookingData.location;
-    } else if (bookingData.serviceType === 'car-wash') {
-      return bookingData.startDate && bookingData.startTime && bookingData.location;
-    } else if (bookingData.serviceType === 'repair') {
-      return bookingData.startDate && bookingData.startTime && bookingData.location;
-    }
-    return true;
-  };
-
-  // Validate step 2
-  const isStep2Valid = () => {
-    return (
-      bookingData.firstName &&
-      bookingData.lastName &&
-      bookingData.email &&
-      bookingData.phone
-    );
-  };
+  const steps = [
+    { number: 1, title: 'Choose Service', icon: '🔍' },
+    { number: 2, title: 'Your Details', icon: '📝' },
+    { number: 3, title: 'Payment', icon: '💳' }
+  ];
 
   return (
     <div className="booking-page">
-      {/* ===== HERO SECTION ===== */}
-      <section className="booking-hero">
-        <div className="booking-hero-content">
-          <h1 className="booking-hero-title animate-fade-up">
+      {/* Header */}
+      <section className="booking-header">
+        <div className="container">
+          <h1 className="header-title">
             Complete Your <span className="gold-text">Booking</span>
           </h1>
-          <p className="booking-hero-description animate-fade-up">
-            Just a few steps to confirm your reservation
+          <p className="header-subtitle">
+            Follow the simple steps below to book your service
           </p>
         </div>
       </section>
 
-      {/* ===== BOOKING CONTAINER ===== */}
-      <section className="booking-container">
+      {/* Progress Bar */}
+      <div className="booking-progress">
         <div className="container">
-          <div className="booking-card">
-            {/* Booking Steps */}
-            <div className="booking-steps">
-              {bookingSteps.map((step) => (
-                <div 
-                  key={step.number}
-                  className={`step ${bookingStep === step.number ? 'active' : ''} ${bookingStep > step.number ? 'completed' : ''}`}
-                >
-                  <div className="step-indicator">
-                    <span className="step-icon">{step.icon}</span>
-                    <span className="step-number">{step.number}</span>
-                  </div>
-                  <span className="step-name">{step.name}</span>
+          <div className="progress-steps">
+            {steps.map((step, index) => (
+              <div
+                key={step.number}
+                className={`progress-step ${currentStep === step.number ? 'active' : ''} ${currentStep > step.number ? 'completed' : ''}`}
+              >
+                <div className="step-indicator">
+                  <span className="step-icon">{step.icon}</span>
+                  <span className="step-number">{step.number}</span>
                 </div>
-              ))}
-            </div>
-
-            {/* Step 1: Service Details */}
-            {bookingStep === 1 && (
-              <div className="step-content">
-                <h2>Service Details</h2>
-
-                {/* Service Summary Card */}
-                <div className="service-summary-card">
-                  <h3>Your Selection</h3>
-                  {bookingData.serviceType === 'rental' && bookingData.vehicle && (
-                    <div className="summary-vehicle">
-                      <img src={bookingData.vehicle.image} alt={bookingData.vehicle.name} />
-                      <div>
-                        <h4>{bookingData.vehicle.name}</h4>
-                        <p className="vehicle-category">{bookingData.vehicle.category} • {bookingData.vehicle.year}</p>
-                        <p className="vehicle-price">${bookingData.vehicle.price}/day</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {bookingData.serviceType === 'car-wash' && bookingData.servicePackage && (
-                    <div className="summary-package">
-                      <div className="package-icon">{bookingData.servicePackage.icon}</div>
-                      <div>
-                        <h4>{bookingData.servicePackage.name}</h4>
-                        <p className="package-description">{bookingData.servicePackage.description}</p>
-                        <p className="package-price">${bookingData.servicePackage.price}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {bookingData.serviceType === 'repair' && bookingData.repairService && (
-                    <div className="summary-repair">
-                      <div className="repair-icon">{bookingData.repairService.icon}</div>
-                      <div>
-                        <h4>{bookingData.repairService.name}</h4>
-                        <p className="repair-description">{bookingData.repairService.description}</p>
-                        <p className="repair-price">${bookingData.repairService.price}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Date & Time Selection */}
-                <div className="form-section">
-                  <h3>Date & Time</h3>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Date *</label>
-                      <input
-                        type="date"
-                        name="startDate"
-                        className="form-input"
-                        value={bookingData.startDate}
-                        onChange={handleInputChange}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Time *</label>
-                      <select
-                        name="startTime"
-                        className="form-select"
-                        value={bookingData.startTime}
-                        onChange={handleInputChange}
-                      >
-                        <option value="">Select time</option>
-                        <option value="9:00 AM">9:00 AM</option>
-                        <option value="10:00 AM">10:00 AM</option>
-                        <option value="11:00 AM">11:00 AM</option>
-                        <option value="12:00 PM">12:00 PM</option>
-                        <option value="1:00 PM">1:00 PM</option>
-                        <option value="2:00 PM">2:00 PM</option>
-                        <option value="3:00 PM">3:00 PM</option>
-                        <option value="4:00 PM">4:00 PM</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {bookingData.serviceType === 'rental' && (
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label>Return Date</label>
-                        <input
-                          type="date"
-                          name="endDate"
-                          className="form-input"
-                          value={bookingData.endDate}
-                          onChange={handleInputChange}
-                          min={bookingData.startDate}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label>Return Time</label>
-                        <select
-                          name="endTime"
-                          className="form-select"
-                          value={bookingData.endTime}
-                          onChange={handleInputChange}
-                        >
-                          <option value="">Select time</option>
-                          <option value="9:00 AM">9:00 AM</option>
-                          <option value="10:00 AM">10:00 AM</option>
-                          <option value="11:00 AM">11:00 AM</option>
-                          <option value="12:00 PM">12:00 PM</option>
-                          <option value="1:00 PM">1:00 PM</option>
-                          <option value="2:00 PM">2:00 PM</option>
-                          <option value="3:00 PM">3:00 PM</option>
-                          <option value="4:00 PM">4:00 PM</option>
-                        </select>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Location Selection */}
-                <div className="form-section">
-                  <h3>Location</h3>
-                  {bookingData.location && (
-                    <div className="selected-location">
-                      <div className="location-info">
-                        <span className="location-icon">📍</span>
-                        <div>
-                          <h4>{bookingData.location.name}</h4>
-                          <p>{bookingData.location.address}</p>
-                          {bookingData.location.id === 'mobile' && (
-                            <p className="delivery-note">Delivery to: {bookingData.deliveryAddress}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Special Requests */}
-                <div className="form-section">
-                  <h3>Special Requests (Optional)</h3>
-                  <textarea
-                    name="specialRequests"
-                    className="form-textarea"
-                    rows="3"
-                    placeholder="Any special requests or instructions..."
-                    value={bookingData.specialRequests}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
-                <div className="step-actions">
-                  <button className="btn-next" onClick={handleNext} disabled={!isStep1Valid()}>
-                    Continue to Personal Info
-                  </button>
-                </div>
+                <span className="step-title">{step.title}</span>
+                {index < steps.length - 1 && <div className="step-connector"></div>}
               </div>
-            )}
-
-            {/* Step 2: Personal Information */}
-            {bookingStep === 2 && (
-              <div className="step-content">
-                <h2>Personal Information</h2>
-
-                <div className="form-section">
-                  <h3>Contact Details</h3>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>First Name *</label>
-                      <input
-                        type="text"
-                        name="firstName"
-                        className="form-input"
-                        placeholder="John"
-                        value={bookingData.firstName}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Last Name *</label>
-                      <input
-                        type="text"
-                        name="lastName"
-                        className="form-input"
-                        placeholder="Doe"
-                        value={bookingData.lastName}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Email Address *</label>
-                      <input
-                        type="email"
-                        name="email"
-                        className="form-input"
-                        placeholder="john@example.com"
-                        value={bookingData.email}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Phone Number *</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        className="form-input"
-                        placeholder="(555) 123-4567"
-                        value={bookingData.phone}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-group">
-                    <label>Preferred Contact Method</label>
-                    <div className="radio-group">
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name="contactMethod"
-                          value="email"
-                          checked={bookingData.contactMethod === 'email'}
-                          onChange={handleInputChange}
-                        />
-                        <span>Email</span>
-                      </label>
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name="contactMethod"
-                          value="phone"
-                          checked={bookingData.contactMethod === 'phone'}
-                          onChange={handleInputChange}
-                        />
-                        <span>Phone</span>
-                      </label>
-                      <label className="radio-label">
-                        <input
-                          type="radio"
-                          name="contactMethod"
-                          value="text"
-                          checked={bookingData.contactMethod === 'text'}
-                          onChange={handleInputChange}
-                        />
-                        <span>Text</span>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="form-section">
-                  <h3>Billing Address</h3>
-                  <div className="form-group">
-                    <label>Street Address</label>
-                    <input
-                      type="text"
-                      name="address"
-                      className="form-input"
-                      placeholder="123 Main St"
-                      value={bookingData.address}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>City</label>
-                      <input
-                        type="text"
-                        name="city"
-                        className="form-input"
-                        placeholder="Los Angeles"
-                        value={bookingData.city}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>State</label>
-                      <input
-                        type="text"
-                        name="state"
-                        className="form-input"
-                        placeholder="CA"
-                        value={bookingData.state}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>ZIP Code</label>
-                      <input
-                        type="text"
-                        name="zipCode"
-                        className="form-input"
-                        placeholder="90210"
-                        value={bookingData.zipCode}
-                        onChange={handleInputChange}
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Country</label>
-                      <select
-                        name="country"
-                        className="form-select"
-                        value={bookingData.country}
-                        onChange={handleInputChange}
-                      >
-                        <option value="USA">United States</option>
-                        <option value="CAN">Canada</option>
-                        <option value="MEX">Mexico</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="step-actions">
-                  <button className="btn-back" onClick={handleBack}>
-                    Back
-                  </button>
-                  <button className="btn-next" onClick={handleNext} disabled={!isStep2Valid()}>
-                    Review Booking
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Review */}
-            {bookingStep === 3 && (
-              <div className="step-content">
-                <h2>Review Your Booking</h2>
-
-                <div className="review-card">
-                  {/* Service Summary */}
-                  <div className="review-section">
-                    <h3>Service Details</h3>
-                    
-                    {bookingData.serviceType === 'rental' && bookingData.vehicle && (
-                      <div className="review-item">
-                        <span className="review-label">Vehicle:</span>
-                        <span className="review-value">{bookingData.vehicle.name}</span>
-                      </div>
-                    )}
-
-                    {bookingData.serviceType === 'car-wash' && bookingData.servicePackage && (
-                      <div className="review-item">
-                        <span className="review-label">Package:</span>
-                        <span className="review-value">{bookingData.servicePackage.name}</span>
-                      </div>
-                    )}
-
-                    {bookingData.serviceType === 'repair' && bookingData.repairService && (
-                      <div className="review-item">
-                        <span className="review-label">Service:</span>
-                        <span className="review-value">{bookingData.repairService.name}</span>
-                      </div>
-                    )}
-
-                    <div className="review-item">
-                      <span className="review-label">Date:</span>
-                      <span className="review-value">
-                        {new Date(bookingData.startDate).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </span>
-                    </div>
-
-                    <div className="review-item">
-                      <span className="review-label">Time:</span>
-                      <span className="review-value">{bookingData.startTime}</span>
-                    </div>
-
-                    {bookingData.endDate && (
-                      <div className="review-item">
-                        <span className="review-label">Return:</span>
-                        <span className="review-value">
-                          {new Date(bookingData.endDate).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="review-item">
-                      <span className="review-label">Location:</span>
-                      <span className="review-value">{bookingData.location?.name}</span>
-                    </div>
-
-                    {bookingData.deliveryAddress && (
-                      <div className="review-item">
-                        <span className="review-label">Delivery:</span>
-                        <span className="review-value">{bookingData.deliveryAddress}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Customer Information */}
-                  <div className="review-section">
-                    <h3>Contact Information</h3>
-                    <div className="review-item">
-                      <span className="review-label">Name:</span>
-                      <span className="review-value">{bookingData.firstName} {bookingData.lastName}</span>
-                    </div>
-                    <div className="review-item">
-                      <span className="review-label">Email:</span>
-                      <span className="review-value">{bookingData.email}</span>
-                    </div>
-                    <div className="review-item">
-                      <span className="review-label">Phone:</span>
-                      <span className="review-value">{bookingData.phone}</span>
-                    </div>
-                    <div className="review-item">
-                      <span className="review-label">Contact:</span>
-                      <span className="review-value">{bookingData.contactMethod}</span>
-                    </div>
-                  </div>
-
-                  {/* Special Requests */}
-                  {bookingData.specialRequests && (
-                    <div className="review-section">
-                      <h3>Special Requests</h3>
-                      <p className="review-text">{bookingData.specialRequests}</p>
-                    </div>
-                  )}
-
-                  {/* Price Summary */}
-                  {price && (
-                    <div className="price-summary">
-                      <h3>Price Summary</h3>
-                      
-                      {bookingData.serviceType === 'rental' && (
-                        <>
-                          <div className="price-row">
-                            <span>Base Price (3 days)</span>
-                            <span>${price.basePrice}</span>
-                          </div>
-                          {price.deliveryFee > 0 && (
-                            <div className="price-row">
-                              <span>Delivery Fee</span>
-                              <span>${price.deliveryFee}</span>
-                            </div>
-                          )}
-                        </>
-                      )}
-
-                      {bookingData.serviceType === 'car-wash' && (
-                        <div className="price-row">
-                          <span>{bookingData.servicePackage.name}</span>
-                          <span>${price.total}</span>
-                        </div>
-                      )}
-
-                      {bookingData.serviceType === 'repair' && (
-                        <div className="price-row">
-                          <span>{bookingData.repairService.name}</span>
-                          <span>${price.total}</span>
-                        </div>
-                      )}
-
-                      <div className="price-row subtotal">
-                        <span>Subtotal</span>
-                        <span>${price.subtotal || price.total}</span>
-                      </div>
-                      
-                      <div className="price-row tax">
-                        <span>Tax (10%)</span>
-                        <span>${price.tax || (price.total * 0.1).toFixed(2)}</span>
-                      </div>
-                      
-                      <div className="price-row total">
-                        <span>Total</span>
-                        <span className="total-amount">${price.total ? (price.total * 1.1).toFixed(2) : (price.total * 1.1).toFixed(2)}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="terms-agreement">
-                  <label className="checkbox-label">
-                    <input type="checkbox" required />
-                    <span>I agree to the <a href="/terms">Terms of Service</a> and <a href="/privacy">Privacy Policy</a></span>
-                  </label>
-                </div>
-
-                <div className="step-actions">
-                  <button className="btn-back" onClick={handleBack}>
-                    Back
-                  </button>
-                  <button className="btn-confirm" onClick={handleSubmit}>
-                    Proceed to Checkout
-                  </button>
-                </div>
-              </div>
-            )}
+            ))}
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Main Content */}
+      <div className="booking-content">
+        <div className="container">
+          <div className="booking-grid">
+            {/* Left Column - Main Form */}
+            <div className="booking-main">
+              {/* Step 1: Service Selection */}
+              {currentStep === 1 && (
+                <div className="booking-step animate-fade-in">
+                  <h2 className="step-heading">Select Service Type</h2>
+                  <p className="step-description">Choose the service you'd like to book</p>
+
+                  <div className="service-selection">
+                    {serviceTypes.map(service => (
+                      <Card
+                        key={service.id}
+                        className={`service-option ${bookingData.serviceType === service.id ? 'selected' : ''}`}
+                        onClick={() => handleServiceSelect(service.id)}
+                      >
+                        <div className="service-option-icon">{service.icon}</div>
+                        <h3 className="service-option-title">{service.label}</h3>
+                        <p className="service-option-description">{service.description}</p>
+                        {bookingData.serviceType === service.id && (
+                          <div className="selected-check">✓</div>
+                        )}
+                      </Card>
+                    ))}
+                  </div>
+
+                  <div className="step-actions">
+                    <Button
+                      variant="primary"
+                      size="lg"
+                      onClick={() => setCurrentStep(2)}
+                    >
+                      Continue to Details →
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Booking Form */}
+              {currentStep === 2 && (
+                <div className="booking-step animate-fade-in">
+                  <h2 className="step-heading">Your Information</h2>
+                  <p className="step-description">Please provide your details to complete the booking</p>
+
+                  <BookingForm
+                    serviceType={bookingData.serviceType}
+                    initialData={bookingData}
+                    onSubmit={handleBookingFormSubmit}
+                    onCancel={handleBack}
+                    loading={loading}
+                  />
+                </div>
+              )}
+
+              {/* Step 3: Payment */}
+              {currentStep === 3 && bookingData.customerInfo && (
+                <div className="booking-step animate-fade-in">
+                  <h2 className="step-heading">Payment</h2>
+                  <p className="step-description">Complete your booking with secure payment</p>
+
+                  <PaymentOptions
+                    amount={pricing?.total}
+                    currency="USD"
+                    bookingId={bookingData.id}
+                    onSuccess={handlePaymentSuccess}
+                    onError={(error) => {
+                      addNotification(error.message, 'error');
+                    }}
+                    loading={loading}
+                  />
+
+                  <div className="step-actions">
+                    <Button
+                      variant="outline"
+                      onClick={handleBack}
+                    >
+                      ← Back
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Booking Summary */}
+            <div className="booking-sidebar">
+              <Card className="summary-card">
+                <h3 className="summary-title">Booking Summary</h3>
+
+                <div className="summary-service">
+                  <span className="summary-label">Service:</span>
+                  <span className="summary-value">
+                    {serviceTypes.find(s => s.id === bookingData.serviceType)?.label || 'Not selected'}
+                  </span>
+                </div>
+
+                {bookingData.date && (
+                  <div className="summary-item">
+                    <span className="summary-label">Date:</span>
+                    <span className="summary-value">{new Date(bookingData.date).toLocaleDateString()}</span>
+                  </div>
+                )}
+
+                {bookingData.time && (
+                  <div className="summary-item">
+                    <span className="summary-label">Time:</span>
+                    <span className="summary-value">{bookingData.time}</span>
+                  </div>
+                )}
+
+                {bookingData.duration > 1 && (
+                  <div className="summary-item">
+                    <span className="summary-label">Duration:</span>
+                    <span className="summary-value">{bookingData.duration} days</span>
+                  </div>
+                )}
+
+                {bookingData.extras?.length > 0 && (
+                  <div className="summary-extras">
+                    <span className="summary-label">Extras:</span>
+                    <ul className="extras-list">
+                      {bookingData.extras.map((extra, idx) => (
+                        <li key={idx}>{extra.name} (+${extra.price})</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {pricing && (
+                  <>
+                    <div className="summary-divider"></div>
+
+                    <div className="summary-pricing">
+                      <div className="price-row">
+                        <span>Subtotal:</span>
+                        <span>${pricing.subtotal?.toFixed(2)}</span>
+                      </div>
+                      <div className="price-row">
+                        <span>Tax:</span>
+                        <span>${pricing.tax?.toFixed(2)}</span>
+                      </div>
+                      <div className="price-row total">
+                        <span>Total:</span>
+                        <span className="total-amount">${pricing.total?.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {availability && !availability.available && (
+                  <div className="availability-warning">
+                    <span className="warning-icon">⚠️</span>
+                    <span>{availability.message}</span>
+                  </div>
+                )}
+              </Card>
+
+              <Card className="info-card">
+                <h4 className="info-title">Need Help?</h4>
+                <p className="info-text">
+                  Our concierge team is available 24/7 to assist you with your booking.
+                </p>
+                <div className="info-contact">
+                  <a href="tel:+18005550123" className="info-phone">
+                    <span className="info-icon">📞</span>
+                    +1 (800) 555-0123
+                  </a>
+                  <a href="mailto:concierge@carease.com" className="info-email">
+                    <span className="info-icon">✉️</span>
+                    concierge@carease.com
+                  </a>
+                </div>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

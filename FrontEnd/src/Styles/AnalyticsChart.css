@@ -1,0 +1,48 @@
+/* ===== src/Styles/AnalyticsChart.css ===== */
+@import './Variables.css';
+@import './Animations.css';
+@import './Cards.css';
+/* ============================================
+   ANALYTICS CHART STYLES
+   ============================================ */
+
+.chart-container {
+  background: var(--glass-bg);
+  border: var(--border-fine);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  min-height: 300px;
+}
+
+.chart-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  color: var(--silver);
+}
+
+.chart-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  color: var(--silver-dark);
+}
+
+/* Chart Tooltips */
+.chart-tooltip {
+  background: var(--bg-deep) !important;
+  border: var(--border-gold-light) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: var(--space-2) var(--space-3) !important;
+  color: var(--white) !important;
+  font-family: var(--font-primary) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+

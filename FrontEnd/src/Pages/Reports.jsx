@@ -1,183 +1,449 @@
-// src/pages/Admin/Reports.jsx
-import React, { useState } from 'react';
-import DashboardLayout from '../Components/Layout/DashboardLayout';
-import AnalyticsChart from '../Components/Admin/AnalyticsChart';
-import '../Styles/Admin.css';
+// ===== src/Pages/Reports.jsx =====
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+
+// Core imports
+import { ROUTES } from '../Config/Routes';
+
+// Components
+import Button from '../Components/Common/Button';
+import Card from '../Components/Common/Card';
+import Input from '../Components/Common/Input';
+import Select from '../Components/Common/Select';
+import LoadingSpinner from '../Components/Common/LoadingSpinner';
+import AnalyticsChart, { ChartTemplates } from '../Components/Admin/AnalyticsChart';
+
+// Services
+import { getRevenueReports, getBookingReports, getAnalytics, exportData } from '../Services/AdminService';
+
+// Hooks
+import { useAdminAuth } from '../Hooks/useAdminAuth';
+import { useApp } from '../Context/AppContext';
+
+// Utils
+import { formatCurrency, formatDate, formatCompactNumber } from '../Utils/format';
+
+// Styles
+import '../Styles/Reports.css';
 
 const Reports = () => {
-  const [dateRange, setDateRange] = useState('month');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [dateRange, setDateRange] = useState({
+    start: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
+    end: new Date().toISOString().split('T')[0]
+  });
+  const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [revenueData, setRevenueData] = useState(null);
+  const [bookingData, setBookingData] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
 
-  const revenueData = [
-    { label: 'Jan', value: 45000 },
-    { label: 'Feb', value: 52000 },
-    { label: 'Mar', value: 48000 },
-    { label: 'Apr', value: 61000 },
-    { label: 'May', value: 58000 },
-    { label: 'Jun', value: 67000 },
-    { label: 'Jul', value: 72000 },
-    { label: 'Aug', value: 69000 },
-    { label: 'Sep', value: 74000 },
-    { label: 'Oct', value: 81000 },
-    { label: 'Nov', value: 79000 },
-    { label: 'Dec', value: 95000 }
-  ];
+  const { admin } = useAdminAuth();
+  const { addNotification } = useApp();
 
-  const categoryData = [
-    { label: 'Supercar', value: 35 },
-    { label: 'Luxury', value: 25 },
-    { label: 'SUV', value: 20 },
-    { label: 'Sports', value: 15 },
-    { label: 'Other', value: 5 }
-  ];
+  useEffect(() => {
+    fetchReports();
+  }, [dateRange]);
 
-  const stats = [
-    { label: 'Total Revenue', value: '$845,000', change: '+15.3%', icon: '💰' },
-    { label: 'Total Bookings', value: '2,847', change: '+12.5%', icon: '📅' },
-    { label: 'Avg. Daily Rate', value: '$1,250', change: '+5.2%', icon: '📊' },
-    { label: 'Occupancy Rate', value: '78%', change: '+8.1%', icon: '📈' }
+  const fetchReports = async () => {
+    setLoading(true);
+    try {
+      const [revenue, bookings, analyticsData] = await Promise.all([
+        getRevenueReports({ startDate: dateRange.start, endDate: dateRange.end }),
+        getBookingReports({ startDate: dateRange.start, endDate: dateRange.end }),
+        getAnalytics({ period: 'month' })
+      ]);
+
+      setRevenueData(revenue);
+      setBookingData(bookings);
+      setAnalytics(analyticsData);
+    } catch (error) {
+      console.error('Failed to fetch reports:', error);
+      addNotification('Failed to load reports', 'error');
+      
+      // Fallback data
+      setRevenueData({
+        total: 158900,
+        byPeriod: [12500, 18900, 15200, 24800, 22300, 30100, 27900],
+        byService: {
+          rental: 85000,
+          car_wash: 23900,
+          repair: 35000,
+          sales: 15000
+        },
+        byMethod: {
+          card: 120000,
+          paypal: 25000,
+          cash: 13900
+        }
+      });
+
+      setBookingData({
+        total: 1245,
+        byStatus: {
+          pending: 123,
+          confirmed: 456,
+          completed: 567,
+          cancelled: 99
+        },
+        byService: {
+          rental: 500,
+          car_wash: 300,
+          repair: 350,
+          sales: 95
+        },
+        cancellationRate: 7.9,
+        occupancyRate: 78.5
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      const data = await exportData(activeTab, format, dateRange);
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${activeTab}-report.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      addNotification(`Report exported as ${format.toUpperCase()}`, 'success');
+    } catch (error) {
+      addNotification('Failed to export report', 'error');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const tabs = [
+    { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'revenue', label: 'Revenue', icon: '💰' },
+    { id: 'bookings', label: 'Bookings', icon: '📅' },
+    { id: 'vehicles', label: 'Vehicles', icon: '🚗' },
+    { id: 'customers', label: 'Customers', icon: '👥' }
   ];
 
   return (
-    <DashboardLayout role="admin">
-      <div className="admin-header">
-        <div className="admin-header-title">
-          <h1>Reports & Analytics</h1>
-          <p>Comprehensive insights into your business performance</p>
+    <div className="reports-page">
+      {/* Header */}
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Analytics & <span className="gold-text">Reports</span></h1>
+          <p className="page-subtitle">View business performance and generate reports</p>
         </div>
-        <div className="admin-header-actions">
-          <select 
-            className="filter-select"
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-          >
-            <option value="week">Last 7 Days</option>
-            <option value="month">Last 30 Days</option>
-            <option value="quarter">Last 90 Days</option>
-            <option value="year">This Year</option>
-          </select>
-          <button className="btn btn-gold btn-sm">Export Report</button>
+        <div className="header-actions">
+          <Select
+            value={`${dateRange.start} to ${dateRange.end}`}
+            onChange={(e) => {
+              // Handle preset ranges
+            }}
+            options={[
+              { value: 'today', label: 'Today' },
+              { value: 'yesterday', label: 'Yesterday' },
+              { value: 'week', label: 'This Week' },
+              { value: 'month', label: 'This Month' },
+              { value: 'quarter', label: 'This Quarter' },
+              { value: 'year', label: 'This Year' },
+              { value: 'custom', label: 'Custom Range' }
+            ]}
+            className="date-range-select"
+          />
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="admin-stats-grid">
-        {stats.map((stat, index) => (
-          <div key={index} className="admin-stat-card">
-            <div className="admin-stat-icon">{stat.icon}</div>
-            <span className="admin-stat-value">{stat.value}</span>
-            <span className="admin-stat-label">{stat.label}</span>
-            <span className={`stat-change ${stat.change.startsWith('+') ? 'positive' : 'negative'}`}>
-              {stat.change}
-            </span>
-          </div>
+      {/* Date Range Picker */}
+      <Card className="date-range-card">
+        <div className="date-range-picker">
+          <Input
+            type="date"
+            label="Start Date"
+            value={dateRange.start}
+            onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+          />
+          <Input
+            type="date"
+            label="End Date"
+            value={dateRange.end}
+            onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+          />
+          <Button variant="primary" onClick={fetchReports} loading={loading}>
+            Apply
+          </Button>
+        </div>
+      </Card>
+
+      {/* Tabs */}
+      <div className="reports-tabs">
+        {tabs.map(tab => (
+          <button
+            key={tab.id}
+            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            <span className="tab-icon">{tab.icon}</span>
+            <span className="tab-label">{tab.label}</span>
+          </button>
         ))}
       </div>
 
-      {/* Revenue Chart */}
-      <div className="reports-section">
-        <h2>Revenue Overview</h2>
-        <AnalyticsChart type="line" data={revenueData} />
+      {/* Export Actions */}
+      <div className="export-actions">
+        <span className="export-label">Export as:</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleExport('pdf')}
+          loading={exporting}
+          disabled={exporting}
+        >
+          PDF
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleExport('csv')}
+          loading={exporting}
+          disabled={exporting}
+        >
+          CSV
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => handleExport('excel')}
+          loading={exporting}
+          disabled={exporting}
+        >
+          Excel
+        </Button>
       </div>
 
-      {/* Category Distribution */}
-      <div className="reports-grid">
-        <div className="reports-card">
-          <h3>Bookings by Category</h3>
-          <AnalyticsChart type="pie" data={categoryData} />
-        </div>
+      {/* Overview Tab */}
+      {activeTab === 'overview' && (
+        <div className="overview-tab">
+          {/* KPI Cards */}
+          <div className="kpi-grid">
+            <Card className="kpi-card">
+              <div className="kpi-icon revenue">💰</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Total Revenue</span>
+                <span className="kpi-value">{formatCurrency(revenueData?.total || 0)}</span>
+                <span className="kpi-trend positive">+12.5% vs last period</span>
+              </div>
+            </Card>
 
-        <div className="reports-card">
-          <h3>Top Performing Vehicles</h3>
-          <div className="top-vehicles-list">
-            <div className="top-vehicle-item">
-              <span className="vehicle-rank">1</span>
-              <span className="vehicle-name">Lamborghini Huracán</span>
-              <span className="vehicle-bookings">128 bookings</span>
-              <span className="vehicle-revenue">$153,600</span>
-            </div>
-            <div className="top-vehicle-item">
-              <span className="vehicle-rank">2</span>
-              <span className="vehicle-name">Rolls Royce Ghost</span>
-              <span className="vehicle-bookings">96 bookings</span>
-              <span className="vehicle-revenue">$172,800</span>
-            </div>
-            <div className="top-vehicle-item">
-              <span className="vehicle-rank">3</span>
-              <span className="vehicle-name">Ferrari F8</span>
-              <span className="vehicle-bookings">84 bookings</span>
-              <span className="vehicle-revenue">$126,000</span>
-            </div>
-            <div className="top-vehicle-item">
-              <span className="vehicle-rank">4</span>
-              <span className="vehicle-name">Porsche 911</span>
-              <span className="vehicle-bookings">72 bookings</span>
-              <span className="vehicle-revenue">$64,800</span>
-            </div>
-            <div className="top-vehicle-item">
-              <span className="vehicle-rank">5</span>
-              <span className="vehicle-name">Range Rover</span>
-              <span className="vehicle-bookings">68 bookings</span>
-              <span className="vehicle-revenue">$47,600</span>
-            </div>
+            <Card className="kpi-card">
+              <div className="kpi-icon bookings">📅</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Total Bookings</span>
+                <span className="kpi-value">{bookingData?.total || 0}</span>
+                <span className="kpi-trend positive">+8.3% vs last period</span>
+              </div>
+            </Card>
+
+            <Card className="kpi-card">
+              <div className="kpi-icon occupancy">🚗</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Occupancy Rate</span>
+                <span className="kpi-value">{bookingData?.occupancyRate || 0}%</span>
+                <span className="kpi-trend positive">+5.2% vs last period</span>
+              </div>
+            </Card>
+
+            <Card className="kpi-card">
+              <div className="kpi-icon cancellation">⚠️</div>
+              <div className="kpi-content">
+                <span className="kpi-label">Cancellation Rate</span>
+                <span className="kpi-value">{bookingData?.cancellationRate || 0}%</span>
+                <span className="kpi-trend negative">-2.1% vs last period</span>
+              </div>
+            </Card>
           </div>
-        </div>
-      </div>
 
-      {/* Summary Table */}
-      <div className="reports-section">
-        <h3>Monthly Summary</h3>
-        <div className="summary-table">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Month</th>
-                <th>Bookings</th>
-                <th>Revenue</th>
-                <th>Avg. Daily Rate</th>
-                <th>Occupancy</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>January</td>
-                <td>210</td>
-                <td>$45,000</td>
-                <td>$1,150</td>
-                <td>72%</td>
-              </tr>
-              <tr>
-                <td>February</td>
-                <td>235</td>
-                <td>$52,000</td>
-                <td>$1,180</td>
-                <td>75%</td>
-              </tr>
-              <tr>
-                <td>March</td>
-                <td>228</td>
-                <td>$48,000</td>
-                <td>$1,120</td>
-                <td>73%</td>
-              </tr>
-              <tr>
-                <td>April</td>
-                <td>275</td>
-                <td>$61,000</td>
-                <td>$1,250</td>
-                <td>78%</td>
-              </tr>
-              <tr>
-                <td>May</td>
-                <td>268</td>
-                <td>$58,000</td>
-                <td>$1,220</td>
-                <td>77%</td>
-              </tr>
-            </tbody>
-          </table>
+          {/* Charts */}
+          <div className="charts-grid">
+            <Card className="chart-card">
+              <h3 className="chart-title">Revenue Trend</h3>
+              <AnalyticsChart
+                {...ChartTemplates.revenueChart({
+                  labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                  values: revenueData?.byPeriod || [12000, 19000, 15000, 25000]
+                })}
+                height={300}
+              />
+            </Card>
+
+            <Card className="chart-card">
+              <h3 className="chart-title">Booking Distribution</h3>
+              <AnalyticsChart
+                {...ChartTemplates.bookingsByTypeChart({
+                  labels: ['Rentals', 'Car Wash', 'Repairs', 'Sales'],
+                  values: [
+                    bookingData?.byService?.rental || 500,
+                    bookingData?.byService?.car_wash || 300,
+                    bookingData?.byService?.repair || 350,
+                    bookingData?.byService?.sales || 95
+                  ]
+                })}
+                height={300}
+              />
+            </Card>
+          </div>
+
+          {/* Recent Activity */}
+          <Card className="activity-card">
+            <h3 className="card-title">Recent Activity</h3>
+            <div className="activity-list">
+              <div className="activity-item">
+                <span className="activity-time">2 min ago</span>
+                <span className="activity-desc">New booking #B1234 - Lamborghini Huracán</span>
+              </div>
+              <div className="activity-item">
+                <span className="activity-time">15 min ago</span>
+                <span className="activity-desc">Payment received $1,299 from booking #B1230</span>
+              </div>
+              <div className="activity-item">
+                <span className="activity-time">1 hour ago</span>
+                <span className="activity-desc">New user registered: john.doe@email.com</span>
+              </div>
+              <div className="activity-item">
+                <span className="activity-time">2 hours ago</span>
+                <span className="activity-desc">Booking #B1228 marked as completed</span>
+              </div>
+            </div>
+          </Card>
         </div>
-      </div>
-    </DashboardLayout>
+      )}
+
+      {/* Revenue Tab */}
+      {activeTab === 'revenue' && (
+        <div className="revenue-tab">
+          <div className="revenue-summary">
+            <Card className="summary-card">
+              <h3 className="summary-title">Revenue Breakdown</h3>
+              <div className="summary-stats">
+                <div className="stat-row">
+                  <span>Total Revenue:</span>
+                  <span className="stat-value">{formatCurrency(revenueData?.total || 0)}</span>
+                </div>
+                <div className="stat-row">
+                  <span>By Service:</span>
+                </div>
+                {revenueData?.byService && Object.entries(revenueData.byService).map(([service, amount]) => (
+                  <div key={service} className="stat-row indent">
+                    <span>{service.replace('_', ' ').toUpperCase()}:</span>
+                    <span>{formatCurrency(amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="summary-card">
+              <h3 className="summary-title">Payment Methods</h3>
+              <div className="summary-stats">
+                {revenueData?.byMethod && Object.entries(revenueData.byMethod).map(([method, amount]) => (
+                  <div key={method} className="stat-row">
+                    <span>{method.toUpperCase()}:</span>
+                    <span>{formatCurrency(amount)}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <Card className="chart-card">
+            <h3 className="chart-title">Daily Revenue</h3>
+            <AnalyticsChart
+              type="line"
+              data={{
+                labels: Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`),
+                datasets: [{
+                  label: 'Revenue',
+                  data: revenueData?.byPeriod || Array(30).fill(0).map(() => Math.random() * 5000 + 1000),
+                  borderColor: '#d4af37',
+                  backgroundColor: 'rgba(212, 175, 55, 0.1)'
+                }]
+              }}
+              height={400}
+            />
+          </Card>
+        </div>
+      )}
+
+      {/* Bookings Tab */}
+      {activeTab === 'bookings' && (
+        <div className="bookings-tab">
+          <div className="bookings-summary">
+            <Card className="summary-card">
+              <h3 className="summary-title">Booking Status</h3>
+              <div className="summary-stats">
+                {bookingData?.byStatus && Object.entries(bookingData.byStatus).map(([status, count]) => (
+                  <div key={status} className="stat-row">
+                    <span className={`status-text status-${status}`}>
+                      {status.toUpperCase()}:
+                    </span>
+                    <span>{count}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="summary-card">
+              <h3 className="summary-title">Performance Metrics</h3>
+              <div className="summary-stats">
+                <div className="stat-row">
+                  <span>Cancellation Rate:</span>
+                  <span className={bookingData?.cancellationRate > 10 ? 'negative' : 'positive'}>
+                    {bookingData?.cancellationRate || 0}%
+                  </span>
+                </div>
+                <div className="stat-row">
+                  <span>Occupancy Rate:</span>
+                  <span className="positive">{bookingData?.occupancyRate || 0}%</span>
+                </div>
+                <div className="stat-row">
+                  <span>Average Booking Value:</span>
+                  <span>{formatCurrency((revenueData?.total || 0) / (bookingData?.total || 1))}</span>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <Card className="chart-card">
+            <h3 className="chart-title">Bookings by Service</h3>
+            <AnalyticsChart
+              type="bar"
+              data={{
+                labels: ['Rentals', 'Car Wash', 'Repairs', 'Sales'],
+                datasets: [{
+                  label: 'Number of Bookings',
+                  data: [
+                    bookingData?.byService?.rental || 500,
+                    bookingData?.byService?.car_wash || 300,
+                    bookingData?.byService?.repair || 350,
+                    bookingData?.byService?.sales || 95
+                  ],
+                  backgroundColor: [
+                    'rgba(212, 175, 55, 0.8)',
+                    'rgba(0, 255, 136, 0.8)',
+                    'rgba(51, 181, 229, 0.8)',
+                    'rgba(255, 187, 51, 0.8)'
+                  ]
+                }]
+              }}
+              height={400}
+            />
+          </Card>
+        </div>
+      )}
+    </div>
   );
 };
 
