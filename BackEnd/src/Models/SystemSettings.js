@@ -70,4 +70,9 @@ const SystemSettings = sequelize.define('SystemSettings', {
   updatedAt: 'updated_at'
 });
 
+SystemSettings.get = async (key, fallback = null) => {
+  const setting = await SystemSettings.findOne({ where: { key } });
+  return setting ? setting.value : fallback;
+};
+
 module.exports = SystemSettings;
