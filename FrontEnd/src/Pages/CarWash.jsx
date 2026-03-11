@@ -1,6 +1,6 @@
 // ===== src/Pages/CarWash.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -20,12 +20,12 @@ import { getWashPackages, getAvailableTimeSlots } from '../Services/Service.Serv
 
 // Hooks
 import { useApp } from '../Context/AppContext';
-import { useBooking } from '../Hooks/useBooking';
 
 // Styles
 import '../Styles/CarWash.css';
 
 const CarWash = () => {
+  const navigate = useNavigate();
   const [packages, setPackages] = useState([]);
   const [selectedPackage, setSelectedPackage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,6 @@ const CarWash = () => {
   const [price, setPrice] = useState(null);
 
   const { addNotification } = useApp();
-  const { createNewBooking } = useBooking();
 
   useEffect(() => {
     fetchPackages();
@@ -143,19 +142,17 @@ const CarWash = () => {
     });
   };
 
-  const handleBookingSubmit = async () => {
-    try {
-      await createNewBooking({
-        serviceType: 'car_wash',
-        ...formData,
-        totalPrice: price,
-        packageName: selectedPackage?.name
-      });
-      addNotification('Booking created successfully! Check your email for confirmation.', 'success');
-      setBookingStep(3);
-    } catch (error) {
-      addNotification(error.message || 'Failed to create booking. Please try again.', 'error');
-    }
+  const handleBookingSubmit = () => {
+    const params = new URLSearchParams({
+      service: 'car_wash',
+      startDate: formData.date,
+      endDate: formData.date,
+      time: formData.time,
+      packageId: formData.package || '',
+      location: formData.location || ''
+    });
+    navigate(`${ROUTES.BOOKING}?${params.toString()}`);
+    addNotification('Continue to payment to confirm your booking.', 'info');
   };
 
   const extras = [
@@ -443,7 +440,7 @@ const CarWash = () => {
                     <Link to={ROUTES.HOME}>
                       <Button variant="outline">Return Home</Button>
                     </Link>
-                    <Link to={ROUTES.BOOKINGS}>
+                    <Link to={ROUTES.BOOKING}>
                       <Button variant="primary">View My Bookings</Button>
                     </Link>
                   </div>

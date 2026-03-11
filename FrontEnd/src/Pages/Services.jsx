@@ -4,19 +4,15 @@ import { Link } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
-import { SERVICE_TYPES, SERVICE_CATEGORIES } from '../Utils/constants';
+import { SERVICE_TYPES } from '../Utils/constants';
 
 // Components
 import Button from '../Components/Common/Button';
-import Card from '../Components/Common/Card';
 import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import ServiceCard from '../Components/Features/ServiceCard';
 
 // Services
 import { getServices } from '../Services/Service.Service';
-
-// Hooks
-import { useApp } from '../Context/AppContext';
 
 // Styles
 import '../Styles/Services.css';
@@ -34,8 +30,6 @@ const Services = () => {
   
   const heroRef = useRef(null);
   const particlesRef = useRef(null);
-  const { addNotification } = useApp();
-
   // Mouse move effect for 3D parallax
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -223,6 +217,14 @@ const Services = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
+  };
+
+  const getServiceLink = (service) => {
+    if (service.category === SERVICE_TYPES.RENTAL || service.id === 'rentals') return ROUTES.RENTALS;
+    if (service.category === SERVICE_TYPES.CAR_WASH || service.id === 'car_wash') return ROUTES.CAR_WASH;
+    if (service.category === SERVICE_TYPES.REPAIR || service.id === 'repairs') return ROUTES.REPAIRS;
+    if (service.category === SERVICE_TYPES.SALES || service.id === 'sales') return ROUTES.SALES;
+    return `${ROUTES.BOOKING}?service=${encodeURIComponent(service.category || service.id || '')}`;
   };
 
   const scrollToTop = () => {
@@ -447,7 +449,7 @@ const Services = () => {
                       features={service.features}
                       price={service.priceRange ? { amount: service.priceRange } : null}
                       badge={service.popular ? 'Popular' : null}
-                      linkTo={`${ROUTES.SERVICES}/${service.id}`}
+                      linkTo={getServiceLink(service)}
                       variant="premium"
                     />
                     <div className="card-background-glow"></div>
@@ -498,7 +500,7 @@ const Services = () => {
                           <span key={idx} className="feature-tag">{feature}</span>
                         ))}
                       </div>
-                      <Link to={`${ROUTES.SERVICES}/${service.id}`} className="showcase-link">
+                      <Link to={getServiceLink(service)} className="showcase-link">
                         Discover Experience
                         <span className="link-arrow">→</span>
                       </Link>

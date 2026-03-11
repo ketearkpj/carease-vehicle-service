@@ -1,6 +1,6 @@
 // ===== src/Pages/Sales.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -20,12 +20,12 @@ import { getSalesVehicles, getVehicleById } from '../Services/VehicleService';
 
 // Hooks
 import { useApp } from '../Context/AppContext';
-import { useBooking } from '../Hooks/useBooking';
 
 // Styles
 import '../Styles/Sales.css';
 
 const Sales = () => {
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +53,6 @@ const Sales = () => {
   });
 
   const { addNotification } = useApp();
-  const { createNewBooking } = useBooking();
 
   useEffect(() => {
     fetchVehicles();
@@ -430,19 +429,13 @@ const Sales = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleInquirySubmit = async (type) => {
-    try {
-      await createNewBooking({
-        serviceType: 'sales',
-        vehicleId: selectedVehicle.id,
-        vehicleName: selectedVehicle.name,
-        inquiryType: type
-      });
-      addNotification('Thank you for your interest! A specialist will contact you soon.', 'success');
-      setShowDetails(false);
-    } catch (error) {
-      addNotification('Failed to submit inquiry. Please try again.', 'error');
-    }
+  const handleInquirySubmit = (type) => {
+    if (!selectedVehicle) return;
+    navigate(
+      `${ROUTES.BOOKING}?service=sales&vehicle=${selectedVehicle.id}&inquiryType=${type}`
+    );
+    addNotification('Complete your details to submit this inquiry.', 'info');
+    setShowDetails(false);
   };
 
   const calculateFinancing = () => {
@@ -960,7 +953,7 @@ const Sales = () => {
                   Contact a Specialist
                 </Button>
               </Link>
-              <Link to="/inventory-request">
+              <Link to={`${ROUTES.BOOKING}?service=sales&inquiryType=vehicle_request`}>
                 <Button variant="outline" size="lg">
                   Submit Vehicle Request
                 </Button>

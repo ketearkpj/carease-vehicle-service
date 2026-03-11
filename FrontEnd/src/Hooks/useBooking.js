@@ -35,7 +35,7 @@ export const useBooking = (initialBookingId = null) => {
       if (result.success) {
         setBooking(result.booking);
         addNotification('Booking created successfully!', 'success');
-        return result.booking;
+        return result;
       }
     } catch (err) {
       setError(err.message);

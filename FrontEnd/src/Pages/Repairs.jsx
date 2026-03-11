@@ -1,6 +1,6 @@
 // ===== src/Pages/Repairs.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -19,12 +19,12 @@ import { getRepairServices, getAvailableTimeSlots } from '../Services/Service.Se
 
 // Hooks
 import { useApp } from '../Context/AppContext';
-import { useBooking } from '../Hooks/useBooking';
 
 // Styles
 import '../Styles/Repairs.css';
 
 const Repairs = () => {
+  const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +46,6 @@ const Repairs = () => {
   const [diagnosticFee, setDiagnosticFee] = useState(89);
 
   const { addNotification } = useApp();
-  const { createNewBooking } = useBooking();
 
   useEffect(() => {
     fetchServices();
@@ -132,20 +131,17 @@ const Repairs = () => {
     }));
   };
 
-  const handleBookingSubmit = async () => {
-    try {
-      await createNewBooking({
-        serviceType: 'repair',
-        ...formData,
-        serviceName: selectedService?.name,
-        estimatedPrice,
-        diagnosticFee: selectedService?.id === 'diagnostic' ? 0 : diagnosticFee
-      });
-      addNotification('Service booked successfully! We\'ll contact you to confirm.', 'success');
-      setBookingStep(3);
-    } catch (error) {
-      addNotification(error.message || 'Failed to create booking. Please try again.', 'error');
-    }
+  const handleBookingSubmit = () => {
+    const params = new URLSearchParams({
+      service: 'repair',
+      startDate: formData.date,
+      endDate: formData.date,
+      time: formData.time,
+      packageId: formData.service || '',
+      location: formData.location || ''
+    });
+    navigate(`${ROUTES.BOOKING}?${params.toString()}`);
+    addNotification('Continue to payment to confirm this repair booking.', 'info');
   };
 
   const vehicleTypes = [
@@ -484,7 +480,7 @@ const Repairs = () => {
                     <Link to={ROUTES.HOME}>
                       <Button variant="outline">Return Home</Button>
                     </Link>
-                    <Link to={ROUTES.BOOKINGS}>
+                    <Link to={ROUTES.BOOKING}>
                       <Button variant="primary">View My Bookings</Button>
                     </Link>
                   </div>

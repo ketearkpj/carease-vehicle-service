@@ -1,6 +1,6 @@
 // ===== src/Pages/Rentals.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -20,12 +20,12 @@ import { getVehicles, getVehicleCategories } from '../Services/VehicleService';
 
 // Hooks
 import { useApp } from '../Context/AppContext';
-import { useBooking } from '../Hooks/useBooking';
 
 // Styles
 import '../Styles/Rentals.css';
 
 const Rentals = () => {
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -46,7 +46,6 @@ const Rentals = () => {
   const [showQuickView, setShowQuickView] = useState(false);
 
   const { addNotification } = useApp();
-  const { createNewBooking } = useBooking();
 
   useEffect(() => {
     fetchVehicles();
@@ -367,18 +366,9 @@ const Rentals = () => {
     setShowQuickView(true);
   };
 
-  const handleQuickBook = async (vehicle) => {
-    try {
-      await createNewBooking({
-        serviceType: 'rental',
-        vehicleId: vehicle.id,
-        vehicleName: vehicle.name,
-        price: vehicle.price
-      });
-      addNotification('Booking initiated! Please complete your details.', 'success');
-    } catch (error) {
-      addNotification('Failed to create booking. Please try again.', 'error');
-    }
+  const handleQuickBook = (vehicle) => {
+    navigate(`${ROUTES.BOOKING}?service=rental&vehicle=${vehicle.id}`);
+    addNotification('Vehicle selected. Complete your booking details.', 'info');
   };
 
   const priceRanges = [
@@ -672,7 +662,7 @@ const Rentals = () => {
                 </div>
 
                 <div className="quick-view-actions">
-                  <Link to={`${ROUTES.BOOKING}?vehicle=${selectedVehicle.id}`}>
+                  <Link to={`${ROUTES.BOOKING}?service=rental&vehicle=${selectedVehicle.id}`}>
                     <Button variant="primary" size="lg" fullWidth>
                       Book Now
                     </Button>
@@ -696,7 +686,7 @@ const Rentals = () => {
               Book your luxury vehicle today and experience the ultimate driving pleasure
             </p>
             <div className="cta-buttons">
-              <Link to={ROUTES.BOOKING}>
+              <Link to={`${ROUTES.BOOKING}?service=rental`}>
                 <Button variant="primary" size="lg">
                   Book Now
                 </Button>
