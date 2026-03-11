@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 const hpp = require('hpp');
 const path = require('path');
+const fs = require('fs');
 
 const AppError = require('./src/Utils/AppError');
 const globalErrorHandler = require('./src/Middleware/Error.md.js');
@@ -122,9 +123,14 @@ app.get('/health', (req, res) => {
 
 // API Documentation
 if (process.env.NODE_ENV === 'development') {
-  const swaggerUi = require('swagger-ui-express');
-  const swaggerSpec = require('./docs/swagger');
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  const swaggerPath = path.join(__dirname, 'docs', 'swagger.js');
+  if (fs.existsSync(swaggerPath)) {
+    const swaggerUi = require('swagger-ui-express');
+    const swaggerSpec = require('./docs/swagger');
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  } else {
+    logger.warn('Swagger docs not found at BackEnd/docs/swagger.js; /api-docs is disabled.');
+  }
 }
 
 // Handle undefined routes
