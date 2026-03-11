@@ -1,5 +1,6 @@
 // ===== server.js =====
 const dotenv = require('dotenv');
+const { connectDatabase } = require('./src/Config/sequelize');
 
 process.on('uncaughtException', (err) => {
   console.log('UNCAUGHT EXCEPTION! 💥 Shutting down...');
@@ -12,17 +13,9 @@ dotenv.config({ path: './.env' });
 const app = require('./App');
 
 const PORT = process.env.PORT || 5000;
-const DB_URI = process.env.NODE_ENV === 'production' 
-  ? process.env.DATABASE_PROD 
-  : process.env.DATABASE_LOCAL;
 
 // Database connection
-const mongoose = require('mongoose');
-
-mongoose.connect(DB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
+connectDatabase().then(() => {
   console.log('✅ Database connected successfully');
 });
 
