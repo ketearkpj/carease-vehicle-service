@@ -40,7 +40,7 @@ const FAQ = () => {
       id: 2,
       category: 'general',
       question: 'Where are your locations?',
-      answer: 'We have three flagship locations: Beverly Hills (123 Luxury Lane), Miami Beach (456 Ocean Drive), and Manhattan (789 Park Avenue). Each location offers our full range of services with state-of-the-art facilities.'
+      answer: 'We have three flagship locations: Roysambu (next to TRM) (TRM Service Lane), Westlands (Westlands Ring Road), and Upper Hill (Upper Hill Road). Each location offers our full range of services with state-of-the-art facilities.'
     },
     {
       id: 3,

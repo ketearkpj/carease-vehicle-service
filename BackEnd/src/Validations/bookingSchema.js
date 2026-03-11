@@ -34,7 +34,7 @@ const bookingValidation = {
         city: Joi.string().required(),
         state: Joi.string().required(),
         zipCode: Joi.string().required(),
-        country: Joi.string().default('USA')
+        country: Joi.string().default('Kenya')
       }).required(),
       coordinates: Joi.object({
         lat: Joi.number().min(-90).max(90).required(),

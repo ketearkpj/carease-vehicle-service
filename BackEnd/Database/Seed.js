@@ -494,10 +494,10 @@ class DatabaseSeeder {
         start_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
         pickup_location_type: 'showroom',
-        pickup_location_name: 'Beverly Hills Showroom',
+        pickup_location_name: 'Roysambu (next to TRM) Showroom',
         pickup_address: JSON.stringify({
-          street: '123 Luxury Lane',
-          city: 'Beverly Hills',
+          street: 'TRM Service Lane',
+          city: 'Roysambu (next to TRM)',
           state: 'CA',
           zipCode: '90210'
         }),
@@ -521,8 +521,8 @@ class DatabaseSeeder {
         pickup_location_type: 'showroom',
         pickup_location_name: 'Miami Showroom',
         pickup_address: JSON.stringify({
-          street: '456 Ocean Drive',
-          city: 'Miami Beach',
+          street: 'Westlands Ring Road',
+          city: 'Westlands',
           state: 'FL',
           zipCode: '33139'
         }),
@@ -602,7 +602,7 @@ class DatabaseSeeder {
         billing_email: 'john.doe@example.com',
         billing_address: JSON.stringify({
           line1: '123 Main St',
-          city: 'Beverly Hills',
+          city: 'Roysambu (next to TRM)',
           state: 'CA',
           postalCode: '90210'
         }),
@@ -666,10 +666,10 @@ class DatabaseSeeder {
         estimated_pickup: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000),
         estimated_dropoff: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
         pickup_type: 'showroom',
-        pickup_name: 'Beverly Hills Showroom',
+        pickup_name: 'Roysambu (next to TRM) Showroom',
         pickup_address: JSON.stringify({
-          street: '123 Luxury Lane',
-          city: 'Beverly Hills',
+          street: 'TRM Service Lane',
+          city: 'Roysambu (next to TRM)',
           state: 'CA',
           zipCode: '90210'
         }),

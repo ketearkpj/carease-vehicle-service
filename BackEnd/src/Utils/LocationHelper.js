@@ -402,9 +402,9 @@ class LocationHelper {
    */
   async isWithinServiceArea(lat, lng, radius = 50) {
     const serviceCenters = [
-      { name: 'Beverly Hills', lat: 34.0736, lng: -118.4004, radius: 30 },
+      { name: 'Roysambu (next to TRM)', lat: 34.0736, lng: -118.4004, radius: 30 },
       { name: 'Miami', lat: 25.7617, lng: -80.1918, radius: 40 },
-      { name: 'Manhattan', lat: 40.7831, lng: -73.9712, radius: 25 },
+      { name: 'Upper Hill', lat: 40.7831, lng: -73.9712, radius: 25 },
       { name: 'Los Angeles', lat: 34.0522, lng: -118.2437, radius: 50 },
       { name: 'San Francisco', lat: 37.7749, lng: -122.4194, radius: 45 }
     ];

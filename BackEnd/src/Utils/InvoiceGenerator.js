@@ -332,8 +332,8 @@ class InvoiceGenerator {
             <div class="header-grid">
               <div class="company-info">
                 <h2>CAR EASE LLC</h2>
-                <p>123 Luxury Lane, Beverly Hills, CA 90210</p>
-                <p>+1 (800) 555-0123</p>
+                <p>TRM Service Lane, Roysambu (next to TRM), Nairobi</p>
+                <p>0758458358</p>
                 <p>info@carease.com</p>
               </div>
               
@@ -494,8 +494,8 @@ class InvoiceGenerator {
            .text('CAR EASE LLC', 50, 170)
            .fontSize(8)
            .fillColor('#94a3b8')
-           .text('123 Luxury Lane, Beverly Hills, CA 90210', 50, 185)
-           .text('+1 (800) 555-0123', 50, 200)
+           .text('TRM Service Lane, Roysambu (next to TRM), Nairobi', 50, 185)
+           .text('0758458358', 50, 200)
            .text('info@carease.com', 50, 215);
 
         // Bill To

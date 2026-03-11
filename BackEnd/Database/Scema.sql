@@ -100,7 +100,7 @@ CREATE TABLE user_addresses (
     city VARCHAR(100) NOT NULL,
     state VARCHAR(50) NOT NULL,
     zip_code VARCHAR(20) NOT NULL,
-    country VARCHAR(50) DEFAULT 'USA',
+    country VARCHAR(50) DEFAULT 'Kenya',
     is_default BOOLEAN DEFAULT FALSE,
     latitude DECIMAL(10, 8),
     longitude DECIMAL(11, 8),
@@ -1061,4 +1061,4 @@ $$ LANGUAGE plpgsql;
 -- ============================================
 
 -- GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO carease_app;
--- GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO carease_app;
+-- GRANT KenyaGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO carease_app;

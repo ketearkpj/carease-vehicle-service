@@ -302,7 +302,7 @@ const BookingForm = ({
                   error={touched.phone && errors.phone}
                   required
                   icon="📞"
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="0758458358"
                 />
               </div>
             </div>

@@ -37,7 +37,7 @@ const UserAddress = sequelize.define('UserAddress', {
   },
   country: {
     type: DataTypes.STRING(50),
-    defaultValue: 'USA'
+    defaultValue: 'Kenya'
   },
   isDefault: {
     type: DataTypes.BOOLEAN,

@@ -33,7 +33,7 @@ const Careers = () => {
       id: 1,
       title: 'Senior Automotive Technician',
       department: 'Service',
-      location: 'Beverly Hills',
+      location: 'Roysambu (next to TRM)',
       type: 'Full-time',
       experience: '5+ years',
       description: 'We are seeking an experienced automotive technician specializing in luxury and exotic vehicles. You will be responsible for diagnostics, maintenance, and repairs on high-end automobiles.',
@@ -64,7 +64,7 @@ const Careers = () => {
       id: 2,
       title: 'Customer Experience Manager',
       department: 'Operations',
-      location: 'Miami Beach',
+      location: 'Westlands',
       type: 'Full-time',
       experience: '3+ years',
       description: 'Lead our customer experience team to deliver exceptional white-glove service to our discerning clientele. You will oversee the concierge team and ensure every interaction exceeds expectations.',
@@ -96,7 +96,7 @@ const Careers = () => {
       id: 3,
       title: 'Detail Specialist',
       department: 'Detailing',
-      location: 'Manhattan',
+      location: 'Upper Hill',
       type: 'Full-time',
       experience: '2+ years',
       description: 'Join our award-winning detailing team to provide premium car care services. You will perform exterior and interior detailing, paint correction, and ceramic coating applications.',
@@ -129,7 +129,7 @@ const Careers = () => {
       id: 4,
       title: 'Sales Consultant',
       department: 'Sales',
-      location: 'Beverly Hills',
+      location: 'Roysambu (next to TRM)',
       type: 'Full-time',
       experience: '2+ years',
       description: 'Join our luxury vehicle sales team to help clients find their dream cars. You will guide customers through the purchasing process and build lasting relationships.',
@@ -195,7 +195,7 @@ const Careers = () => {
       id: 6,
       title: 'Fleet Coordinator',
       department: 'Operations',
-      location: 'Miami Beach',
+      location: 'Westlands',
       type: 'Full-time',
       experience: '2+ years',
       description: 'Coordinate our luxury vehicle fleet operations, including logistics, maintenance scheduling, and inventory management.',
@@ -227,7 +227,7 @@ const Careers = () => {
   ];
 
   const departments = ['All', 'Service', 'Operations', 'Detailing', 'Sales', 'Marketing'];
-  const locations = ['All', 'Beverly Hills', 'Miami Beach', 'Manhattan', 'Remote'];
+  const locations = ['All', 'Roysambu (next to TRM)', 'Westlands', 'Upper Hill', 'Remote'];
 
   const [filters, setFilters] = useState({
     department: 'All',

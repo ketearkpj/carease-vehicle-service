@@ -471,9 +471,9 @@ exports.isWithinServiceArea = (req, res, next) => {
 
   // Define service areas (simplified example)
   const serviceAreas = [
-    { name: 'Beverly Hills', center: { lat: 34.0736, lng: -118.4004 }, radius: 20 },
+    { name: 'Roysambu (next to TRM)', center: { lat: 34.0736, lng: -118.4004 }, radius: 20 },
     { name: 'Miami', center: { lat: 25.7617, lng: -80.1918 }, radius: 30 },
-    { name: 'Manhattan', center: { lat: 40.7831, lng: -73.9712 }, radius: 15 }
+    { name: 'Upper Hill', center: { lat: 40.7831, lng: -73.9712 }, radius: 15 }
   ];
 
   const isWithinAnyArea = serviceAreas.some(area => {

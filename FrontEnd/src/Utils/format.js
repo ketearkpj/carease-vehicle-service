@@ -187,18 +187,18 @@ export const formatPercentage = (number, options = {}) => {
 };
 
 // ===== PHONE FORMATTING =====
-export const formatPhone = (phone, country = 'US') => {
+export const formatPhone = (phone, country = 'KE') => {
   if (!phone) return '';
 
   const cleaned = phone.replace(/\D/g, '');
 
   const formats = {
-    US: (num) => {
-      if (num.length === 10) {
-        return `(${num.slice(0, 3)}) ${num.slice(3, 6)}-${num.slice(6)}`;
+    KE: (num) => {
+      if (num.length === 10 && num.startsWith('0')) {
+        return `${num.slice(0, 4)} ${num.slice(4, 7)} ${num.slice(7)}`;
       }
-      if (num.length === 11 && num[0] === '1') {
-        return `+1 (${num.slice(1, 4)}) ${num.slice(4, 7)}-${num.slice(7)}`;
+      if (num.length === 12 && num.startsWith('254')) {
+        return `+254 ${num.slice(3, 6)} ${num.slice(6, 9)} ${num.slice(9)}`;
       }
       return phone;
     },
@@ -210,7 +210,7 @@ export const formatPhone = (phone, country = 'US') => {
     }
   };
 
-  const formatter = formats[country] || formats.US;
+  const formatter = formats[country] || formats.KE;
   return formatter(cleaned);
 };
 

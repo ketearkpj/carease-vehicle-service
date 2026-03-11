@@ -38,7 +38,7 @@ export const validateDeliveryAddress = (data) => {
   // Postal code validation
   if (!data.postalCode) {
     errors.postalCode = 'Postal code is required';
-  } else if (!validatePostalCode(data.postalCode, data.country || 'USA')) {
+  } else if (!validatePostalCode(data.postalCode, data.country || 'Kenya')) {
     errors.postalCode = 'Please enter a valid postal code';
   }
 

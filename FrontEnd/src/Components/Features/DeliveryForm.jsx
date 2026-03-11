@@ -21,7 +21,7 @@ const DeliveryForm = ({
     city: initialData.city || '',
     state: initialData.state || '',
     postalCode: initialData.postalCode || '',
-    country: initialData.country || 'USA',
+    country: initialData.country || 'Kenya',
     instructions: initialData.instructions || '',
     contactName: initialData.contactName || '',
     contactPhone: initialData.contactPhone || '',
@@ -36,32 +36,13 @@ const DeliveryForm = ({
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
 
-  const usStates = [
-    { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' },
-    { value: 'AZ', label: 'Arizona' }, { value: 'AR', label: 'Arkansas' },
-    { value: 'CA', label: 'California' }, { value: 'CO', label: 'Colorado' },
-    { value: 'CT', label: 'Connecticut' }, { value: 'DE', label: 'Delaware' },
-    { value: 'FL', label: 'Florida' }, { value: 'GA', label: 'Georgia' },
-    { value: 'HI', label: 'Hawaii' }, { value: 'ID', label: 'Idaho' },
-    { value: 'IL', label: 'Illinois' }, { value: 'IN', label: 'Indiana' },
-    { value: 'IA', label: 'Iowa' }, { value: 'KS', label: 'Kansas' },
-    { value: 'KY', label: 'Kentucky' }, { value: 'LA', label: 'Louisiana' },
-    { value: 'ME', label: 'Maine' }, { value: 'MD', label: 'Maryland' },
-    { value: 'MA', label: 'Massachusetts' }, { value: 'MI', label: 'Michigan' },
-    { value: 'MN', label: 'Minnesota' }, { value: 'MS', label: 'Mississippi' },
-    { value: 'MO', label: 'Missouri' }, { value: 'MT', label: 'Montana' },
-    { value: 'NE', label: 'Nebraska' }, { value: 'NV', label: 'Nevada' },
-    { value: 'NH', label: 'New Hampshire' }, { value: 'NJ', label: 'New Jersey' },
-    { value: 'NM', label: 'New Mexico' }, { value: 'NY', label: 'New York' },
-    { value: 'NC', label: 'North Carolina' }, { value: 'ND', label: 'North Dakota' },
-    { value: 'OH', label: 'Ohio' }, { value: 'OK', label: 'Oklahoma' },
-    { value: 'OR', label: 'Oregon' }, { value: 'PA', label: 'Pennsylvania' },
-    { value: 'RI', label: 'Rhode Island' }, { value: 'SC', label: 'South Carolina' },
-    { value: 'SD', label: 'South Dakota' }, { value: 'TN', label: 'Tennessee' },
-    { value: 'TX', label: 'Texas' }, { value: 'UT', label: 'Utah' },
-    { value: 'VT', label: 'Vermont' }, { value: 'VA', label: 'Virginia' },
-    { value: 'WA', label: 'Washington' }, { value: 'WV', label: 'West Virginia' },
-    { value: 'WI', label: 'Wisconsin' }, { value: 'WY', label: 'Wyoming' }
+  const kenyaCounties = [
+    { value: 'Nairobi', label: 'Nairobi' },
+    { value: 'Kiambu', label: 'Kiambu' },
+    { value: 'Machakos', label: 'Machakos' },
+    { value: 'Kajiado', label: 'Kajiado' },
+    { value: 'Mombasa', label: 'Mombasa' },
+    { value: 'Kisumu', label: 'Kisumu' }
   ];
 
   useEffect(() => {
@@ -81,7 +62,7 @@ const DeliveryForm = ({
     try {
       const fullAddress = `${formData.addressLine1}, ${formData.city}, ${formData.state} ${formData.postalCode}`;
       const estimate = await getDeliveryEstimate(
-        { lat: 34.0736, lng: -118.4004 },
+        { lat: -1.2195, lng: 36.8869 },
         fullAddress
       );
       setDeliveryEstimate(estimate);
@@ -117,7 +98,7 @@ const DeliveryForm = ({
         if (!value || value.trim().length < 2) error = 'Please enter a valid city';
         break;
       case 'state':
-        if (!value) error = 'Please select a state';
+        if (!value) error = 'Please select a county';
         break;
       case 'postalCode':
         if (!validatePostalCode(value, formData.country)) error = 'Please enter a valid postal code';
@@ -189,7 +170,7 @@ const DeliveryForm = ({
       city: location.city,
       state: location.state,
       postalCode: location.postalCode,
-      country: location.country || 'USA'
+      country: location.country || 'Kenya'
     }));
     setShowLocationPicker(false);
   };
@@ -262,8 +243,8 @@ const DeliveryForm = ({
                 className={`form-select ${touched.state && errors.state ? 'error' : ''}`}
                 required
               >
-                <option value="">Select State</option>
-                {usStates.map(state => (
+                <option value="">Select County</option>
+                {kenyaCounties.map(state => (
                   <option key={state.value} value={state.value}>{state.label}</option>
                 ))}
               </select>
@@ -282,13 +263,12 @@ const DeliveryForm = ({
                 error={touched.postalCode && errors.postalCode}
                 required
                 icon="📮"
-                placeholder="90210"
+                placeholder="00100"
               />
             </div>
             <div className="form-col">
               <select name="country" value={formData.country} onChange={handleChange} className="form-select">
-                <option value="USA">United States</option>
-                <option value="CAN">Canada</option>
+                <option value="Kenya">Kenya</option>
               </select>
             </div>
           </div>
@@ -308,7 +288,7 @@ const DeliveryForm = ({
               </div>
               <div className="estimate-item highlight">
                 <span className="estimate-label">Delivery Cost:</span>
-                <span className="estimate-value">${deliveryEstimate.cost.total}</span>
+                <span className="estimate-value">KSh {deliveryEstimate.cost.total}</span>
               </div>
             </div>
           </div>
@@ -351,7 +331,7 @@ const DeliveryForm = ({
                 error={touched.contactPhone && errors.contactPhone}
                 required
                 icon="📞"
-                placeholder="+1 (555) 123-4567"
+                placeholder="0758458358"
               />
             </div>
           </div>

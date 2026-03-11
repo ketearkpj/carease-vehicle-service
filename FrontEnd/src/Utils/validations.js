@@ -174,11 +174,11 @@ export const validateTimeWithMessage = (time, field = 'Time') => {
 };
 
 // ===== POSTAL CODE VALIDATION =====
-export const validatePostalCode = (postalCode, country = 'USA') => {
+export const validatePostalCode = (postalCode, country = 'Kenya') => {
   if (!postalCode) return false;
   
   const patterns = {
-    USA: /^\d{5}(-\d{4})?$/,
+    Kenya: /^\d{5}$/,
     CAN: /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/,
     UK: /^[A-Z]{1,2}\d[A-Z\d]? ?\d[A-Z]{2}$/i,
     AUS: /^\d{4}$/,
@@ -187,11 +187,11 @@ export const validatePostalCode = (postalCode, country = 'USA') => {
     JP: /^\d{3}-\d{4}$/
   };
 
-  const pattern = patterns[country] || patterns.USA;
+  const pattern = patterns[country] || patterns.Kenya;
   return pattern.test(postalCode);
 };
 
-export const validatePostalCodeWithMessage = (postalCode, country = 'USA') => {
+export const validatePostalCodeWithMessage = (postalCode, country = 'Kenya') => {
   if (!postalCode) return { valid: false, message: 'Postal code is required' };
   if (!validatePostalCode(postalCode, country)) {
     return { valid: false, message: 'Please enter a valid postal code' };

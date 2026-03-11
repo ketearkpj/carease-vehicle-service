@@ -405,8 +405,8 @@ export const generateHTMLInvoice = (data) => {
             <div class="header-grid">
                 <div class="company-info">
                     <h2>${companyInfo.name}</h2>
-                    <p>${companyInfo.address || '123 Luxury Lane, Beverly Hills, CA 90210'}</p>
-                    <p>${companyInfo.phone || '+1 (800) 555-0123'}</p>
+                    <p>${companyInfo.address || 'TRM Service Lane, Roysambu (next to TRM), Nairobi'}</p>
+                    <p>${companyInfo.phone || '0758458358'}</p>
                     <p>${companyInfo.email || 'info@carease.com'}</p>
                 </div>
                 

@@ -50,11 +50,11 @@ const About = () => {
   ];
 
   const milestones = [
-    { year: 2018, title: 'Company Founded', description: 'CAR EASE established in Beverly Hills with a vision to transform luxury automotive services.' },
-    { year: 2019, title: 'First Expansion', description: 'Opened Miami Beach location to serve the vibrant South Florida luxury market.' },
+    { year: 2018, title: 'Company Founded', description: 'CAR EASE established in Roysambu (next to TRM) with a vision to transform luxury automotive services.' },
+    { year: 2019, title: 'First Expansion', description: 'Opened Westlands location to serve Nairobi’s growing premium mobility market.' },
     { year: 2020, title: 'Luxury Rentals Launch', description: 'Introduced exotic car rentals with a fleet of premium supercars and luxury vehicles.' },
     { year: 2021, title: 'Service Expansion', description: 'Added professional detailing and certified repair services to our portfolio.' },
-    { year: 2022, title: 'Manhattan Showroom', description: 'Opened flagship NYC location in the heart of Manhattan\'s luxury district.' },
+    { year: 2022, title: 'Upper Hill Showroom', description: 'Opened Upper Hill showroom to support corporate and executive clients.' },
     { year: 2023, title: '10,000+ Clients', description: 'Reached milestone of serving over 10,000 satisfied clients across all locations.' }
   ];
 
@@ -83,26 +83,26 @@ const About = () => {
 
   const locations = [
     {
-      city: 'Beverly Hills',
-      address: '123 Luxury Lane, Beverly Hills, CA 90210',
-      phone: '+1 (310) 555-0123',
-      email: 'beverlyhills@carease.com',
+      city: 'Roysambu (next to TRM)',
+      address: 'TRM Service Lane, Roysambu (next to TRM), Nairobi',
+      phone: '0758458358',
+      email: 'roysambu@carease.co.ke',
       hours: 'Mon-Sun: 9am - 8pm',
       image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
-      city: 'Miami Beach',
-      address: '456 Ocean Drive, Miami Beach, FL 33139',
-      phone: '+1 (305) 555-0456',
-      email: 'miami@carease.com',
+      city: 'Westlands',
+      address: 'Westlands Ring Road, Westlands, Nairobi',
+      phone: '0758458358',
+      email: 'westlands@carease.co.ke',
       hours: 'Mon-Sun: 10am - 7pm',
       image: 'https://images.unsplash.com/photo-1533106418989-8840c7ff8f3d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     },
     {
-      city: 'Manhattan',
-      address: '789 Park Avenue, New York, NY 10022',
-      phone: '+1 (212) 555-0789',
-      email: 'nyc@carease.com',
+      city: 'Upper Hill',
+      address: 'Upper Hill Road, Nairobi, Nairobi',
+      phone: '0758458358',
+      email: 'upperhill@carease.co.ke',
       hours: 'Mon-Fri: 9am - 8pm, Sat: 10am-6pm',
       image: 'https://images.unsplash.com/photo-1496582490289-5cff8c8f2672?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
     }
@@ -164,7 +164,7 @@ const About = () => {
                 </p>
                 <p>
                   Today, we've built the region's most comprehensive luxury automotive platform, 
-                  serving clients from our flagship locations in Beverly Hills, Miami, and Manhattan. 
+                  serving clients from our flagship locations in Roysambu (next to TRM), Westlands, and Upper Hill, Nairobi. 
                   Our integrated approach means you can rent an exotic car today, have it detailed 
                   tomorrow, and purchase your dream vehicle next month - all with the same trusted partner.
                 </p>

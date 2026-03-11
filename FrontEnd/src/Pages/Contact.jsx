@@ -322,7 +322,7 @@ const Contact = () => {
                     onBlur={handleBlur}
                     error={touched.phone && errors.phone}
                     icon="📞"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="0758458358"
                     helper="Include country code for international numbers"
                   />
                 </div>

@@ -304,7 +304,7 @@ const ManageBookings = () => {
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Location:</span>
-                  <span className="detail-value">{selectedBooking.location || 'Beverly Hills'}</span>
+                  <span className="detail-value">{selectedBooking.location || 'Roysambu (next to TRM)'}</span>
                 </div>
                 <div className="detail-item">
                   <span className="detail-label">Total Amount:</span>

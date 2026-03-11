@@ -50,7 +50,7 @@ const validators = {
         city: Joi.string(),
         state: Joi.string(),
         zipCode: Joi.string(),
-        country: Joi.string().default('USA')
+        country: Joi.string().default('Kenya')
       })
     })
   },
@@ -312,7 +312,7 @@ const validators = {
           city: Joi.string().required(),
           state: Joi.string().required(),
           zipCode: Joi.string().required(),
-          country: Joi.string().default('USA')
+          country: Joi.string().default('Kenya')
         }),
         coordinates: Joi.object({
           lat: Joi.number().required(),
@@ -331,7 +331,7 @@ const validators = {
           city: Joi.string().required(),
           state: Joi.string().required(),
           zipCode: Joi.string().required(),
-          country: Joi.string().default('USA')
+          country: Joi.string().default('Kenya')
         }),
         coordinates: Joi.object({
           lat: Joi.number().required(),

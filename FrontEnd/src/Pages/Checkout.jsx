@@ -36,16 +36,23 @@ const Checkout = () => {
   const [promoCode, setPromoCode] = useState('');
   const [promoApplied, setPromoApplied] = useState(false);
   const [discount, setDiscount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
   const [selectedMethod, setSelectedMethod] = useState('card');
+  const [billingSameAsService, setBillingSameAsService] = useState(true);
+  const [validationErrors, setValidationErrors] = useState({});
   const [billingAddress, setBillingAddress] = useState({
-    sameAsService: true,
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
     addressLine1: '',
     addressLine2: '',
     city: '',
     state: '',
     postalCode: '',
-    country: 'USA'
+    country: 'Kenya'
   });
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
 
   const { addNotification } = useApp();
   const { processNewPayment } = usePayment();
@@ -65,14 +72,18 @@ const Checkout = () => {
       const data = await getBookingById(bookingId);
       setBooking(data);
       
-      // Pre-fill billing address with service address if same
-      if (data.location) {
+      // Pre-fill billing address with customer info
+      if (data.customerInfo) {
         setBillingAddress(prev => ({
           ...prev,
-          addressLine1: data.location.address || '',
-          city: data.location.city || '',
-          state: data.location.state || '',
-          postalCode: data.location.postalCode || ''
+          firstName: data.customerInfo.firstName || '',
+          lastName: data.customerInfo.lastName || '',
+          email: data.customerInfo.email || '',
+          phone: data.customerInfo.phone || '',
+          addressLine1: data.customerInfo.address || '',
+          city: data.customerInfo.city || '',
+          state: data.customerInfo.state || '',
+          postalCode: data.customerInfo.zipCode || ''
         }));
       }
     } catch (error) {
@@ -85,32 +96,93 @@ const Checkout = () => {
   };
 
   const handlePromoApply = async () => {
-    if (!promoCode) return;
+    if (!promoCode) {
+      addNotification('Please enter a promo code', 'warning');
+      return;
+    }
 
     // Simulate promo validation
-    if (promoCode.toUpperCase() === 'WELCOME10') {
-      setDiscount(10);
+    const promoCodes = {
+      'WELCOME10': { discount: 10, applied: true },
+      'SAVE20': { discount: 20, applied: true },
+      'SUMMER15': { discount: 15, applied: true },
+      'VIP25': { discount: 25, applied: true }
+    };
+
+    const promoData = promoCodes[promoCode.toUpperCase()];
+    
+    if (promoData) {
+      const calculated = (booking?.totalPrice * promoData.discount) / 100;
+      setDiscount(promoData.discount);
+      setDiscountAmount(calculated);
       setPromoApplied(true);
-      addNotification('Promo code applied successfully!', 'success');
-    } else if (promoCode.toUpperCase() === 'SAVE20') {
-      setDiscount(20);
-      setPromoApplied(true);
-      addNotification('Promo code applied successfully!', 'success');
+      addNotification(`Promo code "${promoCode}" applied! You saved $${calculated.toFixed(2)}`, 'success');
     } else {
-      addNotification('Invalid promo code', 'error');
+      addNotification('Invalid promo code. Please check and try again.', 'error');
+      setPromoCode('');
     }
+  };
+
+  const validateBillingAddress = () => {
+    const errors = {};
+    
+    if (!billingAddress.firstName?.trim()) errors.firstName = 'First name is required';
+    if (!billingAddress.lastName?.trim()) errors.lastName = 'Last name is required';
+    if (!billingAddress.email?.trim()) errors.email = 'Email is required';
+    if (!billingAddress.phone?.trim()) errors.phone = 'Phone is required';
+    if (!billingAddress.addressLine1?.trim()) errors.addressLine1 = 'Address is required';
+    if (!billingAddress.city?.trim()) errors.city = 'City is required';
+    if (!billingAddress.state?.trim()) errors.state = 'State is required';
+    if (!billingAddress.postalCode?.trim()) errors.postalCode = 'Postal code is required';
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode('');
+    setPromoApplied(false);
+    setDiscount(0);
+    setDiscountAmount(0);
+    addNotification('Promo code removed', 'info');
   };
 
   const handlePaymentSuccess = async (paymentResult) => {
     setProcessing(true);
     try {
-      // Update booking with payment info
-      // This would call an API to update the booking status
-      
-      addNotification('Payment successful! Your booking is confirmed.', 'success');
-      navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${bookingId}`);
+      // Validate billing address
+      if (!validateBillingAddress()) {
+        addNotification('Please complete your billing information', 'error');
+        setProcessing(false);
+        return;
+      }
+
+      if (!agreementAccepted) {
+        addNotification('Please accept the terms and conditions', 'error');
+        setProcessing(false);
+        return;
+      }
+
+      // Call payment processing
+      const paymentData = {
+        bookingId,
+        billingAddress,
+        paymentMethod: selectedMethod,
+        transactionId: paymentResult?.transactionId || 'txn_' + Date.now(),
+        amount: calculateTotal(),
+        promoCode: promoApplied ? promoCode : null,
+        discountApplied: discountAmount
+      };
+
+      const result = await processNewPayment(paymentData);
+
+      if (result.success) {
+        addNotification('Payment successful! Your booking is confirmed.', 'success');
+        navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${bookingId}`);
+      }
     } catch (error) {
-      addNotification('Payment succeeded but failed to update booking. Please contact support.', 'warning');
+      console.error('Payment error:', error);
+      addNotification('Payment processing failed. Please try again.', 'error');
     } finally {
       setProcessing(false);
     }
@@ -119,8 +191,11 @@ const Checkout = () => {
   const calculateTotal = () => {
     if (!booking) return 0;
     const subtotal = booking.totalPrice || 0;
-    const discountAmount = (subtotal * discount) / 100;
     return (subtotal - discountAmount).toFixed(2);
+  };
+
+  const calculateSubtotal = () => {
+    return booking?.totalPrice || 0;
   };
 
   if (loading) {
@@ -173,70 +248,147 @@ const Checkout = () => {
 
             {/* Billing Address */}
             <Card className="checkout-section">
-              <h2 className="section-title">Billing Address</h2>
+              <h2 className="section-title">Billing Information</h2>
               
               <div className="address-option">
                 <label className="checkbox-label">
                   <input
                     type="checkbox"
-                    checked={billingAddress.sameAsService}
-                    onChange={(e) => setBillingAddress(prev => ({ 
-                      ...prev, 
-                      sameAsService: e.target.checked 
-                    }))}
+                    checked={billingSameAsService}
+                    onChange={(e) => setBillingSameAsService(e.target.checked)}
                   />
-                  <span>Same as service location</span>
+                  <span>Billing address same as service location</span>
                 </label>
               </div>
 
-              {!billingAddress.sameAsService && (
-                <div className="address-form">
-                  <div className="form-row">
+              <div className="billing-form">
+                {/* Name Fields */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>First Name *</label>
                     <Input
-                      label="Address Line 1"
-                      value={billingAddress.addressLine1}
-                      onChange={(e) => setBillingAddress(prev => ({ ...prev, addressLine1: e.target.value }))}
-                      required
-                      icon="🏠"
+                      value={billingAddress.firstName}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, firstName: e.target.value }))}
+                      placeholder="John"
+                      error={validationErrors.firstName}
                     />
+                    {validationErrors.firstName && (
+                      <span className="field-error">{validationErrors.firstName}</span>
+                    )}
                   </div>
-                  <div className="form-row">
+                  <div className="form-group">
+                    <label>Last Name *</label>
                     <Input
-                      label="Address Line 2 (Optional)"
-                      value={billingAddress.addressLine2}
-                      onChange={(e) => setBillingAddress(prev => ({ ...prev, addressLine2: e.target.value }))}
-                      icon="🚪"
+                      value={billingAddress.lastName}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, lastName: e.target.value }))}
+                      placeholder="Doe"
+                      error={validationErrors.lastName}
                     />
-                  </div>
-                  <div className="form-row">
-                    <Input
-                      label="City"
-                      value={billingAddress.city}
-                      onChange={(e) => setBillingAddress(prev => ({ ...prev, city: e.target.value }))}
-                      required
-                      icon="🏙️"
-                    />
-                  </div>
-                  <div className="form-row">
-                    <Input
-                      label="State"
-                      value={billingAddress.state}
-                      onChange={(e) => setBillingAddress(prev => ({ ...prev, state: e.target.value }))}
-                      required
-                      icon="📍"
-                    />
-                  </div>
-                  <div className="form-row">
-                    <Input
-                      label="Postal Code"
-                      value={billingAddress.postalCode}
-                      onChange={(e) => setBillingAddress(prev => ({ ...prev, postalCode: e.target.value }))}
-                      required
-                      icon="📮"
-                    />
+                    {validationErrors.lastName && (
+                      <span className="field-error">{validationErrors.lastName}</span>
+                    )}
                   </div>
                 </div>
-              )}
+
+                {/* Email & Phone */}
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Email *</label>
+                    <Input
+                      type="email"
+                      value={billingAddress.email}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="john@example.com"
+                      error={validationErrors.email}
+                    />
+                    {validationErrors.email && (
+                      <span className="field-error">{validationErrors.email}</span>
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label>Phone *</label>
+                    <Input
+                      type="tel"
+                      value={billingAddress.phone}
+                      onChange={(e) => setBillingAddress(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="(555) 123-4567"
+                      error={validationErrors.phone}
+                    />
+                    {validationErrors.phone && (
+                      <span className="field-error">{validationErrors.phone}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Address Section */}
+                {(!billingSameAsService || !billingAddress.addressLine1) && (
+                  <>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Address Line 1 *</label>
+                        <Input
+                          value={billingAddress.addressLine1}
+                          onChange={(e) => setBillingAddress(prev => ({ ...prev, addressLine1: e.target.value }))}
+                          placeholder="123 Main Street"
+                          error={validationErrors.addressLine1}
+                        />
+                        {validationErrors.addressLine1 && (
+                          <span className="field-error">{validationErrors.addressLine1}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Address Line 2 (Optional)</label>
+                        <Input
+                          value={billingAddress.addressLine2}
+                          onChange={(e) => setBillingAddress(prev => ({ ...prev, addressLine2: e.target.value }))}
+                          placeholder="Apartment, suite, etc."
+                        />
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>City *</label>
+                        <Input
+                          value={billingAddress.city}
+                          onChange={(e) => setBillingAddress(prev => ({ ...prev, city: e.target.value }))}
+                          placeholder="Nairobi"
+                          error={validationErrors.city}
+                        />
+                        {validationErrors.city && (
+                          <span className="field-error">{validationErrors.city}</span>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label>State *</label>
+                        <Input
+                          value={billingAddress.state}
+                          onChange={(e) => setBillingAddress(prev => ({ ...prev, state: e.target.value }))}
+                          placeholder="NY"
+                          maxLength="2"
+                          error={validationErrors.state}
+                        />
+                        {validationErrors.state && (
+                          <span className="field-error">{validationErrors.state}</span>
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label>Postal Code *</label>
+                        <Input
+                          value={billingAddress.postalCode}
+                          onChange={(e) => setBillingAddress(prev => ({ ...prev, postalCode: e.target.value }))}
+                          placeholder="10001"
+                          error={validationErrors.postalCode}
+                        />
+                        {validationErrors.postalCode && (
+                          <span className="field-error">{validationErrors.postalCode}</span>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </Card>
 
             {/* Payment Method */}
@@ -252,6 +404,21 @@ const Checkout = () => {
                 loading={processing}
               />
             </Card>
+
+            {/* Terms & Conditions */}
+            <div className="terms-section">
+              <label className="terms-checkbox">
+                <input
+                  type="checkbox"
+                  checked={agreementAccepted}
+                  onChange={(e) => setAgreementAccepted(e.target.checked)}
+                  required
+                />
+                <span>
+                  I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">terms and conditions</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer">privacy policy</a>
+                </span>
+              </label>
+            </div>
           </div>
 
           {/* Right Column - Order Summary */}
@@ -262,15 +429,17 @@ const Checkout = () => {
               <div className="summary-items">
                 <div className="summary-row">
                   <span>Subtotal</span>
-                  <span>${booking?.totalPrice?.toFixed(2)}</span>
+                  <span>${calculateSubtotal().toFixed(2)}</span>
                 </div>
                 
-                {discount > 0 && (
+                {promoApplied && discountAmount > 0 && (
                   <div className="summary-row discount">
                     <span>Discount ({discount}%)</span>
-                    <span>-${((booking?.totalPrice * discount) / 100).toFixed(2)}</span>
+                    <span>-${discountAmount.toFixed(2)}</span>
                   </div>
                 )}
+
+                <div className="summary-divider"></div>
 
                 <div className="summary-row total">
                   <span>Total</span>
@@ -281,26 +450,37 @@ const Checkout = () => {
               {/* Promo Code */}
               <div className="promo-section">
                 <h3 className="promo-title">Have a promo code?</h3>
-                <div className="promo-input-group">
-                  <Input
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Enter code"
-                    disabled={promoApplied}
-                  />
-                  {!promoApplied ? (
+                {!promoApplied ? (
+                  <div className="promo-input-group">
+                    <Input
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                      placeholder="Enter promo code (e.g., WELCOME10)"
+                    />
                     <Button 
-                      variant="outline" 
+                      variant="primary" 
                       size="sm"
                       onClick={handlePromoApply}
-                      disabled={!promoCode}
+                      disabled={!promoCode || processing}
                     >
                       Apply
                     </Button>
-                  ) : (
-                    <span className="promo-applied">✓ Applied</span>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div className="promo-applied-section">
+                    <div className="promo-badge">
+                      <span className="checkmark">✓</span>
+                      <span className="promo-text">{promoCode} applied - Save ${discountAmount.toFixed(2)}</span>
+                      <button 
+                        className="remove-promo"
+                        onClick={handleRemovePromo}
+                        type="button"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Security Badge */}

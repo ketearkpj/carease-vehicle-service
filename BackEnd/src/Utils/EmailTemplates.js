@@ -101,7 +101,7 @@ class EmailTemplate {
           </div>
           <div class="footer">
             <p>© ${new Date().getFullYear()} CAR EASE. All rights reserved.</p>
-            <p>123 Luxury Lane, Beverly Hills, CA 90210</p>
+            <p>TRM Service Lane, Roysambu (next to TRM), Nairobi</p>
           </div>
         </div>
       </body>
@@ -173,7 +173,7 @@ class EmailTemplate {
         </div>
         <div class="detail-row">
           <span class="detail-label">Location:</span>
-          <span class="detail-value">${booking.location.pickup.name || 'Beverly Hills'}</span>
+          <span class="detail-value">${booking.location.pickup.name || 'Roysambu (next to TRM)'}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Total:</span>
@@ -289,7 +289,7 @@ class EmailTemplate {
         </div>
         <div class="detail-row">
           <span class="detail-label">Location:</span>
-          <span class="detail-value">${booking.location.pickup.name || 'Beverly Hills'}</span>
+          <span class="detail-value">${booking.location.pickup.name || 'Roysambu (next to TRM)'}</span>
         </div>
       </div>
 
@@ -486,7 +486,7 @@ class EmailTemplate {
         </div>
         <div class="detail-row">
           <span class="detail-label">Pickup Location:</span>
-          <span class="detail-value">${delivery.pickupLocation?.name || 'Beverly Hills'}</span>
+          <span class="detail-value">${delivery.pickupLocation?.name || 'Roysambu (next to TRM)'}</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Dropoff Location:</span>
