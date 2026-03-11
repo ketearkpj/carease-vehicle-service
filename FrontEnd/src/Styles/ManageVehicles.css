@@ -9,7 +9,7 @@
 
 .manage-vehicles-page {
   padding: var(--space-8);
-  max-width: 1600px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -17,10 +17,10 @@
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--space-8);
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .page-title {
@@ -47,11 +47,12 @@
 .filters-card {
   padding: var(--space-6);
   margin-bottom: var(--space-6);
+  overflow: hidden;
 }
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-4);
 }
 

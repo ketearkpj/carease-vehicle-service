@@ -7,8 +7,8 @@
 // ===== CURRENCY FORMATTING =====
 export const formatCurrency = (amount, options = {}) => {
   const {
-    currency = 'USD',
-    locale = 'en-US',
+    currency = 'KES',
+    locale = 'en-KE',
     minimumFractionDigits = 2,
     maximumFractionDigits = 2,
     useSymbol = true
@@ -26,10 +26,10 @@ export const formatCurrency = (amount, options = {}) => {
   return formatter.format(amount);
 };
 
-export const formatCompactCurrency = (amount, currency = 'USD') => {
+export const formatCompactCurrency = (amount, currency = 'KES') => {
   if (amount === null || amount === undefined) return '';
 
-  const formatter = new Intl.NumberFormat('en-US', {
+  const formatter = new Intl.NumberFormat('en-KE', {
     style: 'currency',
     currency,
     notation: 'compact',

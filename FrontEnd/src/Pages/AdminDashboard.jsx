@@ -14,6 +14,7 @@ import AdminTable from '../Components/Admin/AdminTable';
 
 // Services
 import { getDashboardStats, getRecentBookings } from '../Services/AdminService';
+import { formatCurrency } from '../Utils/format';
 
 // Hooks
 import { useAdminAuth } from '../Hooks/useAdminAuth';
@@ -84,7 +85,7 @@ const AdminDashboard = () => {
   const statCards = [
     {
       title: 'Total Revenue',
-      value: stats?.revenue?.total ? `$${stats.revenue.total.toLocaleString()}` : '$158,900',
+      value: formatCurrency(stats?.revenue?.total || 158900),
       change: stats?.revenue?.change || 12.5,
       icon: '💰',
       color: 'gold'
@@ -120,7 +121,7 @@ const AdminDashboard = () => {
     { key: 'status', label: 'Status', render: (status) => (
       <span className={`status-badge status-${status.toLowerCase()}`}>{status}</span>
     )},
-    { key: 'amount', label: 'Amount', render: (amount) => `$${amount?.toFixed(2)}` }
+    { key: 'amount', label: 'Amount', render: (amount) => formatCurrency(amount || 0) }
   ];
 
   const quickActions = [

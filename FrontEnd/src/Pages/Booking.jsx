@@ -69,6 +69,16 @@ const Booking = () => {
     },
     paymentMethod: null
   });
+  const [paymentDetails, setPaymentDetails] = useState({
+    cardName: '',
+    cardNumber: '',
+    cardExpiry: '',
+    cardCvv: '',
+    paypalEmail: '',
+    mpesaPhone: '',
+    squareCustomer: ''
+  });
+  const [paymentHint, setPaymentHint] = useState('');
 
   const [pricing, setPricing] = useState({
     basePrice: 0,
@@ -280,6 +290,124 @@ const Booking = () => {
     return digitsOnly.length >= 10;
   };
 
+  const normalizeMpesaPhone = (phone) => {
+    const digits = (phone || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('254') && digits.length === 12) return digits;
+    if (digits.startsWith('0') && digits.length === 10) return `254${digits.slice(1)}`;
+    if (digits.startsWith('7') && digits.length === 9) return `254${digits}`;
+    return digits;
+  };
+
+  const handlePaymentDetailsChange = (field, value) => {
+    let nextValue = value;
+    if (field === 'cardNumber') {
+      const digits = value.replace(/\D/g, '').slice(0, 16);
+      nextValue = digits.replace(/(.{4})/g, '$1 ').trim();
+    }
+    if (field === 'cardExpiry') {
+      const digits = value.replace(/\D/g, '').slice(0, 4);
+      nextValue = digits.length > 2 ? `${digits.slice(0, 2)}/${digits.slice(2)}` : digits;
+    }
+    if (field === 'cardCvv') {
+      nextValue = value.replace(/\D/g, '').slice(0, 4);
+    }
+    if (field === 'mpesaPhone') {
+      nextValue = value.replace(/[^\d+]/g, '').slice(0, 13);
+    }
+
+    setPaymentDetails((prev) => ({ ...prev, [field]: nextValue }));
+    setErrors((prev) => {
+      if (!prev[field]) return prev;
+      const nextErrors = { ...prev };
+      delete nextErrors[field];
+      return nextErrors;
+    });
+  };
+
+  const validatePaymentDetails = () => {
+    const newErrors = {};
+    const paymentErrorKeys = [
+      'paymentMethod',
+      'cardName',
+      'cardNumber',
+      'cardExpiry',
+      'cardCvv',
+      'paypalEmail',
+      'mpesaPhone',
+      'squareCustomer'
+    ];
+
+    if (!bookingData.paymentMethod) {
+      newErrors.paymentMethod = 'Please select a payment method';
+      setErrors((prev) => ({ ...prev, ...newErrors }));
+      return false;
+    }
+
+    if (bookingData.paymentMethod === 'card') {
+      const cardDigits = paymentDetails.cardNumber.replace(/\D/g, '');
+      if (!paymentDetails.cardName.trim()) newErrors.cardName = 'Card holder name is required';
+      if (cardDigits.length !== 16) newErrors.cardNumber = 'Enter a valid 16-digit card number';
+      if (!/^\d{2}\/\d{2}$/.test(paymentDetails.cardExpiry)) newErrors.cardExpiry = 'Use MM/YY format';
+      if (!/^\d{3,4}$/.test(paymentDetails.cardCvv)) newErrors.cardCvv = 'Enter a valid CVV';
+    }
+
+    if (bookingData.paymentMethod === 'paypal') {
+      if (!paymentDetails.paypalEmail.trim()) {
+        newErrors.paypalEmail = 'PayPal email is required';
+      } else if (!validateEmail(paymentDetails.paypalEmail)) {
+        newErrors.paypalEmail = 'Enter a valid PayPal email';
+      }
+    }
+
+    if (bookingData.paymentMethod === 'mpesa') {
+      const normalized = normalizeMpesaPhone(paymentDetails.mpesaPhone);
+      if (!/^254\d{9}$/.test(normalized)) {
+        newErrors.mpesaPhone = 'Use 07XXXXXXXX, 7XXXXXXXX or 254XXXXXXXXX';
+      }
+    }
+
+    if (bookingData.paymentMethod === 'square') {
+      if (!paymentDetails.squareCustomer.trim()) {
+        newErrors.squareCustomer = 'Enter a phone or customer reference';
+      }
+    }
+
+    setErrors((prev) => {
+      const remaining = { ...prev };
+      paymentErrorKeys.forEach((key) => delete remaining[key]);
+      return { ...remaining, ...newErrors };
+    });
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const getPaymentPayload = () => {
+    if (bookingData.paymentMethod === 'card') {
+      const cardDigits = paymentDetails.cardNumber.replace(/\D/g, '');
+      return {
+        paymentMethodId: `pm_card_${cardDigits.slice(-4) || Date.now()}`,
+        cardLast4: cardDigits.slice(-4)
+      };
+    }
+
+    if (bookingData.paymentMethod === 'paypal') {
+      return {
+        customerEmail: paymentDetails.paypalEmail.trim(),
+        payerEmail: paymentDetails.paypalEmail.trim()
+      };
+    }
+
+    if (bookingData.paymentMethod === 'mpesa') {
+      return { phoneNumber: normalizeMpesaPhone(paymentDetails.mpesaPhone) };
+    }
+
+    if (bookingData.paymentMethod === 'square') {
+      return { customerReference: paymentDetails.squareCustomer.trim() };
+    }
+
+    return {};
+  };
+
   const validateStep = (stepNum) => {
     const newErrors = {};
 
@@ -401,13 +529,19 @@ const Booking = () => {
   const handlePaymentSuccess = async (paymentResult) => {
     setLoading(true);
     try {
+      if (bookingData.paymentMethod === 'mpesa') {
+        setPaymentHint(`M-PESA prompt sent to ${normalizeMpesaPhone(paymentDetails.mpesaPhone)}. Approve on your phone to continue.`);
+      }
+
+      const paymentPayload = getPaymentPayload();
       const payment = paymentResult || await processNewPayment({
         bookingId: bookingData.vehicleId || `booking-${Date.now()}`,
         amount: pricing.total,
         currency: 'KES',
-        customerEmail: bookingData.customerInfo?.email,
+        customerEmail: paymentPayload.customerEmail || bookingData.customerInfo?.email,
         customerName: `${bookingData.customerInfo?.firstName || ''} ${bookingData.customerInfo?.lastName || ''}`.trim(),
-        paymentMethod: bookingData.paymentMethod
+        paymentMethod: bookingData.paymentMethod,
+        ...paymentPayload
       }, bookingData.paymentMethod === 'paypal' ? 'paypal' : bookingData.paymentMethod || 'stripe');
 
       // Create final booking
@@ -416,7 +550,14 @@ const Booking = () => {
         inquiryType: queryParams.get('inquiryType') || null,
         paymentId: payment?.transactionId || `txn_${Date.now()}`,
         totalAmount: pricing.total,
-        status: 'confirmed'
+        status: 'confirmed',
+        paymentMeta: {
+          method: bookingData.paymentMethod,
+          phoneNumber: bookingData.paymentMethod === 'mpesa' ? normalizeMpesaPhone(paymentDetails.mpesaPhone) : undefined,
+          paypalEmail: bookingData.paymentMethod === 'paypal' ? paymentDetails.paypalEmail.trim() : undefined,
+          cardLast4: bookingData.paymentMethod === 'card' ? paymentDetails.cardNumber.replace(/\D/g, '').slice(-4) : undefined,
+          customerReference: bookingData.paymentMethod === 'square' ? paymentDetails.squareCustomer.trim() : undefined
+        }
       };
 
       const result = await createNewBooking(finalBookingData);
@@ -443,6 +584,11 @@ const Booking = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCompleteBooking = async () => {
+    if (!validatePaymentDetails()) return;
+    await handlePaymentSuccess();
   };
 
   return (
@@ -610,7 +756,7 @@ const Booking = () => {
                                 onChange={(e) => handleFieldChange('deliveryMode', e.target.value)}
                                 options={[
                                   { value: 'pickup', label: 'I will pick up' },
-                                  { value: 'delivery', label: 'Home delivery (+$50)' },
+                                  { value: 'delivery', label: 'Home delivery (+KSh 6,500)' },
                                   { value: 'mobile', label: 'Mobile service' }
                                 ]}
                               />
@@ -735,7 +881,7 @@ const Booking = () => {
                               onChange={(e) => handleFieldChange('customerInfo.phone', e.target.value, true)}
                               onBlur={() => handleFieldBlur('phone')}
                               error={touched.phone ? errors.phone : ''}
-                              placeholder="(555) 123-4567"
+                              placeholder="07XX XXX XXX"
                             />
                           </div>
                         </div>
@@ -748,7 +894,7 @@ const Booking = () => {
                             <Input
                               value={bookingData.customerInfo.address}
                               onChange={(e) => handleFieldChange('customerInfo.address', e.target.value, true)}
-                              placeholder="123 Main St"
+                              placeholder="TRM Service Lane"
                             />
                           </div>
                           <div className="form-row">
@@ -761,20 +907,19 @@ const Booking = () => {
                               />
                             </div>
                             <div className="form-group">
-                              <label>State *</label>
+                              <label>County *</label>
                               <Input
                                 value={bookingData.customerInfo.state}
                                 onChange={(e) => handleFieldChange('customerInfo.state', e.target.value, true)}
-                                placeholder="NY"
-                                maxLength="2"
+                                placeholder="Nairobi"
                               />
                             </div>
                             <div className="form-group">
-                              <label>ZIP Code *</label>
+                              <label>Postal Code *</label>
                               <Input
                                 value={bookingData.customerInfo.zipCode}
                                 onChange={(e) => handleFieldChange('customerInfo.zipCode', e.target.value, true)}
-                                placeholder="10001"
+                                placeholder="00100"
                               />
                             </div>
                           </div>
@@ -967,7 +1112,10 @@ const Booking = () => {
                               name="paymentMethod"
                               value={method.id}
                               checked={bookingData.paymentMethod === method.id}
-                              onChange={(e) => handleFieldChange('paymentMethod', e.target.value)}
+                              onChange={(e) => {
+                                setPaymentHint('');
+                                handleFieldChange('paymentMethod', e.target.value);
+                              }}
                               required
                             />
                             <span className="method-label">{method.label}</span>
@@ -975,6 +1123,102 @@ const Booking = () => {
                           </label>
                         ))}
                       </div>
+                      {errors.paymentMethod && <div className="error-message show">{errors.paymentMethod}</div>}
+
+                      {bookingData.paymentMethod === 'card' && (
+                        <div className="payment-credentials">
+                          <h3 className="payment-credentials-title">Card Details</h3>
+                          <div className="form-group">
+                            <label>Card Holder Name *</label>
+                            <Input
+                              value={paymentDetails.cardName}
+                              onChange={(e) => handlePaymentDetailsChange('cardName', e.target.value)}
+                              placeholder="Full name on card"
+                              error={errors.cardName}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label>Card Number *</label>
+                            <Input
+                              value={paymentDetails.cardNumber}
+                              onChange={(e) => handlePaymentDetailsChange('cardNumber', e.target.value)}
+                              placeholder="4242 4242 4242 4242"
+                              error={errors.cardNumber}
+                            />
+                          </div>
+                          <div className="form-row">
+                            <div className="form-group">
+                              <label>Expiry *</label>
+                              <Input
+                                value={paymentDetails.cardExpiry}
+                                onChange={(e) => handlePaymentDetailsChange('cardExpiry', e.target.value)}
+                                placeholder="MM/YY"
+                                error={errors.cardExpiry}
+                              />
+                            </div>
+                            <div className="form-group">
+                              <label>CVV *</label>
+                              <Input
+                                type="password"
+                                value={paymentDetails.cardCvv}
+                                onChange={(e) => handlePaymentDetailsChange('cardCvv', e.target.value)}
+                                placeholder="123"
+                                error={errors.cardCvv}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {bookingData.paymentMethod === 'paypal' && (
+                        <div className="payment-credentials">
+                          <h3 className="payment-credentials-title">PayPal Account</h3>
+                          <div className="form-group">
+                            <label>PayPal Email *</label>
+                            <Input
+                              type="email"
+                              value={paymentDetails.paypalEmail}
+                              onChange={(e) => handlePaymentDetailsChange('paypalEmail', e.target.value)}
+                              placeholder="you@example.com"
+                              error={errors.paypalEmail}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {bookingData.paymentMethod === 'mpesa' && (
+                        <div className="payment-credentials">
+                          <h3 className="payment-credentials-title">M-PESA STK Push</h3>
+                          <div className="form-group">
+                            <label>M-PESA Number *</label>
+                            <Input
+                              type="tel"
+                              value={paymentDetails.mpesaPhone}
+                              onChange={(e) => handlePaymentDetailsChange('mpesaPhone', e.target.value)}
+                              placeholder="07XX XXX XXX"
+                              error={errors.mpesaPhone}
+                            />
+                          </div>
+                          <p className="payment-procedure">
+                            After you click complete booking, we send an STK prompt to your phone. Enter your M-PESA PIN on your device to authorize payment.
+                          </p>
+                        </div>
+                      )}
+
+                      {bookingData.paymentMethod === 'square' && (
+                        <div className="payment-credentials">
+                          <h3 className="payment-credentials-title">Square Checkout</h3>
+                          <div className="form-group">
+                            <label>Phone / Customer Reference *</label>
+                            <Input
+                              value={paymentDetails.squareCustomer}
+                              onChange={(e) => handlePaymentDetailsChange('squareCustomer', e.target.value)}
+                              placeholder="07XX XXX XXX or customer ID"
+                              error={errors.squareCustomer}
+                            />
+                          </div>
+                        </div>
+                      )}
 
                       {/* Order Summary */}
                       <div className="payment-summary">
@@ -997,6 +1241,7 @@ const Booking = () => {
                       <div className="security-message">
                         🔒 Your payment is secure and encrypted. We never store your full card details.
                       </div>
+                      {paymentHint && <div className="payment-hint">{paymentHint}</div>}
                     </div>
                   </div>
                 )}
@@ -1063,7 +1308,7 @@ const Booking = () => {
                       Our concierge team is available 24/7 to assist you with your booking.
                     </p>
                     <div className="info-contact">
-                      <a href="tel:+18005550123" className="info-phone">
+                      <a href="tel:+254758458358" className="info-phone">
                         <span className="info-icon">📞</span>
                         0758458358
                       </a>
@@ -1098,7 +1343,7 @@ const Booking = () => {
                 {currentStep === totalSteps && (
                   <Button
                     variant="success"
-                    onClick={handlePaymentSuccess}
+                    onClick={handleCompleteBooking}
                     size="lg"
                     disabled={!bookingData.paymentMethod || loading || !agreedToTerms}
                   >

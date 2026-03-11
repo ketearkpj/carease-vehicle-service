@@ -9,7 +9,7 @@
 
 .admin-dashboard {
   padding: var(--space-8);
-  max-width: 1600px;
+  max-width: 1500px;
   margin: 0 auto;
 }
 
@@ -24,10 +24,10 @@
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: var(--space-8);
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .page-title {
@@ -53,6 +53,8 @@
 .header-actions {
   display: flex;
   gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .timeframe-select {
@@ -74,7 +76,7 @@
 /* ===== STATS GRID ===== */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-6);
   margin-bottom: var(--space-8);
 }
@@ -160,6 +162,7 @@
 
 .chart-card {
   padding: var(--space-6);
+  overflow: hidden;
 }
 
 .chart-header {
@@ -224,7 +227,7 @@
 
 .quick-actions-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: var(--space-4);
 }
 
@@ -233,6 +236,8 @@
   flex-direction: column;
   align-items: center;
   padding: var(--space-6);
+  min-height: 180px;
+  justify-content: center;
   background: var(--glass-bg);
   border: var(--border-fine);
   border-radius: var(--radius-xl);
@@ -293,6 +298,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-4);
+  gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .view-all-link {
@@ -343,7 +350,7 @@
 /* ===== ACTIVITY SUMMARY ===== */
 .activity-summary {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: var(--space-6);
 }
 
@@ -420,16 +427,6 @@
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1200px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 768px) {
   .admin-dashboard {
     padding: var(--space-4);
@@ -445,19 +442,7 @@
   }
 
   .timeframe-select {
-    flex: 1;
-  }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .quick-actions-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .activity-summary {
-    grid-template-columns: 1fr;
+    width: 100%;
   }
 
   .chart-legend {
