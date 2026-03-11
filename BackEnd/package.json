@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@hapi/joi": "^17.1.1",
-    "@paypal/checkout-server-sdk": "^2.0.0",
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@sendgrid/mail": "^7.7.0",
     "aws-sdk": "^2.1503.0",
     "axios": "^1.6.2",
