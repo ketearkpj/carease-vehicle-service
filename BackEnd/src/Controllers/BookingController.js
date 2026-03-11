@@ -292,6 +292,37 @@ exports.updateBooking = catchAsync(async (req, res, next) => {
   });
 });
 
+// ===== UPDATE BOOKING STATUS (ADMIN) =====
+exports.updateBookingStatus = catchAsync(async (req, res, next) => {
+  const booking = await Booking.findByPk(req.params.id);
+
+  if (!booking) {
+    return next(new AppError('Booking not found', 404));
+  }
+
+  const { status, note } = req.body;
+  booking.status = status;
+
+  const timeline = Array.isArray(booking.timeline) ? booking.timeline : [];
+  timeline.push({
+    status,
+    timestamp: new Date(),
+    note: note || `Status changed to ${status}`,
+    updatedBy: req.user?.id || req.admin?.id || null
+  });
+  booking.timeline = timeline;
+
+  await booking.save();
+  await sendBookingUpdateNotification(booking);
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      booking
+    }
+  });
+});
+
 // ===== CANCEL BOOKING =====
 exports.cancelBooking = catchAsync(async (req, res, next) => {
   const { reason } = req.body;

@@ -80,6 +80,60 @@ exports.logout = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getProfile = catchAsync(async (req, res) => {
+  res.status(200).json({
+    status: 'success',
+    data: {
+      admin: req.admin
+    }
+  });
+});
+
+exports.updateProfile = catchAsync(async (req, res, next) => {
+  const admin = await User.findByPk(req.admin.id);
+  if (!admin) {
+    return next(new AppError('Admin not found', 404));
+  }
+
+  const allowed = ['firstName', 'lastName', 'phone', 'profileImage'];
+  allowed.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      admin[field] = req.body[field];
+    }
+  });
+
+  await admin.save();
+
+  res.status(200).json({
+    status: 'success',
+    data: {
+      admin
+    }
+  });
+});
+
+exports.changePassword = catchAsync(async (req, res, next) => {
+  const admin = await User.findByPk(req.admin.id);
+  if (!admin) {
+    return next(new AppError('Admin not found', 404));
+  }
+
+  const { currentPassword, newPassword } = req.body;
+  const isValid = await admin.correctPassword(currentPassword);
+  if (!isValid) {
+    return next(new AppError('Current password is incorrect', 401));
+  }
+
+  admin.passwordHash = await bcrypt.hash(newPassword, 12);
+  admin.passwordChangedAt = new Date();
+  await admin.save();
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Password changed successfully'
+  });
+});
+
 // ===== ADMIN MANAGEMENT =====
 
 exports.getAllAdmins = catchAsync(async (req, res, next) => {

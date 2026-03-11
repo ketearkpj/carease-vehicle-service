@@ -483,8 +483,54 @@ const methodIdParamSchema = Joi.object({
 const checkoutRequestParamSchema = Joi.object({
   checkoutRequestId: Joi.string().required()
 });
+const tokenParamSchema = Joi.object({
+  token: Joi.string().required()
+});
+const deviceIdParamSchema = Joi.object({
+  deviceId: Joi.string().required()
+});
+const addressIdParamSchema = Joi.object({
+  addressId: Joi.string().required()
+});
+const notificationIdParamSchema = Joi.object({
+  notificationId: Joi.string().required()
+});
+const vehicleIdParamSchema = Joi.object({
+  vehicleId: Joi.string().required()
+});
+const typeParamSchema = Joi.object({
+  type: Joi.string().required()
+});
+const keyParamSchema = Joi.object({
+  key: Joi.string().required()
+});
+const exportTypeParamSchema = Joi.object({
+  type: Joi.string().required()
+});
+const passthroughSchema = Joi.object().unknown(true);
+const passthroughQuerySchema = Joi.object().unknown(true);
 
 // Backward-compatible route validator exports expected by route files.
+const validateAuth = {
+  register: validators.auth.register,
+  login: validators.auth.login,
+  forgotPassword: validators.auth.forgotPassword,
+  resetPassword: validators.auth.resetPassword,
+  verifyEmail: tokenParamSchema,
+  resendVerification: validators.auth.forgotPassword,
+  refreshToken: Joi.object({ refreshToken: Joi.string().required() }),
+  socialLogin: Joi.object({ token: Joi.string().required() }).unknown(true),
+  updateMe: validators.auth.updateMe,
+  changePassword: validators.auth.changePassword,
+  deleteAccount: Joi.object({
+    password: Joi.string().required(),
+    reason: Joi.string().max(200)
+  }),
+  verify2FA: Joi.object({ token: Joi.string().required() }),
+  disable2FA: Joi.object({ password: Joi.string().required() }),
+  removeDevice: deviceIdParamSchema
+};
+
 const validateBooking = {
   createBooking: validators.booking.create,
   checkAvailability: validators.booking.checkAvailability,
@@ -518,8 +564,141 @@ const validatePayment = {
   getMpesaStatus: checkoutRequestParamSchema
 };
 
+const validateVehicle = {
+  searchVehicles: passthroughQuerySchema,
+  getVehicle: idParamSchema,
+  checkAvailability: validators.vehicle.checkAvailability,
+  getSimilar: idParamSchema,
+  getReviews: passthroughQuerySchema,
+  addReview: validators.vehicle.addReview,
+  toggleFavorite: vehicleIdParamSchema,
+  createVehicle: validators.vehicle.create,
+  updateVehicle: validators.vehicle.updateVehicle,
+  deleteVehicle: idParamSchema,
+  uploadImages: idParamSchema
+};
+
+const validateUser = {
+  updateProfile: validators.auth.updateMe,
+  uploadAvatar: passthroughSchema,
+  addAddress: passthroughSchema,
+  updateAddress: passthroughSchema,
+  deleteAddress: addressIdParamSchema,
+  setDefaultAddress: addressIdParamSchema,
+  addPaymentMethod: validators.payment.addPaymentMethod,
+  deletePaymentMethod: methodIdParamSchema,
+  setDefaultPaymentMethod: methodIdParamSchema,
+  toggleFavorite: vehicleIdParamSchema,
+  getNotifications: passthroughQuerySchema,
+  markNotificationRead: notificationIdParamSchema,
+  deleteNotification: notificationIdParamSchema,
+  updatePreferences: passthroughSchema,
+  deactivateAccount: Joi.object({ reason: Joi.string().max(200) }),
+  reactivateAccount: Joi.object({
+    email: Joi.string().email().required(),
+    token: Joi.string().required()
+  })
+};
+
+const validateService = {
+  getByType: typeParamSchema,
+  getService: idParamSchema,
+  getAvailability: passthroughQuerySchema,
+  calculatePrice: passthroughSchema,
+  getReviews: passthroughQuerySchema,
+  addReview: passthroughSchema,
+  createService: passthroughSchema,
+  updateService: passthroughSchema,
+  deleteService: idParamSchema
+};
+
+const validateLocation = {
+  getNearby: passthroughQuerySchema,
+  getLocation: idParamSchema,
+  getLocationVehicles: idParamSchema,
+  getAvailability: passthroughQuerySchema,
+  getDirections: passthroughQuerySchema,
+  geocode: passthroughSchema,
+  reverseGeocode: passthroughSchema,
+  createLocation: passthroughSchema,
+  updateLocation: passthroughSchema,
+  deleteLocation: idParamSchema,
+  updateHours: passthroughSchema,
+  updateServices: passthroughSchema
+};
+
+const validateDelivery = {
+  createDelivery: validators.delivery.create,
+  getDelivery: idParamSchema,
+  updateStatus: validators.delivery.updateStatus,
+  updateLocation: validators.delivery.updateLocation,
+  cancelDelivery: validators.delivery.cancelDelivery,
+  rateDelivery: validators.delivery.rateDelivery,
+  getByDriver: userIdParamSchema,
+  assignDriver: validators.delivery.assignDriver
+};
+
+const validateReview = {
+  getReview: idParamSchema,
+  createReview: passthroughSchema,
+  updateReview: passthroughSchema,
+  deleteReview: idParamSchema,
+  markHelpful: idParamSchema,
+  unmarkHelpful: idParamSchema,
+  updateStatus: passthroughSchema,
+  addResponse: passthroughSchema
+};
+
+const validateReport = {
+  getRevenueReport: passthroughQuerySchema,
+  getBookingsReport: passthroughQuerySchema,
+  getUsersReport: passthroughQuerySchema,
+  getVehiclesReport: passthroughQuerySchema,
+  getDeliveriesReport: passthroughQuerySchema,
+  exportReport: validators.report.exportReport
+};
+
+const validateAdmin = {
+  login: validators.admin.login,
+  updateProfile: passthroughSchema,
+  changePassword: Joi.object({
+    currentPassword: Joi.string().required(),
+    newPassword: Joi.string().min(8).required(),
+    newPasswordConfirm: Joi.string().valid(Joi.ref('newPassword')).required()
+  }),
+  createAdmin: validators.admin.createAdmin,
+  getAdmin: idParamSchema,
+  updateAdmin: validators.admin.updateAdmin,
+  deleteAdmin: idParamSchema,
+  getUser: idParamSchema,
+  updateUser: passthroughSchema,
+  toggleUserStatus: validators.admin.toggleUserStatus,
+  getBooking: idParamSchema,
+  updateBookingStatus: validators.admin.updateBookingStatus,
+  getPayment: idParamSchema,
+  processRefund: validators.admin.processRefund,
+  getRevenueReport: passthroughQuerySchema,
+  getBookingReport: passthroughQuerySchema,
+  getAuditLogs: passthroughQuerySchema,
+  getAuditSummary: passthroughQuerySchema,
+  updateSetting: validators.admin.updateSetting,
+  resetSetting: keyParamSchema,
+  sendNotification: validators.admin.sendNotification,
+  getNotifications: passthroughQuerySchema,
+  exportData: exportTypeParamSchema
+};
+
 module.exports = {
   ...validators,
+  validateAuth,
+  validateUser,
+  validateVehicle,
+  validateService,
+  validateLocation,
+  validateDelivery,
+  validateReview,
+  validateReport,
+  validateAdmin,
   validateBooking,
   validatePayment
 };

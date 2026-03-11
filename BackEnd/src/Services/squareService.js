@@ -1,16 +1,31 @@
 // ===== src/services/squareService.js =====
-const { Client } = require('square');
+let SquareClient = null;
+try {
+  const squareSdk = require('square');
+  SquareClient = squareSdk.Client || squareSdk.SquareClient || null;
+} catch (error) {
+  SquareClient = null;
+}
 const { logger } = require('../Middleware/Logger.md.js');
 
 // ===== INITIALIZE SQUARE CLIENT =====
-const client = new Client({
-  environment: process.env.SQUARE_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
-  accessToken: process.env.SQUARE_ACCESS_TOKEN
-});
+const client = SquareClient
+  ? new SquareClient({
+      environment: process.env.SQUARE_ENVIRONMENT === 'production' ? 'production' : 'sandbox',
+      accessToken: process.env.SQUARE_ACCESS_TOKEN
+    })
+  : null;
+
+const ensureClient = () => {
+  if (!client) {
+    throw new Error('Square SDK is not configured correctly');
+  }
+};
 
 // ===== PROCESS PAYMENT =====
 exports.processPayment = async ({ amount, currency, sourceId, locationId, metadata }) => {
   try {
+    ensureClient();
     const response = await client.paymentsApi.createPayment({
       sourceId,
       idempotencyKey: generateIdempotencyKey(),
@@ -48,6 +63,7 @@ exports.processPayment = async ({ amount, currency, sourceId, locationId, metada
 // ===== REFUND PAYMENT =====
 exports.refundPayment = async ({ paymentId, amount }) => {
   try {
+    ensureClient();
     const response = await client.refundsApi.refundPayment({
       idempotencyKey: generateIdempotencyKey(),
       paymentId,
@@ -75,6 +91,7 @@ exports.refundPayment = async ({ paymentId, amount }) => {
 // ===== GET PAYMENT =====
 exports.getPayment = async (paymentId) => {
   try {
+    ensureClient();
     const response = await client.paymentsApi.getPayment(paymentId);
     const payment = response.result.payment;
 
@@ -94,6 +111,7 @@ exports.getPayment = async (paymentId) => {
 // ===== CREATE CUSTOMER =====
 exports.createCustomer = async ({ email, name, phone }) => {
   try {
+    ensureClient();
     const response = await client.customersApi.createCustomer({
       idempotencyKey: generateIdempotencyKey(),
       givenName: name.split(' ')[0],

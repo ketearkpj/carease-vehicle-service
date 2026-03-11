@@ -6,13 +6,13 @@ const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
 const hpp = require('hpp');
 const path = require('path');
 
 const AppError = require('./src/Utils/AppError');
 const globalErrorHandler = require('./src/Middleware/Error.md.js');
 const { logger } = require('./src/Middleware/Logger.md.js');
+const { xssClean } = require('./src/Middleware/Sanitizer.md.js');
 
 // Import Routes
 const authRoutes = require('./src/Routes/authRoutes');
@@ -77,7 +77,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(mongoSanitize());
 
 // Data sanitization against XSS
-app.use(xss());
+app.use(xssClean);
 
 // Prevent parameter pollution
 app.use(hpp({
