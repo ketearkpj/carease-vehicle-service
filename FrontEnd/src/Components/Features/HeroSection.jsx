@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Button from '../Common/Button';
+import { APP_CONFIG } from '../../Utils/constants';
 
 const HeroSection = ({
   title = 'Experience Luxury on Wheels',
@@ -114,13 +115,23 @@ const HeroSection = ({
 
       <div className="hero-container">
         <div className={`hero-content ${isVisible ? 'animate-in' : ''}`}>
-          <div className="hero-badge">WELCOME TO CAR EASE</div>
+          <div className="hero-badge">EST. {APP_CONFIG.established}</div>
           
-          <h1 className="hero-title">
-            {title.split(' ').map((word, index) => 
-              word === 'Luxury' ? <span key={index} className="gold-text">{word} </span> : word + ' '
-            )}
+          <h1 className="hero-brand-title">
+            CAR<span className="gold-text" data-text="EASE">EASE</span>
+            <div className="hero-title-decoration">
+              <div className="hero-deco-line"></div>
+              <div className="hero-deco-line"></div>
+              <div className="hero-deco-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
           </h1>
+
+          <h2 className="hero-title">{title}</h2>
           
           <p className="hero-subtitle">{subtitle}</p>
           

@@ -62,6 +62,55 @@ const Home = () => {
     }
   ];
 
+  const servicePillars = [
+    {
+      id: 'rental',
+      title: 'Luxury Rentals',
+      summary: 'Choose from premium fleets for weddings, executive travel, airport runs, and weekend escapes.',
+      details: ['Daily and multi-day options', 'Pickup and delivery coordination', 'Quick route to booking and checkout'],
+      route: ROUTES.RENTALS
+    },
+    {
+      id: 'detailing',
+      title: 'Car Wash & Detailing',
+      summary: 'From express wash to full detailing and protective treatments for long-term finish quality.',
+      details: ['Package and add-on selection', 'Slot-based scheduling', 'Straight-through booking experience'],
+      route: ROUTES.CAR_WASH
+    },
+    {
+      id: 'repair',
+      title: 'Repairs & Maintenance',
+      summary: 'Trusted diagnostics, maintenance, and corrective work with service reporting and follow-up.',
+      details: ['Issue-based service intake', 'Urgent and planned visits', 'Support from booking to confirmation'],
+      route: ROUTES.REPAIRS
+    },
+    {
+      id: 'sales',
+      title: 'Vehicle Sales',
+      summary: 'Explore curated listings, submit inquiries, and move into test-drive or purchase discussions quickly.',
+      details: ['Verified listing information', 'Inquiry and test-drive intent', 'Sales team follow-through'],
+      route: ROUTES.SALES
+    }
+  ];
+
+  const customerFlow = [
+    {
+      id: 1,
+      title: 'Choose Your Service',
+      description: 'Start from rentals, detailing, repairs, or sales and select what fits your immediate need.'
+    },
+    {
+      id: 2,
+      title: 'Share Your Preferences',
+      description: 'Provide location, schedule, vehicle or service details so the booking is contextual and accurate.'
+    },
+    {
+      id: 3,
+      title: 'Confirm and Track',
+      description: 'Complete booking and payment, then proceed with clear confirmation and support channels.'
+    }
+  ];
+
   // Stats data
   const stats = [
     { number: '500+', label: 'Luxury Vehicles', icon: '🚗' },
@@ -257,7 +306,7 @@ const Home = () => {
         <div className="hero-overlay"></div>
         
         <div className="hero-container">
-          <div className="hero-content-left">
+          <div className="hero-content-flow">
             {/* EST. 2018 Badge - Restored exactly as you wanted */}
             <div className="gold-subtitle">
               <span className="year-badge">EST. {APP_CONFIG.established}</span>
@@ -292,9 +341,7 @@ const Home = () => {
                 Discover Our Story
               </Link>
             </div>
-          </div>
-          
-          <div className="hero-content-right">
+
             <div className="hero-stats-compact">
               {stats.slice(0, 2).map((stat, index) => (
                 <div key={index} className="hero-stat-item">
@@ -357,6 +404,56 @@ const Home = () => {
                 <span className="stats-bar-number">{stat.number}</span>
                 <span className="stats-bar-label">{stat.label}</span>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="pillars-section">
+        <div className="container">
+          <div className="section-header-elegant">
+            <span className="section-tag">WHY CAR EASE</span>
+            <h2 className="section-title-large">
+              Built for <span className="gold-gradient">Complete Automotive Journeys</span>
+            </h2>
+            <p className="section-description-wide">
+              CAR EASE is structured to cover end-to-end mobility, care, maintenance, and purchase needs from one platform.
+            </p>
+          </div>
+
+          <div className="pillars-grid">
+            {servicePillars.map((pillar) => (
+              <article key={pillar.id} className="pillar-card">
+                <h3>{pillar.title}</h3>
+                <p>{pillar.summary}</p>
+                <ul>
+                  {pillar.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+                <Link to={pillar.route} className="pillar-link">
+                  Explore {pillar.title}
+                  <span>→</span>
+                </Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="customer-flow-section">
+        <div className="container">
+          <div className="section-header-elegant">
+            <span className="section-tag">HOW IT WORKS</span>
+            <h2 className="section-title-large">Three Steps to Get Started</h2>
+          </div>
+          <div className="customer-flow-grid">
+            {customerFlow.map((step) => (
+              <article key={step.id} className="customer-flow-card">
+                <span className="flow-step-number">0{step.id}</span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </article>
             ))}
           </div>
         </div>

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
-import { SERVICE_TYPES } from '../Utils/constants';
+import { APP_CONFIG, SERVICE_TYPES } from '../Utils/constants';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -25,11 +25,9 @@ const Services = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [activeService, setActiveService] = useState(null);
   const [hoveredCategory, setHoveredCategory] = useState(null);
   
   const heroRef = useRef(null);
-  const particlesRef = useRef(null);
   // Mouse move effect for 3D parallax
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -51,30 +49,6 @@ const Services = () => {
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Particle animation
-  useEffect(() => {
-    if (!particlesRef.current) return;
-    
-    const particles = particlesRef.current.children;
-    let time = 0;
-    
-    const animateParticles = () => {
-      time += 0.002;
-      
-      for (let i = 0; i < particles.length; i++) {
-        const particle = particles[i];
-        const y = Math.sin(time + i) * 20;
-        const x = Math.cos(time + i) * 20;
-        particle.style.transform = `translate(${x}px, ${y}px)`;
-      }
-      
-      requestAnimationFrame(animateParticles);
-    };
-    
-    const animation = requestAnimationFrame(animateParticles);
-    return () => cancelAnimationFrame(animation);
   }, []);
 
   useEffect(() => {
@@ -194,7 +168,32 @@ const Services = () => {
       filtered = filtered.filter(service => 
         service.title.toLowerCase().includes(query) ||
         service.description.toLowerCase().includes(query) ||
-        service.features?.some(f => f.toLowerCase().includes(query))
+        service.longDescription?.toLowerCase().includes(query) ||
+        service.features?.some(f => f.toLowerCase().includes(query)) ||
+        getServiceSearchKeywords(service).some((keyword) => keyword.toLowerCase().includes(query)) ||
+        categories.some((category) =>
+          category.id === (service.category || service.id) &&
+          (
+            category.label.toLowerCase().includes(query) ||
+            category.description.toLowerCase().includes(query)
+          )
+        ) ||
+        kenyaServiceJourneys.some((journey) =>
+          journey.id === service.category &&
+          (
+            journey.title.toLowerCase().includes(query) ||
+            journey.description.toLowerCase().includes(query)
+          )
+        ) ||
+        serviceBlueprints.some((blueprint) =>
+          blueprint.id === service.category &&
+          (
+            blueprint.title.toLowerCase().includes(query) ||
+            blueprint.audience.toLowerCase().includes(query) ||
+            blueprint.outcome.toLowerCase().includes(query) ||
+            blueprint.inclusions.some((item) => item.toLowerCase().includes(query))
+          )
+        )
       );
     }
 
@@ -202,13 +201,129 @@ const Services = () => {
   };
 
   const categories = [
-    { id: 'all', label: 'All Services', icon: '✨', gradient: 'linear-gradient(135deg, #d4af37, #f5d742)', description: 'Discover our complete collection' },
-    { id: SERVICE_TYPES.RENTAL, label: 'Luxury Rentals', icon: '🚗', gradient: 'linear-gradient(135deg, #d4af37, #f5d742)', description: 'Exotic & luxury vehicles' },
-    { id: SERVICE_TYPES.CAR_WASH, label: 'Car Wash', icon: '🧼', gradient: 'linear-gradient(135deg, #00ff88, #00cc66)', description: 'Professional detailing' },
-    { id: SERVICE_TYPES.REPAIR, label: 'Repairs', icon: '🔧', gradient: 'linear-gradient(135deg, #33b5e5, #0099cc)', description: 'Expert maintenance' },
-    { id: SERVICE_TYPES.SALES, label: 'Sales', icon: '💰', gradient: 'linear-gradient(135deg, #ffbb33, #ff8800)', description: 'Premium vehicle sales' },
-    { id: 'concierge', label: 'Concierge', icon: '👔', gradient: 'linear-gradient(135deg, #aa80ff, #884dff)', description: 'White-glove service' },
-    { id: 'storage', label: 'Storage', icon: '🏢', gradient: 'linear-gradient(135deg, #ff80ab, #ff4081)', description: 'Climate-controlled storage' }
+    {
+      id: 'all',
+      label: 'All Services',
+      icon: '✨',
+      gradient: 'linear-gradient(135deg, #d4af37, #f5d742)',
+      description: 'Discover our complete service network',
+      ctaLabel: 'Browse All'
+    },
+    {
+      id: SERVICE_TYPES.RENTAL,
+      label: 'Luxury Rentals',
+      icon: '🚗',
+      gradient: 'linear-gradient(135deg, #d4af37, #f5d742)',
+      description: 'Exotic and luxury vehicles with flexible booking',
+      route: ROUTES.RENTALS,
+      ctaLabel: 'Open Rentals'
+    },
+    {
+      id: SERVICE_TYPES.CAR_WASH,
+      label: 'Car Wash',
+      icon: '🧼',
+      gradient: 'linear-gradient(135deg, #00ff88, #00cc66)',
+      description: 'Express detailing, deep clean, and coating packages',
+      route: ROUTES.CAR_WASH,
+      ctaLabel: 'Open Car Wash'
+    },
+    {
+      id: SERVICE_TYPES.REPAIR,
+      label: 'Repairs',
+      icon: '🔧',
+      gradient: 'linear-gradient(135deg, #33b5e5, #0099cc)',
+      description: 'Diagnostics, mechanical fixes, and scheduled maintenance',
+      route: ROUTES.REPAIRS,
+      ctaLabel: 'Open Repairs'
+    },
+    {
+      id: SERVICE_TYPES.SALES,
+      label: 'Sales',
+      icon: '💰',
+      gradient: 'linear-gradient(135deg, #ffbb33, #ff8800)',
+      description: 'Verified premium stock with inquiry and test-drive flow',
+      route: ROUTES.SALES,
+      ctaLabel: 'Open Sales'
+    },
+    {
+      id: 'concierge',
+      label: 'Concierge',
+      icon: '👔',
+      gradient: 'linear-gradient(135deg, #aa80ff, #884dff)',
+      description: 'White-glove planning for premium automotive requests',
+      route: ROUTES.CONTACT,
+      ctaLabel: 'Request Concierge'
+    },
+    {
+      id: 'storage',
+      label: 'Storage',
+      icon: '🏢',
+      gradient: 'linear-gradient(135deg, #ff80ab, #ff4081)',
+      description: 'Climate-controlled secure storage and handling',
+      route: ROUTES.CONTACT,
+      ctaLabel: 'Request Storage'
+    }
+  ];
+
+  const serviceHighlights = [
+    {
+      id: 'transparent-pricing',
+      title: 'Transparent Pricing Paths',
+      description: 'From first selection to checkout, pricing context stays visible so decisions are clear before payment.'
+    },
+    {
+      id: 'single-flow',
+      title: 'Single Booking Flow',
+      description: 'Rentals, detailing, repairs, and sales inquiries all connect into one booking architecture.'
+    },
+    {
+      id: 'concierge-support',
+      title: 'Concierge-Backed Support',
+      description: 'Need priority support or a custom request? Concierge channels stay accessible across services.'
+    }
+  ];
+
+  const serviceBlueprints = [
+    {
+      id: SERVICE_TYPES.RENTAL,
+      title: 'Rental Architecture',
+      icon: '🚗',
+      audience: 'For executives, events, weddings, and travel convenience',
+      outcome: 'Book a premium car with transparent package and delivery options',
+      route: ROUTES.RENTALS,
+      cta: 'Go To Rentals',
+      inclusions: ['Category filters and availability', 'Vehicle-level booking handoff', 'Checkout-ready pricing context']
+    },
+    {
+      id: SERVICE_TYPES.CAR_WASH,
+      title: 'Detailing Architecture',
+      icon: '🧼',
+      audience: 'For routine care, restoration, and protection',
+      outcome: 'Choose wash package, slot, and add-ons in a single flow',
+      route: ROUTES.CAR_WASH,
+      cta: 'Go To Car Wash',
+      inclusions: ['Package-based choices', 'Preferred schedule selection', 'Booking and payment continuity']
+    },
+    {
+      id: SERVICE_TYPES.REPAIR,
+      title: 'Repair Architecture',
+      icon: '🔧',
+      audience: 'For urgent fixes and preventive maintenance',
+      outcome: 'Submit issue context and move directly into service booking',
+      route: ROUTES.REPAIRS,
+      cta: 'Go To Repairs',
+      inclusions: ['Diagnostics and issue categories', 'Urgent vs scheduled requests', 'Structured service checkout']
+    },
+    {
+      id: SERVICE_TYPES.SALES,
+      title: 'Sales Architecture',
+      icon: '💰',
+      audience: 'For buyers seeking verified premium inventory',
+      outcome: 'Explore vehicles and send informed purchase or test-drive requests',
+      route: ROUTES.SALES,
+      cta: 'Go To Sales',
+      inclusions: ['Inventory browsing and details', 'Inquiry and test-drive intent', 'Direct route to next action']
+    }
   ];
 
   const kenyaServiceJourneys = [
@@ -238,12 +353,36 @@ const Services = () => {
     }
   ];
 
+  const platformSearchIndex = [
+    { id: 'nav-services', title: 'All Services', description: 'Browse every service vertical in one place.', route: ROUTES.SERVICES, tags: ['services', 'all', 'overview', 'carease'] },
+    { id: 'nav-rentals', title: 'Luxury Rentals', description: 'Premium fleet selection and rental booking.', route: ROUTES.RENTALS, tags: ['rental', 'rentals', 'fleet', 'supercar', 'luxury'] },
+    { id: 'nav-wash', title: 'Car Wash & Detailing', description: 'Detailing packages and wash scheduling.', route: ROUTES.CAR_WASH, tags: ['car wash', 'detailing', 'ceramic', 'cleaning'] },
+    { id: 'nav-repairs', title: 'Repairs & Diagnostics', description: 'Mechanical service and maintenance workflows.', route: ROUTES.REPAIRS, tags: ['repair', 'repairs', 'diagnostics', 'maintenance'] },
+    { id: 'nav-sales', title: 'Vehicle Sales & Test Drives', description: 'Inventory browsing, inquiries, and test-drive requests.', route: ROUTES.SALES, tags: ['sales', 'buy', 'purchase', 'test drive', 'inventory'] },
+    { id: 'nav-booking', title: 'Booking Flow', description: 'Complete your selected service in one booking journey.', route: ROUTES.BOOKING, tags: ['booking', 'checkout', 'reserve', 'schedule'] },
+    { id: 'nav-contact', title: 'Concierge & Contact', description: 'Talk to the team for tailored support and custom requests.', route: ROUTES.CONTACT, tags: ['contact', 'concierge', 'support', 'help'] },
+    { id: 'nav-about', title: 'About CAR EASE', description: 'Learn the brand story, values, and service standards.', route: ROUTES.ABOUT, tags: ['about', 'carease', 'company', 'story'] }
+  ];
+
   const handleCategoryChange = (categoryId) => {
     setActiveCategory(categoryId);
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
+  };
+
+  const normalizeText = (value) => (value || '').toString().toLowerCase();
+
+  const getServiceSearchKeywords = (service) => {
+    const routeKeywords = {
+      [SERVICE_TYPES.RENTAL]: ['rental', 'rentals', 'fleet', 'supercar', 'executive', 'chauffeur'],
+      [SERVICE_TYPES.CAR_WASH]: ['wash', 'detailing', 'car wash', 'ceramic', 'interior'],
+      [SERVICE_TYPES.REPAIR]: ['repair', 'repairs', 'diagnostics', 'maintenance', 'service center'],
+      [SERVICE_TYPES.SALES]: ['sales', 'purchase', 'buy', 'inventory', 'test drive']
+    };
+    const categoryKey = service.category || service.id;
+    return routeKeywords[categoryKey] || [];
   };
 
   const getServiceLink = (service) => {
@@ -253,6 +392,22 @@ const Services = () => {
     if (service.category === SERVICE_TYPES.SALES || service.id === 'sales') return ROUTES.SALES;
     return `${ROUTES.BOOKING}?service=${encodeURIComponent(service.category || service.id || '')}`;
   };
+
+  const getCategoryRoute = (categoryId) => {
+    const selectedCategory = categories.find((category) => category.id === categoryId);
+    return selectedCategory?.route || null;
+  };
+
+  const platformSearchResults = searchQuery.trim()
+    ? platformSearchIndex.filter((item) => {
+        const query = normalizeText(searchQuery.trim());
+        return (
+          normalizeText(item.title).includes(query) ||
+          normalizeText(item.description).includes(query) ||
+          item.tags.some((tag) => normalizeText(tag).includes(query))
+        );
+      })
+    : [];
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -265,91 +420,77 @@ const Services = () => {
 
       {/* ===== CINEMATIC HERO SECTION ===== */}
       <section ref={heroRef} className="services-hero-cinematic">
-        {/* 3D Parallax Layers */}
-        <div className="parallax-layer layer-1" style={{
-          transform: `translate3d(${mousePosition.x * 0.5}px, ${mousePosition.y * 0.5}px, 0)`
-        }}></div>
-        <div className="parallax-layer layer-2" style={{
-          transform: `translate3d(${mousePosition.x * -0.3}px, ${mousePosition.y * -0.3}px, 0)`
-        }}></div>
-        <div className="parallax-layer layer-3" style={{
-          transform: `translate3d(${mousePosition.x * 0.2}px, ${mousePosition.y * 0.2}px, 0)`
-        }}></div>
-
-        {/* Animated Particle Field */}
-        <div ref={particlesRef} className="particle-field">
-          {[...Array(30)].map((_, i) => (
-            <div key={i} className="particle" style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              width: `${Math.random() * 6 + 2}px`,
-              height: `${Math.random() * 6 + 2}px`,
-              animationDelay: `${Math.random() * 5}s`,
-              background: i % 3 === 0 ? 'var(--gold-primary)' : 
-                         i % 3 === 1 ? 'rgba(255,255,255,0.5)' : 'rgba(212,175,55,0.3)'
-            }}></div>
-          ))}
+        <div className="services-hero-backdrop" style={{
+          transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`
+        }}>
+          <div className="services-backdrop-grid"></div>
+          <div className="services-backdrop-orb primary"></div>
+          <div className="services-backdrop-orb secondary"></div>
         </div>
 
-        {/* Light Leaks */}
-        <div className="light-leak leak-1"></div>
-        <div className="light-leak leak-2"></div>
-        <div className="light-leak leak-3"></div>
-
-        {/* Floating Orbs */}
-        <div className="floating-orb orb-1"></div>
-        <div className="floating-orb orb-2"></div>
-        <div className="floating-orb orb-3"></div>
-        <div className="floating-orb orb-4"></div>
+        <div className="services-hero-overlay"></div>
 
         {/* Hero Content */}
         <div className="hero-content-container">
-          <div className="hero-badge-wrapper">
-            <span className="hero-badge">✦ PREMIUM SERVICES ✦</span>
-            <div className="badge-glow"></div>
-          </div>
-          
-          <h1 className="hero-title">
-            <span className="title-line">Crafting</span>
-            <span className="title-gradient">Automotive</span>
-            <span className="title-line">Excellence</span>
-          </h1>
-          
-          <div className="hero-description-wrapper">
-            <p className="hero-description">
-              Where precision meets passion. Each service is meticulously crafted 
-              to exceed the expectations of the world's most discerning drivers.
+          <div className="services-hero-flow">
+            <div className="hero-badge-wrapper">
+              <span className="hero-badge">EST. {APP_CONFIG.established}</span>
+              <div className="badge-glow"></div>
+            </div>
+
+            <h1 className="services-main-title">
+              CAR<span className="services-gold-text" data-text="EASE">EASE</span>
+              <div className="services-title-decoration">
+                <div className="services-deco-line"></div>
+                <div className="services-deco-line"></div>
+                <div className="services-deco-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </h1>
+
+            <p className="services-main-description">
+              Explore a complete premium service stack for rentals, detailing, repairs,
+              sales, and concierge support, with clear navigation into each workflow.
             </p>
-            <div className="description-glow"></div>
-          </div>
 
-          {/* Floating Stats Cards */}
-          <div className="floating-stats">
-            <div className="stat-card stat-1">
-              <span className="stat-number">15+</span>
-              <span className="stat-label">Years</span>
+            <div className="hero-cta services-cta">
+              <Link to={ROUTES.SERVICES} className="cta-primary">
+                <span className="cta-text">Explore Services</span>
+                <span className="cta-arrow">→</span>
+                <span className="cta-glow"></span>
+              </Link>
+              <Link to={ROUTES.BOOKING} className="cta-secondary">
+                <span className="cta-text">Start Booking</span>
+                <span className="cta-glow"></span>
+              </Link>
             </div>
-            <div className="stat-card stat-2">
-              <span className="stat-number">6</span>
-              <span className="stat-label">Services</span>
-            </div>
-            <div className="stat-card stat-3">
-              <span className="stat-number">24/7</span>
-              <span className="stat-label">Support</span>
-            </div>
-          </div>
 
-          {/* CTA Buttons with 3D Effect */}
-          <div className="hero-cta">
-            <Link to={ROUTES.BOOKING} className="cta-primary">
-              <span className="cta-text">Begin Journey</span>
-              <span className="cta-arrow">→</span>
-              <span className="cta-glow"></span>
-            </Link>
-            <Link to={ROUTES.CONTACT} className="cta-secondary">
-              <span className="cta-text">Talk to Concierge</span>
-              <span className="cta-glow"></span>
-            </Link>
+            <div className="services-hero-stats">
+              <div className="services-hero-stat">
+                <span className="services-stat-number">6</span>
+                <span className="services-stat-label">Service Lines</span>
+              </div>
+              <div className="services-hero-stat">
+                <span className="services-stat-number">24/7</span>
+                <span className="services-stat-label">Client Support</span>
+              </div>
+              <div className="services-hero-stat">
+                <span className="services-stat-number">1</span>
+                <span className="services-stat-label">Unified Flow</span>
+              </div>
+            </div>
+
+            <div className="services-hero-links">
+              <Link to={ROUTES.RENTALS}>Rentals</Link>
+              <Link to={ROUTES.CAR_WASH}>Detailing</Link>
+              <Link to={ROUTES.REPAIRS}>Repairs</Link>
+              <Link to={ROUTES.SALES}>Sales</Link>
+              <Link to={ROUTES.CONTACT}>Concierge</Link>
+            </div>
           </div>
         </div>
 
@@ -362,6 +503,19 @@ const Services = () => {
         </div>
       </section>
 
+      <section className="services-value-pillars">
+        <div className="container">
+          <div className="value-pillars-grid">
+            {serviceHighlights.map((pillar) => (
+              <article key={pillar.id} className="value-pillar-card">
+                <h3>{pillar.title}</h3>
+                <p>{pillar.description}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===== IMMERSIVE CATEGORIES SECTION ===== */}
       <section className="categories-immersive">
         <div className="container">
@@ -371,15 +525,14 @@ const Services = () => {
               Explore by Category
               <span className="title-accent">✦</span>
             </h2>
-            <p className="categories-subtitle">Navigate through our specialized services</p>
+            <p className="categories-subtitle">Navigate by service line and jump straight to each destination</p>
           </div>
 
           <div className="categories-carousel">
             {categories.map((category, index) => (
-              <button
+              <article
                 key={category.id}
                 className={`category-card-3d ${activeCategory === category.id ? 'active' : ''}`}
-                onClick={() => handleCategoryChange(category.id)}
                 onMouseEnter={() => setHoveredCategory(category.id)}
                 onMouseLeave={() => setHoveredCategory(null)}
                 style={{
@@ -392,9 +545,62 @@ const Services = () => {
                   <span className="category-icon-large">{category.icon}</span>
                   <span className="category-label-large">{category.label}</span>
                   <span className="category-description">{category.description}</span>
+                  <div className="category-card-actions">
+                    {getCategoryRoute(category.id) ? (
+                      <Link to={getCategoryRoute(category.id)} className="category-route-link">
+                        {category.ctaLabel}
+                      </Link>
+                    ) : (
+                      <button
+                        type="button"
+                        className="category-route-link"
+                        onClick={() => handleCategoryChange('all')}
+                      >
+                        {category.ctaLabel}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="category-preview-btn"
+                      onClick={() => handleCategoryChange(category.id)}
+                    >
+                      Preview Here
+                    </button>
+                  </div>
                 </div>
                 <div className="card-glow"></div>
-              </button>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="service-blueprints">
+        <div className="container">
+          <div className="blueprints-header">
+            <h2 className="blueprints-title">Service Architecture Hub</h2>
+            <p className="blueprints-subtitle">
+              Each vertical has a purpose, a clear workflow, and a direct path to action.
+            </p>
+          </div>
+
+          <div className="blueprints-grid">
+            {serviceBlueprints.map((blueprint) => (
+              <article key={blueprint.id} className="blueprint-card">
+                <div className="blueprint-icon">{blueprint.icon}</div>
+                <h3>{blueprint.title}</h3>
+                <p className="blueprint-audience">{blueprint.audience}</p>
+                <p className="blueprint-outcome">{blueprint.outcome}</p>
+                <ul className="blueprint-list">
+                  {blueprint.inclusions.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <Link to={blueprint.route} className="blueprint-link">
+                  {blueprint.cta}
+                  <span className="link-arrow">→</span>
+                </Link>
+              </article>
             ))}
           </div>
         </div>
@@ -409,7 +615,7 @@ const Services = () => {
                 <span className="search-icon">🔍</span>
                 <input
                   type="text"
-                  placeholder="Search by service, feature, or description..."
+                  placeholder="Search services, booking, concierge, test drives, repairs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="search-input-premium"
@@ -429,6 +635,33 @@ const Services = () => {
           </div>
         </div>
       </section>
+
+      {searchQuery.trim() && (
+        <section className="platform-search-results">
+          <div className="container">
+            <div className="platform-search-header">
+              <h3>CAR EASE Search Results</h3>
+              <p>Quick links across services, booking, and support pages related to your search.</p>
+            </div>
+
+            {platformSearchResults.length > 0 ? (
+              <div className="platform-search-grid">
+                {platformSearchResults.map((item) => (
+                  <Link key={item.id} to={item.route} className="platform-search-card">
+                    <h4>{item.title}</h4>
+                    <p>{item.description}</p>
+                    <span>Open Page →</span>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="platform-search-empty">
+                <p>No direct page matches yet. Try searching by service type, booking, concierge, or test drive.</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ===== SERVICES GRID SECTION ===== */}
       <section className="services-grid-section-premium">
@@ -464,8 +697,6 @@ const Services = () => {
                       '--gradient': service.gradient,
                       '--light-effect': service.lightEffect
                     }}
-                    onMouseEnter={() => setActiveService(service.id)}
-                    onMouseLeave={() => setActiveService(null)}
                   >
                     <ServiceCard
                       id={service.id}
@@ -544,8 +775,8 @@ const Services = () => {
       <section className="experience-timeline">
         <div className="container">
           <div className="timeline-header">
-            <h2 className="timeline-title">Designed End-to-End for Kenya</h2>
-            <p className="timeline-subtitle">Every service keeps your selection through booking and payment</p>
+            <h2 className="timeline-title">How Services Move from Selection to Checkout</h2>
+            <p className="timeline-subtitle">Each service line below shows a practical path from discovery to confirmed action.</p>
           </div>
 
           <div className="timeline-grid">

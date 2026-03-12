@@ -114,10 +114,23 @@ const About = () => {
       <section className="about-hero">
         <div className="container">
           <div className="hero-content animate-fade-up">
-            <span className="hero-badge">SINCE 2018</span>
-            <h1 className="hero-title">
-              Redefining <span className="gold-text">Luxury</span> Automotive Service
+            <span className="hero-badge">EST. {APP_CONFIG.established}</span>
+            <h1 className="hero-brand-title">
+              CAR<span className="gold-text" data-text="EASE">EASE</span>
+              <div className="hero-title-decoration">
+                <div className="hero-deco-line"></div>
+                <div className="hero-deco-line"></div>
+                <div className="hero-deco-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
             </h1>
+            <h2 className="hero-title">
+              Redefining <span className="gold-text">Luxury</span> Automotive Service
+            </h2>
             <p className="hero-subtitle">
               Since 2018, CAR EASE has been the premier destination for discerning 
               automotive enthusiasts seeking excellence in rentals, care, and sales.

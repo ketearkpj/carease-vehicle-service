@@ -231,9 +231,23 @@ const Contact = () => {
       <section className="contact-hero">
         <div className="container">
           <div className="hero-content animate-fade-up">
-            <h1 className="hero-title">
-              Get in <span className="gold-text">Touch</span>
+            <span className="hero-badge">EST. {APP_CONFIG.established}</span>
+            <h1 className="hero-brand-title">
+              CAR<span className="gold-text" data-text="EASE">EASE</span>
+              <div className="hero-title-decoration">
+                <div className="hero-deco-line"></div>
+                <div className="hero-deco-line"></div>
+                <div className="hero-deco-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
             </h1>
+            <h2 className="hero-title">
+              Get in <span className="gold-text">Touch</span>
+            </h2>
             <p className="hero-subtitle">
               We're here to assist you with any questions or service needs
             </p>
