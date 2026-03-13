@@ -257,7 +257,7 @@ export const WASH_PACKAGES = [
     name: 'Express Wash',
     price: 3500,
     duration: 30,
-    description: 'Quick and efficient exterior wash',
+    description: 'Fast exterior refresh for daily maintenance',
     features: [
       'Exterior hand wash',
       'Wheel cleaning',
@@ -266,6 +266,21 @@ export const WASH_PACKAGES = [
       'Quick interior vacuum'
     ],
     icon: '🚿'
+  },
+  {
+    id: 'interior-refresh',
+    name: 'Interior Refresh',
+    price: 6200,
+    duration: 50,
+    description: 'Cabin-focused clean for busy daily use vehicles',
+    features: [
+      'Dashboard and console detailing',
+      'Interior vacuum and wipe-down',
+      'Door panel cleaning',
+      'Mat wash and dry',
+      'Air freshener treatment'
+    ],
+    icon: '🧽'
   },
   {
     id: 'premium',
@@ -282,6 +297,36 @@ export const WASH_PACKAGES = [
       'Engine bay cleaning'
     ],
     icon: '✨'
+  },
+  {
+    id: 'executive-detail',
+    name: 'Executive Detail',
+    price: 14500,
+    duration: 120,
+    description: 'Balanced full-service package for family and business vehicles',
+    features: [
+      'Everything in Premium',
+      'Fabric seat shampoo',
+      'Tar and bug removal',
+      'Trim restoration',
+      'Protective wax layer'
+    ],
+    icon: '🛞'
+  },
+  {
+    id: 'paint-protection',
+    name: 'Paint Protection Plus',
+    price: 18900,
+    duration: 150,
+    description: 'Deep gloss and protective layering for long-lasting finish',
+    features: [
+      'Everything in Executive Detail',
+      'Iron decontamination',
+      'Machine polish enhancement',
+      'Hydrophobic sealant',
+      'Rain repellent glass treatment'
+    ],
+    icon: '🛡️'
   },
   {
     id: 'ultimate',

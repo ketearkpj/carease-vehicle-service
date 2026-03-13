@@ -169,23 +169,47 @@ export const getWashPackages = async () => {
       {
         id: 'express',
         name: 'Express Wash',
-        price: 29,
+        price: 3500,
         duration: 30,
-        description: 'Quick and efficient exterior wash',
+        description: 'Fast exterior refresh for daily maintenance',
         features: ['Exterior hand wash', 'Wheel cleaning', 'Tire shine', 'Window cleaning']
+      },
+      {
+        id: 'interior-refresh',
+        name: 'Interior Refresh',
+        price: 6200,
+        duration: 50,
+        description: 'Cabin-focused clean for busy daily use vehicles',
+        features: ['Interior vacuum', 'Dashboard detailing', 'Mat wash', 'Door panel cleaning', 'Air freshener treatment']
       },
       {
         id: 'premium',
         name: 'Premium Detail',
-        price: 79,
+        price: 9500,
         duration: 90,
         description: 'Comprehensive interior and exterior detailing',
         features: ['Everything in Express', 'Deep interior cleaning', 'Leather conditioning', 'Paint sealant']
       },
       {
+        id: 'executive-detail',
+        name: 'Executive Detail',
+        price: 14500,
+        duration: 120,
+        description: 'Balanced full-service package for family and business vehicles',
+        features: ['Everything in Premium', 'Fabric seat shampoo', 'Tar and bug removal', 'Trim restoration']
+      },
+      {
+        id: 'paint-protection',
+        name: 'Paint Protection Plus',
+        price: 18900,
+        duration: 150,
+        description: 'Deep gloss and protective layering for long-lasting finish',
+        features: ['Everything in Executive Detail', 'Iron decontamination', 'Machine polish enhancement', 'Hydrophobic sealant']
+      },
+      {
         id: 'ultimate',
         name: 'Ultimate Ceramic',
-        price: 199,
+        price: 24900,
         duration: 180,
         description: 'Professional ceramic coating',
         features: ['Everything in Premium', '9H ceramic coating', 'Paint correction', '24 month warranty']
