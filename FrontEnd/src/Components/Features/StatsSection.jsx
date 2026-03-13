@@ -45,7 +45,7 @@ const StatsSection = ({
       { threshold: 0.3 }
     );
 
-    if (sectionRef.current) {
+    if (sectionRef.current instanceof Element) {
       observer.observe(sectionRef.current);
     }
 
