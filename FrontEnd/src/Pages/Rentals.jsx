@@ -789,11 +789,11 @@ const Rentals = () => {
                   Speak to Concierge
                 </Button>
               </a>
-              <Link to={`${ROUTES.BOOKING}?service=rental`}>
+              <a href="#how-it-works">
                 <Button variant="secondary" size="lg">
-                  Start Custom Request
+                  See Rental Process
                 </Button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>
