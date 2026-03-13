@@ -173,6 +173,7 @@
   background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-deep) 100%);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .repair-booking-section::before {
@@ -184,6 +185,21 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--gold-primary), transparent);
   opacity: 0.3;
+}
+
+.repair-booking-section .booking-grid {
+  position: relative;
+  z-index: 2;
+}
+
+.repair-booking-section .booking-form-container {
+  position: relative;
+  z-index: 20;
+}
+
+.repair-booking-section .price-summary {
+  position: relative;
+  z-index: 1;
 }
 
 /* Form Styling */

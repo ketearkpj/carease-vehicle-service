@@ -160,7 +160,7 @@
   border: var(--border-gold-light);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl), var(--shadow-gold);
-  z-index: var(--z-dropdown);
+  z-index: var(--z-popover);
   max-height: 300px;
   overflow: hidden;
   display: flex;
