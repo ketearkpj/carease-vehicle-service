@@ -63,6 +63,11 @@ const validators = {
         then: Joi.required()
       }),
       serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'sales', 'delivery').required(),
+      packageId: Joi.alternatives().try(Joi.string(), Joi.number()),
+      packageName: Joi.string().allow('', null),
+      listedPrice: Joi.number().min(0),
+      totalAmount: Joi.number().min(0),
+      inquiryType: Joi.string().allow('', null),
       startDate: Joi.date().required(),
       endDate: Joi.date().min(Joi.ref('startDate')).required(),
       pickupTime: Joi.string(),
@@ -111,6 +116,17 @@ const validators = {
         })
       ),
       specialRequests: Joi.string().max(500),
+      paymentMethod: Joi.string().allow('', null),
+      paymentId: Joi.string().allow('', null),
+      paymentMeta: Joi.object({
+        channel: Joi.string().allow('', null),
+        method: Joi.string().allow('', null),
+        status: Joi.string().allow('', null),
+        paymentStatus: Joi.string().allow('', null),
+        phoneNumber: Joi.string().allow('', null),
+        paypalEmail: Joi.string().email().allow('', null),
+        squareCustomer: Joi.string().allow('', null)
+      }),
       customerInfo: Joi.object({
         firstName: Joi.string(),
         lastName: Joi.string(),

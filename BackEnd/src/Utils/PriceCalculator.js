@@ -12,6 +12,9 @@ exports.calculatePrice = async ({
   startDate,
   endDate,
   extras = [],
+  listedPrice,
+  packageId,
+  inquiryType,
   discountCode,
   userId
 }) => {
@@ -24,26 +27,47 @@ exports.calculatePrice = async ({
   // Get tax rate from settings
   const taxRate = await SystemSettings.get('tax_rate', 0.1);
 
-  switch (serviceType) {
-    case 'rental':
-      basePrice = await calculateRentalPrice(vehicleId, startDate, endDate);
-      insurancePrice = await calculateInsurance(vehicleId, startDate, endDate);
-      break;
+  const explicitListedPrice = Number(listedPrice || 0);
+  if (explicitListedPrice > 0 && (serviceType !== 'rental' || !vehicleId)) {
+    basePrice = explicitListedPrice;
+  } else {
+    try {
+      switch (serviceType) {
+        case 'rental':
+          basePrice = await calculateRentalPrice(vehicleId, startDate, endDate, listedPrice);
+          insurancePrice = await calculateInsurance(vehicleId, startDate, endDate);
+          break;
 
-    case 'car_wash':
-      basePrice = await calculateCarWashPrice(extras);
-      break;
+        case 'car_wash':
+          basePrice = await calculateCarWashPrice(extras, listedPrice);
+          break;
 
-    case 'repair':
-      basePrice = await calculateRepairPrice(extras);
-      break;
+        case 'repair':
+          basePrice = await calculateRepairPrice(extras, listedPrice);
+          break;
 
-    case 'delivery':
-      basePrice = await calculateDeliveryPrice(extras);
-      break;
+        case 'delivery':
+          basePrice = await calculateDeliveryPrice(extras);
+          break;
 
-    default:
-      throw new Error(`Unsupported service type: ${serviceType}`);
+        case 'sales':
+          basePrice = await calculateSalesPrice(extras, listedPrice, inquiryType);
+          break;
+
+        default:
+          throw new Error(`Unsupported service type: ${serviceType}`);
+      }
+    } catch (error) {
+      const fallbackBase = {
+        rental: Number(listedPrice || 18000),
+        car_wash: Number(listedPrice || 3500),
+        repair: Number(listedPrice || 8500),
+        delivery: Number(listedPrice || 3500),
+        sales: Number(listedPrice || 5000)
+      };
+      basePrice = fallbackBase[serviceType] || 0;
+      insurancePrice = serviceType === 'rental' ? await calculateInsurance(vehicleId, startDate, endDate) : 0;
+    }
   }
 
   // Calculate extras
@@ -90,11 +114,14 @@ exports.calculatePrice = async ({
 /**
  * Calculate rental price based on vehicle and duration
  */
-const calculateRentalPrice = async (vehicleId, startDate, endDate) => {
+const calculateRentalPrice = async (vehicleId, startDate, endDate, listedPrice = 0) => {
+  const listed = Number(listedPrice || 0);
+  if (!vehicleId && listed > 0) return listed;
+
   const vehicle = await Vehicle.findByPk(vehicleId);
   if (!vehicle) throw new Error('Vehicle not found');
 
-  const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+  const days = Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)));
   const dailyRate = Number(vehicle.dailyRate);
 
   // Apply weekly/monthly discounts
@@ -110,9 +137,16 @@ const calculateRentalPrice = async (vehicleId, startDate, endDate) => {
 /**
  * Calculate car wash price based on package and vehicle size
  */
-const calculateCarWashPrice = async (extras) => {
-  const washPackage = extras.find(e => e.type === 'wash_package');
-  if (!washPackage) throw new Error('Wash package required');
+const calculateCarWashPrice = async (extras, listedPrice = 0) => {
+  const listed = Number(listedPrice || 0);
+  if (listed > 0) return listed;
+
+  const washPackageIds = ['basic', 'premium', 'ultimate', 'ceramic'];
+  const washPackage = extras.find((e) => {
+    const extraId = String(e.id || '').toLowerCase();
+    return e.type === 'wash_package' || washPackageIds.includes(extraId);
+  });
+  if (!washPackage) return 79;
 
   const prices = {
     basic: 29,
@@ -127,9 +161,16 @@ const calculateCarWashPrice = async (extras) => {
 /**
  * Calculate repair price based on service type and hours
  */
-const calculateRepairPrice = async (extras) => {
-  const repairService = extras.find(e => e.type === 'repair_service');
-  if (!repairService) throw new Error('Repair service required');
+const calculateRepairPrice = async (extras, listedPrice = 0) => {
+  const listed = Number(listedPrice || 0);
+  if (listed > 0) return listed;
+
+  const repairServiceIds = ['diagnostic', 'maintenance', 'repair', 'performance'];
+  const repairService = extras.find((e) => {
+    const extraId = String(e.id || '').toLowerCase();
+    return e.type === 'repair_service' || repairServiceIds.includes(extraId);
+  });
+  if (!repairService) return 99;
 
   const hourlyRates = {
     diagnostic: 89,
@@ -146,7 +187,7 @@ const calculateRepairPrice = async (extras) => {
  * Calculate delivery price based on distance and type
  */
 const calculateDeliveryPrice = async (extras) => {
-  const deliveryInfo = extras.find(e => e.type === 'delivery');
+  const deliveryInfo = extras.find((e) => e.type === 'delivery' || String(e.id || '').toLowerCase() === 'delivery');
   if (!deliveryInfo) return 0;
 
   const baseRate = 35;
@@ -154,6 +195,30 @@ const calculateDeliveryPrice = async (extras) => {
   const distance = deliveryInfo.distance || 10;
 
   return baseRate + (distance * perKm);
+};
+
+/**
+ * Calculate sales booking price (e.g. reservation/deposit)
+ */
+const calculateSalesPrice = async (extras, listedPrice = 0, inquiryType = '') => {
+  const listed = Number(listedPrice || 0);
+  if (listed > 0) return listed;
+  if (!Array.isArray(extras) || extras.length === 0) {
+    const salesDefaults = {
+      purchase: 25000,
+      test_drive: 5000,
+      inspection: 3500
+    };
+    return salesDefaults[String(inquiryType || '').toLowerCase()] || 5000;
+  }
+
+  const primary = extras.find((e) =>
+    ['sales', 'deposit', 'reservation', 'purchase'].includes(String(e.type || '').toLowerCase()) ||
+    ['sales', 'deposit', 'reservation', 'purchase'].includes(String(e.id || '').toLowerCase())
+  ) || extras[0];
+
+  const amount = Number(primary.price || primary.amount || 0);
+  return Number.isFinite(amount) ? amount : 0;
 };
 
 /**
@@ -174,7 +239,7 @@ const calculateExtras = async (extras, serviceType, { startDate, endDate }) => {
   };
 
   const days = serviceType === 'rental' 
-    ? Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24))
+    ? Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)))
     : 1;
 
   extras.forEach(extra => {
@@ -192,7 +257,7 @@ const calculateInsurance = async (vehicleId, startDate, endDate) => {
   const vehicle = await Vehicle.findByPk(vehicleId);
   if (!vehicle) return 0;
 
-  const days = Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24));
+  const days = Math.max(1, Math.ceil((new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24)));
   const insuranceRate = vehicle.insuranceRate || Number(vehicle.dailyRate) * 0.15;
 
   return days * insuranceRate;
@@ -239,7 +304,8 @@ const getBaseDescription = (serviceType) => {
     rental: 'Daily rental rate',
     car_wash: 'Wash package',
     repair: 'Labor and diagnostics',
-    delivery: 'Delivery fee'
+    delivery: 'Delivery fee',
+    sales: 'Sales reservation amount'
   };
 
   return descriptions[serviceType] || 'Service fee';

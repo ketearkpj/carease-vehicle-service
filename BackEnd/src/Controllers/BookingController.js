@@ -16,6 +16,8 @@ const InvoiceGenerator = require('../Utils/InvoiceGenerator');
 exports.createBooking = catchAsync(async (req, res, next) => {
   const {
     vehicleId,
+    listedPrice,
+    inquiryType,
     serviceType,
     startDate,
     endDate,
@@ -56,6 +58,8 @@ exports.createBooking = catchAsync(async (req, res, next) => {
   // Calculate pricing
   const pricing = await calculatePrice({
     vehicleId,
+    listedPrice,
+    inquiryType,
     serviceType,
     startDate,
     endDate,

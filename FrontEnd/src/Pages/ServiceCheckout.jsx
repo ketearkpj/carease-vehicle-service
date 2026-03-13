@@ -9,6 +9,7 @@ import { usePayment } from '../Hooks/usePayment';
 import {
   getPlaceAutocomplete,
   getPlaceDetails,
+  geocodeAddress,
   loadGoogleMapsScript,
   reverseGeocode
 } from '../Services/LocationService';
@@ -297,7 +298,6 @@ const ServiceCheckout = ({ serviceKey }) => {
       if (isAddressRequired) {
         if (!form.exactAddress) return 'Enter exact Nairobi house address.';
         if (!form.estateArea) return 'Enter area/estate in Nairobi.';
-        if (!form.locationPin?.lat || !form.locationPin?.lng) return 'Pin exact location on Google Maps.';
       }
     }
 
@@ -369,6 +369,17 @@ const ServiceCheckout = ({ serviceKey }) => {
       const fullAddress = isAddressRequired
         ? `${form.exactAddress}, ${form.buildingApartment || ''} ${form.estateArea}, ${form.landmark || ''}, Nairobi`.replace(/\s+,/g, ',').replace(/,+/g, ',').replace(/,\s*,/g, ',').trim()
         : BRANCHES.find((branch) => branch.value === form.branch)?.label || form.branch;
+      let resolvedPin = form.locationPin;
+      if (isAddressRequired && (!resolvedPin?.lat || !resolvedPin?.lng)) {
+        try {
+          const geo = await geocodeAddress(fullAddress);
+          if (geo?.lat && geo?.lng) {
+            resolvedPin = { lat: geo.lat, lng: geo.lng };
+          }
+        } catch {
+          // Continue with exact textual address even if coordinates fail.
+        }
+      }
 
       const pickupLocation = isAddressRequired
         ? {
@@ -380,7 +391,7 @@ const ServiceCheckout = ({ serviceKey }) => {
               state: 'Nairobi',
               zipCode: '00100'
             },
-            coordinates: form.locationPin || undefined
+            coordinates: resolvedPin || undefined
           }
         : {
             type: 'showroom',
@@ -423,7 +434,7 @@ const ServiceCheckout = ({ serviceKey }) => {
           city: 'Nairobi',
           state: 'Nairobi',
           notes: form.landmark || '',
-          coordinates: form.locationPin || undefined
+          coordinates: resolvedPin || undefined
         },
         paymentMethod: form.paymentChannel === 'online' ? form.paymentMethod : form.onDeliveryMethod,
         paymentId: null,
