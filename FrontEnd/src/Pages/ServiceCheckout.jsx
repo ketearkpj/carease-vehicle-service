@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { ROUTES } from '../Config/Routes';
@@ -6,6 +6,7 @@ import { formatCurrency } from '../Utils/format';
 import { useApp } from '../Context/AppContext';
 import { useBooking } from '../Hooks/useBooking';
 import { usePayment } from '../Hooks/usePayment';
+import { getPlaceAutocomplete } from '../Services/LocationService';
 import { getPaymentMethods } from '../Services/PaymentService';
 
 import Button from '../Components/Common/Button';
@@ -151,6 +152,9 @@ const ServiceCheckout = ({ serviceKey }) => {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [paymentMethods, setPaymentMethods] = useState([]);
+  const [addressSuggestions, setAddressSuggestions] = useState([]);
+  const [addressLoading, setAddressLoading] = useState(false);
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
 
   const [form, setForm] = useState({
     intent: bookingPrefill.inquiryType || meta.intents[0].value,
@@ -188,6 +192,8 @@ const ServiceCheckout = ({ serviceKey }) => {
 
   const [paymentDetails, setPaymentDetails] = useState(defaultPaymentDetails);
   const [selectedAddOns, setSelectedAddOns] = useState([]);
+  const addressAutocompleteRef = useRef(null);
+  const addressDebounceRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -449,6 +455,90 @@ const ServiceCheckout = ({ serviceKey }) => {
 
   const deliveryOptions = DELIVERY_OPTIONS_BY_SERVICE[serviceType] || DELIVERY_OPTIONS_BY_SERVICE.rental;
 
+  useEffect(() => {
+    if (!isAddressRequired) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
+      return;
+    }
+
+    const query = form.exactAddress?.trim();
+    if (!query || query.length < 3) {
+      setAddressSuggestions([]);
+      setShowAddressSuggestions(false);
+      setAddressLoading(false);
+      return;
+    }
+
+    if (addressDebounceRef.current) {
+      clearTimeout(addressDebounceRef.current);
+    }
+
+    let active = true;
+    setAddressLoading(true);
+    addressDebounceRef.current = setTimeout(async () => {
+      try {
+        const predictions = await getPlaceAutocomplete(query, {
+          country: 'ke',
+          types: ['address']
+        });
+
+        if (!active) return;
+
+        const nairobiOnly = (predictions || [])
+          .filter((item) => /nairobi/i.test(item.description || item.secondaryText || ''))
+          .slice(0, 8);
+
+        setAddressSuggestions(nairobiOnly);
+        setShowAddressSuggestions(nairobiOnly.length > 0);
+      } catch {
+        if (active) {
+          setAddressSuggestions([]);
+          setShowAddressSuggestions(false);
+        }
+      } finally {
+        if (active) {
+          setAddressLoading(false);
+        }
+      }
+    }, 280);
+
+    return () => {
+      active = false;
+      if (addressDebounceRef.current) {
+        clearTimeout(addressDebounceRef.current);
+      }
+    };
+  }, [form.exactAddress, isAddressRequired]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!addressAutocompleteRef.current?.contains(event.target)) {
+        setShowAddressSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const applyAddressSuggestion = (suggestion) => {
+    const normalizedMain = suggestion.mainText || suggestion.description?.split(',')[0] || '';
+    const secondaryParts = (suggestion.secondaryText || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const estate = secondaryParts.find((item) => !/nairobi|kenya/i.test(item)) || form.estateArea;
+
+    setForm((prev) => ({
+      ...prev,
+      exactAddress: normalizedMain || prev.exactAddress,
+      estateArea: prev.estateArea || estate
+    }));
+    setAddressSuggestions([]);
+    setShowAddressSuggestions(false);
+  };
+
   return (
     <div className="service-checkout-page">
       <section className="service-checkout-hero">
@@ -553,12 +643,38 @@ const ServiceCheckout = ({ serviceKey }) => {
                       />
                     </div>
                     <div className="form-row">
-                      <Input
-                        label="Exact House Address"
-                        value={form.exactAddress}
-                        onChange={(e) => updateForm('exactAddress', e.target.value)}
-                        placeholder="House number, street, road"
-                      />
+                      <div className="address-autocomplete" ref={addressAutocompleteRef}>
+                        <Input
+                          label="Exact House Address"
+                          value={form.exactAddress}
+                          onChange={(e) => updateForm('exactAddress', e.target.value)}
+                          onFocus={() => setShowAddressSuggestions(addressSuggestions.length > 0)}
+                          placeholder="House number, street, road"
+                        />
+
+                        {isAddressRequired && (showAddressSuggestions || addressLoading) && (
+                          <div className="address-suggestion-dropdown">
+                            {addressLoading && (
+                              <div className="address-suggestion-item muted">Looking up Nairobi addresses...</div>
+                            )}
+                            {!addressLoading && addressSuggestions.length === 0 && (
+                              <div className="address-suggestion-item muted">No Nairobi address matches yet.</div>
+                            )}
+                            {!addressLoading && addressSuggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.placeId}
+                                type="button"
+                                className="address-suggestion-item"
+                                onMouseDown={(event) => event.preventDefault()}
+                                onClick={() => applyAddressSuggestion(suggestion)}
+                              >
+                                <strong>{suggestion.mainText}</strong>
+                                <span>{suggestion.secondaryText || suggestion.description}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div className="form-row two-col">
                       <Input
