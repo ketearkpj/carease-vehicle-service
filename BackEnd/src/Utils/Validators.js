@@ -63,38 +63,44 @@ const validators = {
         then: Joi.required()
       }),
       serviceType: Joi.string().valid('rental', 'car_wash', 'repair', 'sales', 'delivery').required(),
-      startDate: Joi.date().greater('now').required(),
-      endDate: Joi.date().greater(Joi.ref('startDate')).required(),
+      startDate: Joi.date().required(),
+      endDate: Joi.date().min(Joi.ref('startDate')).required(),
       pickupTime: Joi.string(),
       dropoffTime: Joi.string(),
-      pickupLocation: Joi.object({
-        type: Joi.string().valid('showroom', 'address', 'airport', 'hotel').required(),
-        name: Joi.string(),
-        address: Joi.object({
-          street: Joi.string(),
-          city: Joi.string(),
-          state: Joi.string(),
-          zipCode: Joi.string()
+      pickupLocation: Joi.alternatives().try(
+        Joi.object({
+          type: Joi.string().valid('showroom', 'address', 'airport', 'hotel').required(),
+          name: Joi.string(),
+          address: Joi.object({
+            street: Joi.string(),
+            city: Joi.string(),
+            state: Joi.string(),
+            zipCode: Joi.string()
+          }),
+          coordinates: Joi.object({
+            lat: Joi.number(),
+            lng: Joi.number()
+          })
         }),
-        coordinates: Joi.object({
-          lat: Joi.number(),
-          lng: Joi.number()
-        })
-      }).required(),
-      dropoffLocation: Joi.object({
-        type: Joi.string().valid('showroom', 'address', 'airport', 'hotel'),
-        name: Joi.string(),
-        address: Joi.object({
-          street: Joi.string(),
-          city: Joi.string(),
-          state: Joi.string(),
-          zipCode: Joi.string()
+        Joi.string()
+      ).required(),
+      dropoffLocation: Joi.alternatives().try(
+        Joi.object({
+          type: Joi.string().valid('showroom', 'address', 'airport', 'hotel'),
+          name: Joi.string(),
+          address: Joi.object({
+            street: Joi.string(),
+            city: Joi.string(),
+            state: Joi.string(),
+            zipCode: Joi.string()
+          }),
+          coordinates: Joi.object({
+            lat: Joi.number(),
+            lng: Joi.number()
+          })
         }),
-        coordinates: Joi.object({
-          lat: Joi.number(),
-          lng: Joi.number()
-        })
-      }),
+        Joi.string()
+      ),
       extras: Joi.array().items(
         Joi.object({
           id: Joi.string().required(),
@@ -248,14 +254,11 @@ const validators = {
   // ===== PAYMENT VALIDATION =====
   payment: {
     process: Joi.object({
-      bookingId: Joi.string().required(),
+      bookingId: Joi.string().allow(null, ''),
       amount: Joi.number().positive().required(),
       currency: Joi.string().default('USD'),
       method: Joi.string().valid('card', 'paypal', 'mpesa', 'square', 'flutterwave').required(),
-      paymentMethodId: Joi.string().when('method', {
-        is: 'card',
-        then: Joi.required()
-      }),
+      paymentMethodId: Joi.string().allow('', null),
       phoneNumber: Joi.string().when('method', {
         is: 'mpesa',
         then: Joi.required()

@@ -6,10 +6,11 @@ const { Booking, Vehicle, User, Payment } = require('../Models');
 const AppError = require('../Utils/AppError');
 const catchAsync = require('../Utils/CatchAsync');
 const APIFeatures = require('../Utils/APIFeatures');
-const { sendEmail } = require('../Services/emailService');
+const { logger } = require('../Middleware/Logger.md.js');
+const { sendEmail, sendAdminNotification } = require('../Services/emailService');
 const { createNotification } = require('../Services/notificationService');
 const { calculatePrice } = require('../Utils/PriceCalculator');
-const { generateInvoice } = require('../Utils/InvoiceGenerator');
+const InvoiceGenerator = require('../Utils/InvoiceGenerator');
 
 // ===== CREATE BOOKING =====
 exports.createBooking = catchAsync(async (req, res, next) => {
@@ -22,7 +23,9 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     dropoffLocation,
     extras,
     specialRequests,
-    customerInfo
+    customerInfo,
+    paymentMeta,
+    paymentMethod
   } = req.body;
 
   // Check vehicle availability
@@ -62,6 +65,10 @@ exports.createBooking = catchAsync(async (req, res, next) => {
   // Generate booking number
   const bookingNumber = await generateBookingNumber();
   const customerUser = await resolveCustomerUser(req.body, req.user);
+  const paymentChannel = paymentMeta?.channel || (paymentMethod === 'cash_on_delivery' ? 'on_delivery' : 'online');
+  const paymentState = paymentMeta?.paymentStatus || paymentMeta?.status || (paymentChannel === 'on_delivery' ? 'pending' : 'processing');
+  const isInstantlyConfirmed = paymentChannel === 'on_delivery' || ['completed', 'paid', 'succeeded'].includes(String(paymentState).toLowerCase());
+  const bookingStatus = isInstantlyConfirmed ? 'confirmed' : 'pending';
 
   // Create booking
   const booking = await Booking.create({
@@ -69,7 +76,7 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     userId: customerUser.id,
     vehicleId: vehicleId || null,
     serviceType,
-    status: 'pending',
+    status: bookingStatus,
     startDate,
     endDate,
     pickupTime: req.body.pickupTime,
@@ -95,15 +102,25 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     customerLastName: customerInfo?.lastName || customerUser.lastName || null,
     customerEmail: customerInfo?.email || customerUser.email || null,
     customerPhone: customerInfo?.phone || customerUser.phone || null,
+    notes: {
+      payment: {
+        channel: paymentChannel,
+        method: paymentMeta?.method || paymentMethod || null,
+        status: paymentState
+      }
+    },
     timeline: [{
-      status: 'pending',
+      status: bookingStatus,
       timestamp: new Date(),
-      note: 'Booking created'
+      note: isInstantlyConfirmed
+        ? 'Booking created and confirmed. Payment pending on delivery.'
+        : 'Booking created. Awaiting online payment confirmation.'
     }]
   });
 
   // Send confirmation email
   await sendBookingConfirmation(booking);
+  await sendCompanyBookingNotification(booking);
 
   // Create notification
   if (booking.userId) {
@@ -606,17 +623,70 @@ const sendBookingConfirmation = async (booking) => {
     : await User.findByPk(booking.userId);
   if (!user?.email) return;
 
-  const invoice = await generateInvoice(booking);
+  const attachments = [];
+  try {
+    const invoice = await InvoiceGenerator.generate(booking, null, null, 'pdf');
+    if (invoice) {
+      attachments.push({
+        filename: `invoice-${booking.bookingNumber}.pdf`,
+        content: invoice
+      });
+    }
+  } catch (error) {
+    // Invoice generation failure should not block confirmation email.
+  }
 
   await sendEmail({
     to: user.email,
-    subject: `CAR EASE - Booking Confirmation #${booking.bookingNumber}`,
-    html: generateBookingEmail(booking, 'confirmed'),
-    attachments: [{
-      filename: `invoice-${booking.bookingNumber}.pdf`,
-      content: invoice
-    }]
+    subject: `CAR EASE - Booking ${booking.status === 'confirmed' ? 'Confirmation' : 'Received'} #${booking.bookingNumber}`,
+    html: generateBookingEmail(booking),
+    attachments
   });
+};
+
+const sendCompanyBookingNotification = async (booking) => {
+  try {
+    const recipients = (
+      process.env.COMPANY_NOTIFICATION_EMAILS ||
+      process.env.ADMIN_EMAIL ||
+      process.env.EMAIL_USERNAME ||
+      ''
+    )
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (recipients.length === 0) return;
+
+    const paymentDetails = booking.notes?.payment || {};
+    const details = {
+      bookingNumber: booking.bookingNumber,
+      bookingId: booking.id,
+      serviceType: booking.serviceType,
+      status: booking.status,
+      totalAmount: booking.totalAmount,
+      customerName: `${booking.customerFirstName || ''} ${booking.customerLastName || ''}`.trim(),
+      customerEmail: booking.customerEmail,
+      customerPhone: booking.customerPhone,
+      paymentChannel: paymentDetails.channel || 'unknown',
+      paymentMethod: paymentDetails.method || 'unknown',
+      paymentStatus: paymentDetails.status || 'unknown',
+      startDate: booking.startDate,
+      endDate: booking.endDate
+    };
+
+    await Promise.all(
+      recipients.map((adminEmail) =>
+        sendAdminNotification(
+          adminEmail,
+          `New ${booking.serviceType} booking ${booking.bookingNumber}`,
+          details
+        )
+      )
+    );
+  } catch (error) {
+    logger.error('Company booking notification failed:', error.message);
+  }
 };
 
 const sendBookingUpdateNotification = async (booking) => {
@@ -655,13 +725,25 @@ const processBookingRefund = async (booking) => {
   }
 };
 
-const generateBookingEmail = (booking, status, note = '') => {
-  // Generate HTML email content
+const generateBookingEmail = (booking, note = '') => {
+  const paymentDetails = booking.notes?.payment || {};
+  const pickupAddress = typeof booking.pickupAddress === 'object'
+    ? booking.pickupAddress?.address?.street || booking.pickupAddress?.street || booking.pickupAddress?.name || 'Nairobi'
+    : booking.pickupAddress || 'Nairobi';
+  const paymentStatus = paymentDetails.status || 'pending';
+  const paymentChannel = paymentDetails.channel || 'on_delivery';
+
   return `
-    <h1>Booking ${status}</h1>
+    <h1>Booking ${booking.status === 'confirmed' ? 'Confirmed' : 'Received'}</h1>
     <p>Booking #${booking.bookingNumber}</p>
+    <p>Service: ${booking.serviceType}</p>
     <p>Status: ${booking.status}</p>
+    <p>Payment Channel: ${paymentChannel}</p>
+    <p>Payment Status: ${paymentStatus}</p>
+    <p>Total Amount: KES ${booking.totalAmount}</p>
+    <p>Service Address: ${pickupAddress}</p>
     ${note ? `<p>Note: ${note}</p>` : ''}
+    <p>Invoice is attached where available.</p>
   `;
 };
 

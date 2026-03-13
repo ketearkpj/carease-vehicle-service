@@ -6,7 +6,12 @@ import { formatCurrency } from '../Utils/format';
 import { useApp } from '../Context/AppContext';
 import { useBooking } from '../Hooks/useBooking';
 import { usePayment } from '../Hooks/usePayment';
-import { getPlaceAutocomplete } from '../Services/LocationService';
+import {
+  getPlaceAutocomplete,
+  getPlaceDetails,
+  loadGoogleMapsScript,
+  reverseGeocode
+} from '../Services/LocationService';
 import { getPaymentMethods } from '../Services/PaymentService';
 
 import Button from '../Components/Common/Button';
@@ -155,6 +160,12 @@ const ServiceCheckout = ({ serviceKey }) => {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [addressLoading, setAddressLoading] = useState(false);
   const [showAddressSuggestions, setShowAddressSuggestions] = useState(false);
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [mapLoading, setMapLoading] = useState(false);
+  const [mapError, setMapError] = useState('');
+  const [mapSearchQuery, setMapSearchQuery] = useState('');
+  const [mapSearchSuggestions, setMapSearchSuggestions] = useState([]);
+  const [mapSearchLoading, setMapSearchLoading] = useState(false);
 
   const [form, setForm] = useState({
     intent: bookingPrefill.inquiryType || meta.intents[0].value,
@@ -180,7 +191,9 @@ const ServiceCheckout = ({ serviceKey }) => {
     tradeIn: 'no',
     specialRequests: bookingPrefill.specialRequests || '',
     paymentChannel: 'on_delivery',
+    onDeliveryMethod: 'cash_on_delivery',
     paymentMethod: '',
+    locationPin: null,
     customerInfo: {
       firstName: '',
       lastName: '',
@@ -194,6 +207,10 @@ const ServiceCheckout = ({ serviceKey }) => {
   const [selectedAddOns, setSelectedAddOns] = useState([]);
   const addressAutocompleteRef = useRef(null);
   const addressDebounceRef = useRef(null);
+  const mapRootRef = useRef(null);
+  const mapRef = useRef(null);
+  const markerRef = useRef(null);
+  const mapSearchDebounceRef = useRef(null);
 
   useEffect(() => {
     let mounted = true;
@@ -225,12 +242,6 @@ const ServiceCheckout = ({ serviceKey }) => {
   const currentIntentMeta = useMemo(() => {
     return meta.intents.find((intent) => intent.value === form.intent) || meta.intents[0];
   }, [form.intent, meta.intents]);
-
-  useEffect(() => {
-    if (currentIntentMeta?.type === 'buy') {
-      setForm((prev) => ({ ...prev, paymentChannel: 'online' }));
-    }
-  }, [currentIntentMeta]);
 
   const isAddressRequired = form.deliveryMode !== 'pickup';
 
@@ -286,6 +297,7 @@ const ServiceCheckout = ({ serviceKey }) => {
       if (isAddressRequired) {
         if (!form.exactAddress) return 'Enter exact Nairobi house address.';
         if (!form.estateArea) return 'Enter area/estate in Nairobi.';
+        if (!form.locationPin?.lat || !form.locationPin?.lng) return 'Pin exact location on Google Maps.';
       }
     }
 
@@ -318,6 +330,8 @@ const ServiceCheckout = ({ serviceKey }) => {
             return 'Complete card payment details.';
           }
         }
+      } else if (!form.onDeliveryMethod) {
+        return 'Select on-delivery payment mode.';
       }
     }
 
@@ -352,40 +366,32 @@ const ServiceCheckout = ({ serviceKey }) => {
 
     setSaving(true);
     try {
-      let paymentResult = null;
-
-      if (form.paymentChannel === 'online') {
-        const gateway = gatewayFromMethod(form.paymentMethod);
-        const paymentPayload = {
-          bookingId: null,
-          amount: Number(totalAmount.toFixed(2)),
-          currency: 'KES',
-          customerEmail: form.customerInfo.email,
-          customerName: `${form.customerInfo.firstName} ${form.customerInfo.lastName}`.trim(),
-          phoneNumber: form.paymentMethod === 'mpesa' ? paymentDetails.mpesaPhone : form.customerInfo.phone,
-          paymentMethod: form.paymentMethod,
-          paymentMethodId: form.paymentMethod === 'square' ? paymentDetails.squareCustomer : undefined,
-          billingDetails: {
-            email: form.customerInfo.email,
-            phone: form.customerInfo.phone,
-            firstName: form.customerInfo.firstName,
-            lastName: form.customerInfo.lastName,
-            address: form.exactAddress,
-            city: 'Nairobi',
-            state: 'Nairobi'
-          }
-        };
-
-        paymentResult = await processNewPayment(paymentPayload, gateway);
-
-        if (!paymentResult?.success) {
-          throw new Error('Online payment not completed. Confirm the prompt and retry.');
-        }
-      }
-
       const fullAddress = isAddressRequired
         ? `${form.exactAddress}, ${form.buildingApartment || ''} ${form.estateArea}, ${form.landmark || ''}, Nairobi`.replace(/\s+,/g, ',').replace(/,+/g, ',').replace(/,\s*,/g, ',').trim()
         : BRANCHES.find((branch) => branch.value === form.branch)?.label || form.branch;
+
+      const pickupLocation = isAddressRequired
+        ? {
+            type: 'address',
+            name: form.estateArea || 'Nairobi Address',
+            address: {
+              street: fullAddress,
+              city: 'Nairobi',
+              state: 'Nairobi',
+              zipCode: '00100'
+            },
+            coordinates: form.locationPin || undefined
+          }
+        : {
+            type: 'showroom',
+            name: BRANCHES.find((branch) => branch.value === form.branch)?.label || form.branch,
+            address: {
+              street: BRANCHES.find((branch) => branch.value === form.branch)?.label || form.branch,
+              city: 'Nairobi',
+              state: 'Nairobi',
+              zipCode: '00100'
+            }
+          };
 
       const payload = {
         serviceType,
@@ -399,8 +405,8 @@ const ServiceCheckout = ({ serviceKey }) => {
         endDate: serviceType === 'rental' ? form.endDate : form.startDate,
         time: form.time,
         timeSlot: form.time,
-        pickupLocation: fullAddress,
-        dropoffLocation: fullAddress,
+        pickupLocation,
+        dropoffLocation: pickupLocation,
         deliveryMode: form.deliveryMode,
         extras: selectedAddOns,
         specialRequests: [
@@ -416,17 +422,19 @@ const ServiceCheckout = ({ serviceKey }) => {
           address: fullAddress,
           city: 'Nairobi',
           state: 'Nairobi',
-          notes: form.landmark || ''
+          notes: form.landmark || '',
+          coordinates: form.locationPin || undefined
         },
-        paymentMethod: form.paymentChannel === 'online' ? form.paymentMethod : 'cash_on_delivery',
-        paymentId: paymentResult?.transactionId || null,
+        paymentMethod: form.paymentChannel === 'online' ? form.paymentMethod : form.onDeliveryMethod,
+        paymentId: null,
         paymentMeta: {
           channel: form.paymentChannel,
-          method: form.paymentChannel === 'online' ? form.paymentMethod : 'cash_on_delivery',
+          method: form.paymentChannel === 'online' ? form.paymentMethod : form.onDeliveryMethod,
           phoneNumber: form.paymentMethod === 'mpesa' ? paymentDetails.mpesaPhone : undefined,
           paypalEmail: form.paymentMethod === 'paypal' ? paymentDetails.paypalEmail : undefined,
           squareCustomer: form.paymentMethod === 'square' ? paymentDetails.squareCustomer : undefined,
-          status: form.paymentChannel === 'online' ? (paymentResult?.status || 'completed') : 'due_on_delivery'
+          status: form.paymentChannel === 'online' ? 'processing' : 'pending',
+          paymentStatus: form.paymentChannel === 'online' ? 'processing' : 'pending'
         }
       };
 
@@ -437,7 +445,43 @@ const ServiceCheckout = ({ serviceKey }) => {
         throw new Error('Booking created but ID missing. Please contact support.');
       }
 
-      addNotification('Service flow completed successfully.', 'success');
+      if (form.paymentChannel === 'online') {
+        const gateway = gatewayFromMethod(form.paymentMethod);
+        const paymentPayload = {
+          bookingId,
+          amount: Number(totalAmount.toFixed(2)),
+          currency: 'KES',
+          customerEmail: form.customerInfo.email,
+          customerName: `${form.customerInfo.firstName} ${form.customerInfo.lastName}`.trim(),
+          phoneNumber: form.paymentMethod === 'mpesa' ? paymentDetails.mpesaPhone : form.customerInfo.phone,
+          paymentMethod: form.paymentMethod,
+          paymentMethodId: form.paymentMethod === 'square' ? paymentDetails.squareCustomer : undefined,
+          billingDetails: {
+            email: form.customerInfo.email,
+            phone: form.customerInfo.phone,
+            firstName: form.customerInfo.firstName,
+            lastName: form.customerInfo.lastName,
+            address: {
+              line1: fullAddress,
+              city: 'Nairobi',
+              state: 'Nairobi',
+              country: 'Kenya'
+            }
+          }
+        };
+
+        const paymentResult = await processNewPayment(paymentPayload, gateway);
+        if (!paymentResult?.success) {
+          throw new Error('Online payment not completed. Confirm the prompt and retry.');
+        }
+      }
+
+      addNotification(
+        form.paymentChannel === 'online'
+          ? 'Payment completed and service confirmed successfully.'
+          : 'Service confirmed. Payment is pending on delivery.',
+        'success'
+      );
       navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${bookingId}`);
     } catch (err) {
       addNotification(err?.message || 'Failed to complete service flow.', 'error');
@@ -447,7 +491,10 @@ const ServiceCheckout = ({ serviceKey }) => {
   };
 
   const paymentChannelOptions = currentIntentMeta?.type === 'buy'
-    ? [{ value: 'online', label: 'Online Payment (Required for buying)' }]
+    ? [
+        { value: 'online', label: 'Pay Online Now' },
+        { value: 'on_delivery', label: 'Pay On Delivery / Service Day' }
+      ]
     : [
         { value: 'on_delivery', label: 'Pay On Delivery / Service Day' },
         { value: 'online', label: 'Pay Online Now' }
@@ -537,6 +584,149 @@ const ServiceCheckout = ({ serviceKey }) => {
     }));
     setAddressSuggestions([]);
     setShowAddressSuggestions(false);
+  };
+
+  useEffect(() => {
+    if (!showMapPicker || !isAddressRequired || !mapRootRef.current) return;
+
+    let mounted = true;
+    const initializeMap = async () => {
+      setMapError('');
+      setMapLoading(true);
+      try {
+        await loadGoogleMapsScript();
+        if (!mounted || !window.google?.maps || !mapRootRef.current) return;
+
+        const defaultPin = form.locationPin || { lat: -1.286389, lng: 36.817223 };
+        mapRef.current = new window.google.maps.Map(mapRootRef.current, {
+          center: defaultPin,
+          zoom: 15,
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false
+        });
+
+        markerRef.current = new window.google.maps.Marker({
+          map: mapRef.current,
+          position: defaultPin,
+          draggable: true
+        });
+
+        mapRef.current.addListener('click', async (event) => {
+          if (!markerRef.current) return;
+          const nextPin = { lat: event.latLng.lat(), lng: event.latLng.lng() };
+          markerRef.current.setPosition(nextPin);
+          setForm((prev) => ({ ...prev, locationPin: nextPin }));
+          try {
+            const reversed = await reverseGeocode(nextPin.lat, nextPin.lng);
+            if (reversed?.formattedAddress) {
+              setForm((prev) => ({ ...prev, exactAddress: reversed.formattedAddress }));
+            }
+          } catch {
+            // Ignore reverse geocode errors during manual pinning.
+          }
+        });
+
+        markerRef.current.addListener('dragend', async () => {
+          if (!markerRef.current) return;
+          const position = markerRef.current.getPosition();
+          if (!position) return;
+          const nextPin = { lat: position.lat(), lng: position.lng() };
+          setForm((prev) => ({ ...prev, locationPin: nextPin }));
+          try {
+            const reversed = await reverseGeocode(nextPin.lat, nextPin.lng);
+            if (reversed?.formattedAddress) {
+              setForm((prev) => ({ ...prev, exactAddress: reversed.formattedAddress }));
+            }
+          } catch {
+            // Ignore reverse geocode errors during manual pinning.
+          }
+        });
+      } catch {
+        if (mounted) {
+          setMapError('Google Maps failed to load. Check API key and network.');
+        }
+      } finally {
+        if (mounted) {
+          setMapLoading(false);
+        }
+      }
+    };
+
+    initializeMap();
+    return () => {
+      mounted = false;
+    };
+  }, [showMapPicker, isAddressRequired]);
+
+  useEffect(() => {
+    if (!showMapPicker || !isAddressRequired) return;
+
+    const query = mapSearchQuery?.trim();
+    if (!query || query.length < 3) {
+      setMapSearchSuggestions([]);
+      setMapSearchLoading(false);
+      return;
+    }
+
+    if (mapSearchDebounceRef.current) {
+      clearTimeout(mapSearchDebounceRef.current);
+    }
+
+    let active = true;
+    setMapSearchLoading(true);
+    mapSearchDebounceRef.current = setTimeout(async () => {
+      try {
+        const results = await getPlaceAutocomplete(query, { country: 'ke', types: ['address'] });
+        if (!active) return;
+        const nairobiOnly = (results || []).filter((item) => /nairobi/i.test(item.description || ''));
+        setMapSearchSuggestions(nairobiOnly.slice(0, 8));
+      } catch {
+        if (active) {
+          setMapSearchSuggestions([]);
+        }
+      } finally {
+        if (active) {
+          setMapSearchLoading(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      active = false;
+      if (mapSearchDebounceRef.current) {
+        clearTimeout(mapSearchDebounceRef.current);
+      }
+    };
+  }, [mapSearchQuery, showMapPicker, isAddressRequired]);
+
+  const applyMapSearchResult = async (suggestion) => {
+    try {
+      const place = await getPlaceDetails(suggestion.placeId);
+      const pin = place?.location;
+      if (pin && mapRef.current && markerRef.current) {
+        mapRef.current.setCenter(pin);
+        mapRef.current.setZoom(17);
+        markerRef.current.setPosition(pin);
+      }
+
+      const secondaryParts = (suggestion.secondaryText || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const estate = secondaryParts.find((item) => !/nairobi|kenya/i.test(item));
+
+      setForm((prev) => ({
+        ...prev,
+        locationPin: pin || prev.locationPin,
+        exactAddress: place?.address || suggestion.description || prev.exactAddress,
+        estateArea: prev.estateArea || estate || prev.estateArea
+      }));
+      setMapSearchQuery(place?.address || suggestion.description || '');
+      setMapSearchSuggestions([]);
+    } catch {
+      addNotification('Unable to center that address on map. Try another search.', 'warning');
+    }
   };
 
   return (
@@ -672,6 +862,63 @@ const ServiceCheckout = ({ serviceKey }) => {
                                 <span>{suggestion.secondaryText || suggestion.description}</span>
                               </button>
                             ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="form-row">
+                      <div className="map-picker-panel">
+                        <div className="map-picker-header">
+                          <strong>Pin Exact Location (Google Maps)</strong>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowMapPicker((prev) => !prev)}
+                          >
+                            {showMapPicker ? 'Hide Map' : 'Open Map Picker'}
+                          </Button>
+                        </div>
+
+                        {showMapPicker && (
+                          <div className="map-picker-body">
+                            <div className="map-picker-search">
+                              <Input
+                                label="Search on Map"
+                                value={mapSearchQuery}
+                                onChange={(e) => setMapSearchQuery(e.target.value)}
+                                placeholder="Search exact Nairobi address then pin"
+                              />
+                              {(mapSearchLoading || mapSearchSuggestions.length > 0) && (
+                                <div className="map-search-dropdown">
+                                  {mapSearchLoading && (
+                                    <div className="map-search-item muted">Finding addresses...</div>
+                                  )}
+                                  {!mapSearchLoading && mapSearchSuggestions.map((item) => (
+                                    <button
+                                      key={item.placeId}
+                                      type="button"
+                                      className="map-search-item"
+                                      onClick={() => applyMapSearchResult(item)}
+                                    >
+                                      <strong>{item.mainText}</strong>
+                                      <span>{item.secondaryText || item.description}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="map-canvas-wrap">
+                              <div ref={mapRootRef} className="map-canvas" />
+                              {mapLoading && <div className="map-canvas-state">Loading map...</div>}
+                              {mapError && <div className="map-canvas-state error">{mapError}</div>}
+                            </div>
+                            {form.locationPin && (
+                              <p className="map-pin-readout">
+                                Pinned: {form.locationPin.lat.toFixed(6)}, {form.locationPin.lng.toFixed(6)}
+                              </p>
+                            )}
+                            <p className="map-picker-note">Search, click on map, then drag the pin to exact house gate.</p>
                           </div>
                         )}
                       </div>
@@ -844,7 +1091,16 @@ const ServiceCheckout = ({ serviceKey }) => {
                       placeholder="Select payment method"
                     />
                   ) : (
-                    <Input label="Payment Timing" value="Pay on service day / delivery" disabled onChange={() => {}} />
+                    <Select
+                      label="On-Delivery Payment Mode"
+                      value={form.onDeliveryMethod}
+                      onChange={(e) => updateForm('onDeliveryMethod', e.target.value)}
+                      options={[
+                        { value: 'cash_on_delivery', label: 'Cash on delivery/service day' },
+                        { value: 'card_on_delivery', label: 'Card on service day' },
+                        { value: 'mobile_on_delivery', label: 'M-PESA transfer on service day' }
+                      ]}
+                    />
                   )}
                 </div>
 

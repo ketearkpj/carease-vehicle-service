@@ -10,8 +10,9 @@ const paypalService = require('../Services/paypalService');
 const mpesaService = require('../Services/mpesaService');
 const squareService = require('../Services/squareService');
 const flutterwaveService = require('../Services/flutterwaveService');
-const { sendEmail, sendPaymentReceipt, sendRefundNotification } = require('../Services/emailService');
+const { sendEmail, sendPaymentReceipt, sendRefundNotification, sendAdminNotification } = require('../Services/emailService');
 const { generateReceipt } = require('../Utils/ReceiptGenerator');
+const { logger } = require('../Middleware/Logger.md.js');
 
 // ===== PROCESS PAYMENT =====
 exports.processPayment = catchAsync(async (req, res, next) => {
@@ -148,6 +149,7 @@ exports.processPayment = catchAsync(async (req, res, next) => {
 
     // Send receipt
     await sendPaymentReceipt(payment, booking, actorUser);
+    await sendCompanyPaymentNotification(payment, booking, actorUser);
 
     // Save payment method if requested
     if (savePaymentMethod && result.paymentMethodId && req.user?.id) {
@@ -296,6 +298,7 @@ exports.confirmPayment = catchAsync(async (req, res, next) => {
       const user = await User.findByPk(payment.userId);
       if (user) {
         await sendPaymentReceipt(payment, booking, user);
+        await sendCompanyPaymentNotification(payment, booking, user);
       }
     }
   }
@@ -338,6 +341,7 @@ exports.getMpesaStatus = catchAsync(async (req, res, next) => {
       const user = payment.userId ? await User.findByPk(payment.userId) : null;
       if (booking && user) {
         await sendPaymentReceipt(payment, booking, user);
+        await sendCompanyPaymentNotification(payment, booking, user);
       }
     }
   }
@@ -733,6 +737,49 @@ const generatePaymentNumber = async () => {
 
 const saveUserPaymentMethod = async (userId, methodData) => {
   await UserPaymentMethod.create({ ...methodData, userId });
+};
+
+const sendCompanyPaymentNotification = async (payment, booking, user) => {
+  try {
+    const recipients = (
+      process.env.COMPANY_NOTIFICATION_EMAILS ||
+      process.env.ADMIN_EMAIL ||
+      process.env.EMAIL_USERNAME ||
+      ''
+    )
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (recipients.length === 0) return;
+
+    const details = {
+      paymentNumber: payment.paymentNumber,
+      paymentId: payment.id,
+      transactionId: payment.transactionId,
+      method: payment.method,
+      status: payment.status,
+      amount: payment.amount,
+      currency: payment.currency,
+      bookingId: booking?.id || payment.bookingId,
+      bookingNumber: booking?.bookingNumber || 'n/a',
+      serviceType: booking?.serviceType || 'n/a',
+      customerEmail: user?.email || booking?.customerEmail || payment.billingEmail || 'n/a',
+      customerPhone: user?.phone || booking?.customerPhone || payment.billingPhone || 'n/a'
+    };
+
+    await Promise.all(
+      recipients.map((email) =>
+        sendAdminNotification(
+          email,
+          `Payment completed ${payment.paymentNumber}`,
+          details
+        )
+      )
+    );
+  } catch (error) {
+    logger.error('Company payment notification failed:', error.message);
+  }
 };
 
 const verifyWebhookSignature = async (payload, signature, gateway) => {
