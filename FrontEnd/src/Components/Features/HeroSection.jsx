@@ -43,6 +43,34 @@ const HeroSection = ({
     }
   };
 
+  const scrollToSection = (targetId) => {
+    if (!targetId || !targetId.startsWith('#')) return;
+    const section = document.querySelector(targetId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const renderCta = (text, link, variant = 'primary', withArrow = false) => {
+    if (link?.startsWith('#')) {
+      return (
+        <Button variant={variant} size="lg" onClick={() => scrollToSection(link)}>
+          {text}
+          {withArrow && <span className="btn-arrow">→</span>}
+        </Button>
+      );
+    }
+
+    return (
+      <Link to={link}>
+        <Button variant={variant} size="lg">
+          {text}
+          {withArrow && <span className="btn-arrow">→</span>}
+        </Button>
+      </Link>
+    );
+  };
+
   const renderBackground = () => {
     if (backgroundVideo) {
       return (
@@ -136,18 +164,8 @@ const HeroSection = ({
           <p className="hero-subtitle">{subtitle}</p>
           
           <div className="hero-cta">
-            <Link to={ctaLink}>
-              <Button variant="primary" size="lg">
-                {ctaText}
-                <span className="btn-arrow">→</span>
-              </Button>
-            </Link>
-            
-            <Link to={secondaryCtaLink}>
-              <Button variant="outline" size="lg">
-                {secondaryCtaText}
-              </Button>
-            </Link>
+            {renderCta(ctaText, ctaLink, 'primary', true)}
+            {renderCta(secondaryCtaText, secondaryCtaLink, 'outline')}
           </div>
 
           <div className="hero-stats">
