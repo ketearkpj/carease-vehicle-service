@@ -108,7 +108,6 @@ const AdminTable = ({
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            icon="🔍"
           />
         </div>
         

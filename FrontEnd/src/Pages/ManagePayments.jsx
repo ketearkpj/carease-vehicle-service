@@ -299,7 +299,6 @@ const ManagePayments = () => {
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 placeholder="Payment ID, Transaction ID, Customer..."
-                icon="🔍"
               />
             </div>
           </div>

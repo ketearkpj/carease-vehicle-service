@@ -612,7 +612,6 @@ const Services = () => {
           <div className="search-container-premium">
             <form onSubmit={handleSearch} className="search-form-premium">
               <div className="search-wrapper-premium">
-                <span className="search-icon">🔍</span>
                 <input
                   type="text"
                   placeholder="Search services, booking, concierge, test drives, repairs..."

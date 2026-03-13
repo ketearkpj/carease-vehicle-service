@@ -387,6 +387,26 @@ const Rentals = () => {
     addNotification('Vehicle selected. Complete your booking details.', 'info');
   };
 
+  const handleQuickBuy = (vehicle) => {
+    const draft = {
+      serviceType: 'sales',
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      inquiryType: 'purchase',
+      pickupLocation: 'roysambu-trm'
+    };
+    saveBookingDraft(draft);
+    navigate(`${ROUTES.BOOKING}?service=sales&vehicle=${vehicle.id}&inquiryType=purchase`, {
+      state: { bookingPrefill: draft }
+    });
+    addNotification('Proceed to complete your purchase request.', 'info');
+  };
+
+  const handleContactConcierge = (vehicle) => {
+    addNotification(`Contacting concierge for ${vehicle?.name || 'selected vehicle'}...`, 'info');
+    window.location.href = 'tel:+254758458358';
+  };
+
   const priceRanges = [
     { value: 'all', label: 'All Prices' },
     { value: '0-500', label: `Under ${formatKES(500)}` },
@@ -454,6 +474,35 @@ const Rentals = () => {
         </div>
       </section>
 
+      <section className="how-it-works">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">RENTAL FLOW</span>
+            <h2 className="section-title">Details to <span className="gold-text">Delivery</span></h2>
+            <p className="section-description">
+              Every vehicle can be viewed in full detail, contacted for clarification, and booked instantly.
+            </p>
+          </div>
+          <div className="steps-grid">
+            <div className="step-card animate-fade-up animate-delay-1">
+              <div className="step-number">1</div>
+              <h3 className="step-title">View Details</h3>
+              <p className="step-description">Open any car to see specs, features, location, and availability.</p>
+            </div>
+            <div className="step-card animate-fade-up animate-delay-2">
+              <div className="step-number">2</div>
+              <h3 className="step-title">Contact or Rent</h3>
+              <p className="step-description">Talk to concierge first or proceed directly to the rent-now flow.</p>
+            </div>
+            <div className="step-card animate-fade-up animate-delay-3">
+              <div className="step-number">3</div>
+              <h3 className="step-title">Delivery + Payment</h3>
+              <p className="step-description">Set delivery mode, provide details, then pay online or on delivery.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Fleet Section */}
       <section className="fleet-section" id="fleet">
         <div className="container">
@@ -500,7 +549,6 @@ const Rentals = () => {
                   placeholder="Search vehicles..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  icon="🔍"
                   className="search-input"
                 />
               </div>
@@ -560,6 +608,9 @@ const Rentals = () => {
                     price={toKES(vehicle.price)}
                     onQuickView={() => handleQuickView(vehicle)}
                     onQuickBook={() => handleQuickBook(vehicle)}
+                    onBuy={() => handleQuickBuy(vehicle)}
+                    onContact={() => handleContactConcierge(vehicle)}
+                    showActionGrid={true}
                     variant={viewMode === 'list' ? 'horizontal' : 'featured'}
                   />
                 </div>
@@ -680,10 +731,21 @@ const Rentals = () => {
 
                 <div className="quick-view-actions">
                   <Button variant="primary" size="lg" fullWidth onClick={() => handleQuickBook(selectedVehicle)}>
-                    Book Now
+                    Rent Now
+                  </Button>
+                  <Button variant="success" size="lg" fullWidth onClick={() => handleQuickBuy(selectedVehicle)}>
+                    Buy Now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    fullWidth
+                    onClick={() => handleContactConcierge(selectedVehicle)}
+                  >
+                    Contact Concierge
                   </Button>
                   <Button variant="outline" size="lg" fullWidth onClick={() => setShowQuickView(false)}>
-                    Close
+                    Continue Browsing
                   </Button>
                 </div>
               </div>

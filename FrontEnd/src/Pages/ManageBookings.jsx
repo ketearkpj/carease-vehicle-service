@@ -234,7 +234,6 @@ const ManageBookings = () => {
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 placeholder="Booking ID, Customer, Email..."
-                icon="🔍"
               />
             </div>
           </div>

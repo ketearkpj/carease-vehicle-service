@@ -192,7 +192,6 @@ const FAQ = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for answers..."
-              icon="🔍"
               size="lg"
               className="search-input"
             />

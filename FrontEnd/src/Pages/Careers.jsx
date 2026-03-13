@@ -343,7 +343,6 @@ const Careers = () => {
                 placeholder="Search jobs..."
                 value={filters.search}
                 onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                icon="🔍"
               />
             </div>
           </div>

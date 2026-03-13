@@ -167,7 +167,6 @@ const LocationPicker = ({
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 placeholder="Search for an address"
-                icon="🔍"
               />
               <Button variant="primary" size="sm" onClick={handleSearch}>Search</Button>
             </div>

@@ -665,7 +665,6 @@ const Sales = () => {
                   placeholder="Search vehicles..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
-                  icon="🔍"
                   className="search-input"
                 />
               </div>

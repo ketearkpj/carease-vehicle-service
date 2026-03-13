@@ -324,7 +324,6 @@ const ManageVehicles = () => {
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               placeholder="Search by name, make, model..."
-              icon="🔍"
             />
           </div>
         </div>
