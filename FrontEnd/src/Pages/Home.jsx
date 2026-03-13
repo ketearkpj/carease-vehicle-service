@@ -188,7 +188,10 @@ const Home = () => {
     setIsLoadingVehicles(true);
     try {
       const vehicles = await getFeaturedVehicles(3);
-      setFeaturedVehicles(vehicles);
+      const normalizedVehicles = Array.isArray(vehicles)
+        ? vehicles
+        : vehicles?.vehicles || vehicles?.data?.vehicles || [];
+      setFeaturedVehicles(normalizedVehicles);
     } catch (error) {
       console.error('Failed to fetch vehicles:', error);
       // Fallback data - only 3 for better spacing
@@ -282,6 +285,8 @@ const Home = () => {
       setIsLoadingServices(false);
     }
   };
+
+  const safeFeaturedVehicles = Array.isArray(featuredVehicles) ? featuredVehicles : [];
 
   const scrollToSection = (ref) => {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
@@ -521,7 +526,7 @@ const Home = () => {
           ) : (
             <>
               <div className="vehicles-grid-elegant">
-                {featuredVehicles.map((vehicle, index) => (
+                {safeFeaturedVehicles.map((vehicle, index) => (
                   <div key={vehicle.id} className="vehicle-elegant-card">
                     <div className="vehicle-elegant-image">
                       <img src={vehicle.image} alt={vehicle.name} />
@@ -532,7 +537,7 @@ const Home = () => {
                     <div className="vehicle-elegant-info">
                       <h3>{vehicle.name}</h3>
                       <div className="vehicle-elegant-specs">
-                        {vehicle.specs.slice(0, 2).map((spec, idx) => (
+                        {(Array.isArray(vehicle.specs) ? vehicle.specs : Object.values(vehicle.specs || {})).slice(0, 2).map((spec, idx) => (
                           <span key={idx}>{spec}</span>
                         ))}
                       </div>
