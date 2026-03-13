@@ -117,6 +117,7 @@
   padding: var(--space-24) 0;
   background: var(--bg-deep);
   position: relative;
+  isolation: isolate;
 }
 
 /* Filters */
@@ -133,6 +134,8 @@
   padding: var(--space-6);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 20;
 }
 
 .filter-group {
@@ -212,12 +215,15 @@
 /* Vehicles Container */
 .vehicles-container {
   margin-bottom: var(--space-12);
+  position: relative;
+  z-index: 1;
 }
 
 .vehicles-container.grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-6);
+  align-items: stretch;
 }
 
 .vehicles-container.list {
@@ -234,8 +240,13 @@
 
 .vehicle-wrapper {
   height: 100%;
+  display: flex;
   animation: fadeInUp 0.6s ease forwards;
   opacity: 0;
+}
+
+.vehicles-container.grid .vehicle-wrapper .vehicle-card {
+  width: 100%;
 }
 
 /* Loading State */
