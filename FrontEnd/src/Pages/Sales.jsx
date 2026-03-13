@@ -432,25 +432,35 @@ const Sales = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleInquirySubmit = (type) => {
-    if (!selectedVehicle) return;
+  const handleSalesAction = (vehicle, type, closeDetails = false) => {
+    if (!vehicle) return;
     const draft = {
       serviceType: 'sales',
-      vehicleId: selectedVehicle.id,
-      vehicleName: selectedVehicle.name,
-      listedPrice: selectedVehicle.price * 130,
+      vehicleId: vehicle.id,
+      vehicleName: vehicle.name,
+      listedPrice: vehicle.price * 130,
       inquiryType: type,
       pickupLocation: 'roysambu-trm'
     };
     saveBookingDraft(draft);
     navigate(
-      `${ROUTES.BOOKING}?service=sales&vehicle=${selectedVehicle.id}&inquiryType=${type}`,
+      `${ROUTES.BOOKING}?service=sales&vehicle=${vehicle.id}&inquiryType=${type}`,
       {
         state: { bookingPrefill: draft }
       }
     );
     addNotification('Complete your details to submit this inquiry.', 'info');
-    setShowDetails(false);
+    if (closeDetails) setShowDetails(false);
+  };
+
+  const handleInquirySubmit = (type) => {
+    if (!selectedVehicle) return;
+    handleSalesAction(selectedVehicle, type, true);
+  };
+
+  const handleSalesContact = (vehicle) => {
+    addNotification(`Connecting you to the sales desk for ${vehicle?.name || 'selected vehicle'}.`, 'info');
+    window.location.href = 'tel:+254758458358';
   };
 
   const calculateFinancing = () => {
@@ -561,6 +571,32 @@ const Sales = () => {
               <div className="advantage-icon">🤝</div>
               <h3 className="advantage-title">Trade-Ins Welcome</h3>
               <p className="advantage-description">Fair market value for your current vehicle</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="why-buy-section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">BUYER JOURNEY</span>
+            <h2 className="section-title">From Vehicle Details to <span className="gold-text">Ownership</span></h2>
+          </div>
+          <div className="advantages-grid">
+            <div className="advantage-card animate-fade-up animate-delay-1">
+              <div className="advantage-icon">📄</div>
+              <h3 className="advantage-title">View Full Details</h3>
+              <p className="advantage-description">Inspect specs, history, warranty, and financing before decision.</p>
+            </div>
+            <div className="advantage-card animate-fade-up animate-delay-2">
+              <div className="advantage-icon">📞</div>
+              <h3 className="advantage-title">Contact Specialist</h3>
+              <p className="advantage-description">Speak with sales support before booking inspection or purchase.</p>
+            </div>
+            <div className="advantage-card animate-fade-up animate-delay-3">
+              <div className="advantage-icon">🧾</div>
+              <h3 className="advantage-title">Book or Buy</h3>
+              <p className="advantage-description">Choose inquiry, test drive, or purchase with flexible payment path.</p>
             </div>
           </div>
         </div>
@@ -691,6 +727,10 @@ const Sales = () => {
                     price={formatCurrency(toKES(vehicle.price))}
                     pricePeriod=""
                     onQuickView={() => handleViewDetails(vehicle)}
+                    onQuickBook={() => handleSalesAction(vehicle, 'test_drive')}
+                    onBuy={() => handleSalesAction(vehicle, 'purchase')}
+                    onContact={() => handleSalesContact(vehicle)}
+                    showActionGrid={true}
                     variant={viewMode === 'list' ? 'horizontal' : 'featured'}
                   />
                 </div>
@@ -930,12 +970,20 @@ const Sales = () => {
 
                 <div className="vehicle-actions">
                   <Button 
+                    variant="success"
+                    size="lg" 
+                    fullWidth
+                    onClick={() => handleInquirySubmit('test_drive')}
+                  >
+                    Book Now
+                  </Button>
+                  <Button 
                     variant="primary" 
                     size="lg" 
                     fullWidth
                     onClick={() => handleInquirySubmit('purchase')}
                   >
-                    Buy This Vehicle
+                    Buy Now
                   </Button>
                   <Button 
                     variant="outline" 
@@ -943,15 +991,15 @@ const Sales = () => {
                     fullWidth
                     onClick={() => handleInquirySubmit('inquiry')}
                   >
-                    Inquire About This Vehicle
+                    Send Inquiry
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg" 
+                  <Button
+                    variant="outline"
+                    size="lg"
                     fullWidth
-                    onClick={() => handleInquirySubmit('test_drive')}
+                    onClick={() => handleSalesContact(selectedVehicle)}
                   >
-                    Schedule Test Drive
+                    Contact Sales Desk
                   </Button>
                 </div>
 
