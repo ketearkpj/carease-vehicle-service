@@ -41,6 +41,7 @@ const VehicleCard = ({
   onQuickView,
   onQuickBook,
   onBuy,
+  buyLabel = 'Buy',
   onContact,
   showActionGrid = false,
   onFavorite,
@@ -226,7 +227,7 @@ const VehicleCard = ({
               Book Now
             </Button>
             <Button variant="outline" size="sm" fullWidth onClick={handleBuyClick}>
-              Buy
+              {buyLabel}
             </Button>
             <Button variant="secondary" size="sm" fullWidth onClick={handleContactClick}>
               Contact

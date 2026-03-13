@@ -25,6 +25,7 @@ const serviceRoutes = require('./src/Routes/serviceRoutes');
 const reviewRoutes = require('./src/Routes/reviewRoutes');
 const locationRoutes = require('./src/Routes/locationRoutes');
 const adminRoutes = require('./src/Routes/adminRoutes');
+const emailRoutes = require('./src/Routes/emailRoutes');
 
 const app = express();
 
@@ -39,13 +40,31 @@ app.use(helmet({
 const defaultOrigins = ['http://localhost:3000', 'http://localhost:5173'];
 const envOrigins = [
   process.env.CLIENT_URL,
+  process.env.CLIENT_URL_PROD,
   ...(process.env.CLIENT_URLS || '').split(',')
 ].map((origin) => origin && origin.trim()).filter(Boolean);
-const allowedOrigins = envOrigins.length > 0 ? envOrigins : defaultOrigins;
+const allowedOrigins = Array.from(new Set([...defaultOrigins, ...envOrigins]));
 
 app.use(cors({
   origin: (origin, callback) => {
     if (!origin) return callback(null, true);
+    if (process.env.NODE_ENV === 'development') {
+      try {
+        const parsed = new URL(origin);
+        const host = parsed.hostname;
+        const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
+        const isPrivateLan =
+          /^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+          /^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+          /^172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(host);
+
+        if (isLocalhost || isPrivateLan) {
+          return callback(null, true);
+        }
+      } catch (error) {
+        // Fall through to configured allow list checks.
+      }
+    }
     if (allowedOrigins.includes(origin)) return callback(null, true);
     return callback(new Error('Not allowed by CORS'));
   },
@@ -105,6 +124,7 @@ const mountRoutes = (basePath) => {
   app.use(`${basePath}/reviews`, reviewRoutes);
   app.use(`${basePath}/locations`, locationRoutes);
   app.use(`${basePath}/admin`, adminRoutes);
+  app.use(`${basePath}/email`, emailRoutes);
 };
 
 mountRoutes('/api/v1');

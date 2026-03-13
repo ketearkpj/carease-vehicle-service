@@ -608,7 +608,8 @@ const Rentals = () => {
                     price={toKES(vehicle.price)}
                     onQuickView={() => handleQuickView(vehicle)}
                     onQuickBook={() => handleQuickBook(vehicle)}
-                    onBuy={() => handleQuickBuy(vehicle)}
+                    onBuy={() => handleQuickBook(vehicle)}
+                    buyLabel="Rent Now"
                     onContact={() => handleContactConcierge(vehicle)}
                     showActionGrid={true}
                     variant={viewMode === 'list' ? 'horizontal' : 'featured'}
@@ -733,8 +734,8 @@ const Rentals = () => {
                   <Button variant="primary" size="lg" fullWidth onClick={() => handleQuickBook(selectedVehicle)}>
                     Rent Now
                   </Button>
-                  <Button variant="success" size="lg" fullWidth onClick={() => handleQuickBuy(selectedVehicle)}>
-                    Buy Now
+                  <Button variant="success" size="lg" fullWidth onClick={() => handleQuickBook(selectedVehicle)}>
+                    Rent Now
                   </Button>
                   <Button
                     variant="outline"
