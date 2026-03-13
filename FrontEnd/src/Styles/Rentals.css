@@ -664,6 +664,10 @@
   z-index: 2;
 }
 
+.rentals-creative-cta {
+  max-width: 980px;
+}
+
 .cta-title {
   font-family: var(--font-heading);
   font-size: var(--text-4xl);
@@ -684,6 +688,43 @@
   display: flex;
   gap: var(--space-4);
   justify-content: center;
+  flex-wrap: wrap;
+}
+
+.rental-experience-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+
+.rental-experience-card {
+  text-align: left;
+  padding: var(--space-5);
+  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all var(--transition-base);
+}
+
+.rental-experience-card:hover {
+  border-color: var(--gold-primary);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-gold);
+}
+
+.rental-experience-card h3 {
+  font-family: var(--font-heading);
+  color: var(--white);
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2);
+}
+
+.rental-experience-card p {
+  color: var(--silver-dark);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  margin: 0;
 }
 
 /* ===== ANIMATION DELAYS ===== */
@@ -787,6 +828,10 @@
 
   .cta-buttons {
     flex-direction: column;
+  }
+
+  .rental-experience-grid {
+    grid-template-columns: 1fr;
   }
 
   .cta-title {

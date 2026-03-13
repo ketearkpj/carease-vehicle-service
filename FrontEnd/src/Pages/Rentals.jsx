@@ -757,20 +757,41 @@ const Rentals = () => {
       {/* CTA Section */}
       <section className="rentals-cta-section">
         <div className="container">
-          <div className="cta-content">
-            <h2 className="cta-title">Ready to Drive?</h2>
+          <div className="cta-content rentals-creative-cta">
+            <h2 className="cta-title">Design Your Arrival</h2>
             <p className="cta-description">
-              Book your luxury vehicle today and experience the ultimate driving pleasure
+              Pick the exact rental experience you want, then move straight into the right flow with concierge support.
             </p>
+
+            <div className="rental-experience-grid">
+              <article className="rental-experience-card">
+                <h3>Weekend Escape</h3>
+                <p>Short-term luxury setup with quick pickup and route-ready support.</p>
+              </article>
+              <article className="rental-experience-card">
+                <h3>Event Statement</h3>
+                <p>Premium arrivals for weddings, shoots, and high-visibility occasions.</p>
+              </article>
+              <article className="rental-experience-card">
+                <h3>Executive Mobility</h3>
+                <p>Reliable, polished fleet options for business schedules and VIP transfers.</p>
+              </article>
+            </div>
+
             <div className="cta-buttons">
-              <Link to={`${ROUTES.BOOKING}?service=rental`}>
+              <a href="#fleet">
                 <Button variant="primary" size="lg">
-                  Book Now
+                  Explore Fleet
                 </Button>
-              </Link>
-              <Link to={ROUTES.CONTACT}>
+              </a>
+              <a href="tel:+254758458358">
                 <Button variant="outline" size="lg">
-                  Contact Us
+                  Speak to Concierge
+                </Button>
+              </a>
+              <Link to={`${ROUTES.BOOKING}?service=rental`}>
+                <Button variant="secondary" size="lg">
+                  Start Custom Request
                 </Button>
               </Link>
             </div>
