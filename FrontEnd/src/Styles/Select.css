@@ -84,11 +84,15 @@
 /* Select Value */
 .select-value {
   flex: 1;
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-2) calc(var(--space-10) + var(--space-3)) var(--space-2) var(--space-3);
   color: var(--white);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.select-container.select-has-left-icon .select-value {
+  padding-left: calc(var(--space-10) + var(--space-3));
 }
 
 .select-value.placeholder {
@@ -98,17 +102,24 @@
 
 /* Select Icons */
 .select-left-icon {
-  margin-left: var(--space-3);
+  position: absolute;
+  left: var(--space-3);
+  width: 20px;
+  height: 20px;
   color: var(--silver-dark);
   display: flex;
   align-items: center;
+  justify-content: center;
+  pointer-events: none;
 }
 
 .select-arrow {
-  margin: 0 var(--space-3);
+  position: absolute;
+  right: var(--space-3);
   color: var(--silver-dark);
   font-size: var(--text-xs);
   transition: transform var(--transition-base);
+  pointer-events: none;
 }
 
 .select-arrow.open {
@@ -117,13 +128,16 @@
 }
 
 .select-clear-btn {
+  position: absolute;
+  right: calc(var(--space-8) + var(--space-1));
   background: none;
   border: none;
   color: var(--silver-dark);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   cursor: pointer;
-  padding: 0 var(--space-2);
-  margin-right: var(--space-1);
+  padding: 0;
+  width: 18px;
+  height: 18px;
   transition: all var(--transition-fast);
 }
 
@@ -133,7 +147,8 @@
 }
 
 .select-loading-spinner {
-  margin-right: var(--space-3);
+  position: absolute;
+  right: calc(var(--space-8) + var(--space-1));
 }
 
 .select-loading-spinner .spinner {
@@ -146,8 +161,10 @@
 }
 
 .select-status-icon {
-  margin-right: var(--space-3);
+  position: absolute;
+  right: calc(var(--space-8) + var(--space-1));
   font-size: var(--text-base);
+  pointer-events: none;
 }
 
 /* Select Options Dropdown */

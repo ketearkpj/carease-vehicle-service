@@ -224,6 +224,7 @@ const Select = ({
     'select-container',
     `select-${size}`,
     `select-${variant}`,
+    icon ? 'select-has-left-icon' : '',
     getStatusClass(),
     focused ? 'select-focused' : '',
     disabled ? 'select-disabled' : '',

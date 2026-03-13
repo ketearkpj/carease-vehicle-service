@@ -208,7 +208,7 @@ const Input = ({
         )}
         
         {/* Input Status Indicator */}
-        {statusMessage && !loading && (
+        {statusMessage && !loading && type !== 'password' && !iconRight && (
           <span className="input-status-icon">
             {statusMessage.icon}
           </span>
