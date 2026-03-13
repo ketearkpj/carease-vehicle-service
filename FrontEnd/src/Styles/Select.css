@@ -190,7 +190,7 @@
   border-bottom: var(--border-fine);
 }
 
-.search-input {
+.select-search .search-input {
   width: 100%;
   padding: var(--space-2) var(--space-3);
   background: var(--glass-bg);
@@ -200,7 +200,7 @@
   font-size: var(--text-sm);
 }
 
-.search-input:focus {
+.select-search .search-input:focus {
   outline: none;
   border-color: var(--gold-primary);
   box-shadow: 0 0 0 2px var(--gold-glow);
