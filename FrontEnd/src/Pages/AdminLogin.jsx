@@ -1,9 +1,5 @@
 // ===== src/Pages/AdminLogin.jsx =====
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-// Core imports
-import { ROUTES } from '../Config/Routes';
+import React, { useState } from 'react';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -21,8 +17,7 @@ import { useApp } from '../Context/AppContext';
 import '../Styles/AdminLogin.css';
 
 const AdminLogin = () => {
-  const navigate = useNavigate();
-  const { isAuthenticated, login } = useAdminAuth();
+  const { login } = useAdminAuth();
   const { addNotification } = useApp();
 
   const [formData, setFormData] = useState({
@@ -34,13 +29,6 @@ const AdminLogin = () => {
   const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-
-  useEffect(() => {
-    // Redirect if already authenticated
-    if (isAuthenticated) {
-      navigate(ROUTES.ADMIN_DASHBOARD);
-    }
-  }, [isAuthenticated, navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

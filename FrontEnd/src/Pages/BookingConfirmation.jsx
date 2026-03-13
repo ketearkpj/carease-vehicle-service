@@ -126,7 +126,7 @@ const BookingConfirmation = () => {
       subtotal: totalPrice,
       total: totalPrice,
       paymentMethod: booking.paymentMethod || 'Card',
-      paymentStatus: 'Paid',
+      paymentStatus: paymentStatusMeta.label,
       paymentDate: new Date().toISOString()
     });
 
@@ -156,7 +156,7 @@ const BookingConfirmation = () => {
       subtotal: totalPrice,
       total: totalPrice,
       paymentMethod: booking.paymentMethod || 'Card',
-      paymentStatus: 'Paid',
+      paymentStatus: paymentStatusMeta.label,
       paymentDate: new Date().toISOString()
     });
 
@@ -195,6 +195,63 @@ const BookingConfirmation = () => {
       .replace(/_/g, ' ')
       .replace(/\b\w/g, (char) => char.toUpperCase());
 
+  const formatLocationValue = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    if (typeof value === 'object') {
+      const name = value.name || '';
+      const address = typeof value.address === 'string'
+        ? value.address
+        : value.address
+          ? [
+              value.address.street,
+              value.address.city,
+              value.address.state,
+              value.address.country
+            ].filter(Boolean).join(', ')
+          : '';
+      return [name, address].filter(Boolean).join(' - ');
+    }
+    return String(value);
+  };
+
+  const resolvePaymentStatus = (value) => {
+    const normalized = String(value || '').toLowerCase().replace(/\s+/g, '_');
+    if (['completed', 'paid', 'success', 'successful'].includes(normalized)) {
+      return {
+        label: 'Payment Complete',
+        className: 'success',
+        detail: 'Payment was received successfully.'
+      };
+    }
+    if (['processing', 'pending', 'in_progress'].includes(normalized)) {
+      return {
+        label: 'Payment Processing',
+        className: 'processing',
+        detail: 'M-PESA prompt/request was sent and payment is awaiting provider confirmation.'
+      };
+    }
+    if (['due_on_delivery', 'on_delivery', 'cash_on_delivery'].includes(normalized)) {
+      return {
+        label: 'Payment On Delivery',
+        className: 'neutral',
+        detail: 'Booking is confirmed. Payment will be collected on service day.'
+      };
+    }
+    if (['failed', 'cancelled', 'declined'].includes(normalized)) {
+      return {
+        label: 'Payment Failed',
+        className: 'danger',
+        detail: 'Payment was not successful. You can retry from support.'
+      };
+    }
+    return {
+      label: humanize(value || 'pending'),
+      className: 'neutral',
+      detail: 'Booking is confirmed and payment status will keep updating.'
+    };
+  };
+
   if (loading) {
     return (
       <div className="confirmation-loading">
@@ -226,9 +283,12 @@ const BookingConfirmation = () => {
   const serviceType = booking.serviceType || 'service';
   const bookingDate = booking.date || booking.startDate || booking.createdAt;
   const bookingTime = booking.time || booking.timeSlot || 'N/A';
-  const bookingLocation = booking.location?.name || booking.pickupLocation || 'Roysambu (next to TRM), Nairobi';
+  const bookingLocation = formatLocationValue(booking.location) ||
+    formatLocationValue(booking.pickupLocation) ||
+    'Roysambu (next to TRM), Nairobi';
   const paymentMethod = booking.paymentMethod || booking.paymentMeta?.method || 'Pending';
   const paymentStatus = booking.paymentMeta?.paymentStatus || booking.status || 'confirmed';
+  const paymentStatusMeta = resolvePaymentStatus(paymentStatus);
   const totalPrice = booking.totalPrice || booking.totalAmount || 0;
   const displayBookingId = booking.id || booking.bookingNumber || 'N/A';
   const serviceLabel = booking.serviceName || humanize(serviceType);
@@ -379,8 +439,9 @@ const BookingConfirmation = () => {
               <h3 className="summary-title">Confirmation Snapshot</h3>
               <div className="status-row">
                 <span className="status-pill success">Confirmed</span>
-                <span className="status-pill neutral">{humanize(paymentStatus)}</span>
+                <span className={`status-pill ${paymentStatusMeta.className}`}>{paymentStatusMeta.label}</span>
               </div>
+              <p className="payment-status-note">{paymentStatusMeta.detail}</p>
 
               <div className="summary-row">
                 <span>Reference</span>

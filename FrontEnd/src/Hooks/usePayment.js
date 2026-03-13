@@ -30,17 +30,27 @@ export const usePayment = (initialConfig = {}) => {
     
     try {
       const result = await processPayment(paymentData, gateway);
-      
-      if (result.success) {
+
+      const isAccepted =
+        Boolean(result?.success) ||
+        result?.status === 'processing' ||
+        Boolean(result?.requiresRedirect);
+
+      if (isAccepted) {
         setPayment(result);
-        setTransactionStatus('success');
-        addNotification('Payment processed successfully!', 'success');
+        setTransactionStatus(result?.status === 'processing' ? 'processing' : 'success');
+        addNotification(
+          result?.status === 'processing'
+            ? 'Payment request sent. Awaiting provider confirmation.'
+            : 'Payment processed successfully!',
+          'success'
+        );
         
         // Add to payments list
         setPayments(prev => [{
           id: result.transactionId,
           amount: result.amount,
-          status: 'completed',
+          status: result?.status || 'completed',
           date: new Date().toISOString(),
           method: gateway,
           ...result

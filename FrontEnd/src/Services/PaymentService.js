@@ -57,6 +57,32 @@ const getAuthHeaders = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const normalizeKenyanPhone = (phone) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('254') && digits.length >= 12) return digits.slice(0, 12);
+  if (digits.startsWith('0') && digits.length >= 10) return `254${digits.slice(1, 10)}`;
+  if (digits.length === 9) return `254${digits}`;
+  return digits;
+};
+
+const extractApiErrorMessage = (error, fallbackMessage) => {
+  const baseMessage = error?.response?.data?.message || error?.message || fallbackMessage;
+  const fieldErrors = error?.response?.data?.errors;
+
+  if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+    const detail = fieldErrors
+      .map((item) => item?.message || item?.field)
+      .filter(Boolean)
+      .join('; ');
+    if (detail) {
+      return `${baseMessage}: ${detail}`;
+    }
+  }
+
+  return baseMessage;
+};
+
 /**
  * Get available payment methods
  * @returns {Promise<Array>} - Supported payment methods
@@ -257,7 +283,8 @@ export const capturePayPalPayment = async (orderId) => {
  */
 const processMpesaPayment = async (paymentData) => {
   try {
-    const { amount, phoneNumber, customerEmail, bookingId } = paymentData;
+    const { amount, customerEmail, bookingId } = paymentData;
+    const phoneNumber = normalizeKenyanPhone(paymentData.phoneNumber);
 
     // Validate phone number (Kenyan format)
     const phoneRegex = /^254[0-9]{9}$/;
@@ -281,17 +308,21 @@ const processMpesaPayment = async (paymentData) => {
     const payload = response.data?.data || {};
     const payment = payload.payment || {};
     const checkoutRequestId = payment.transactionId;
-    const paymentResult = await pollMpesaPaymentStatus(checkoutRequestId);
+
+    if (!checkoutRequestId) {
+      throw new Error('M-PESA request was not accepted. Missing checkout request id.');
+    }
 
     return {
-      success: paymentResult.status === 'completed',
-      transactionId: paymentResult.transactionId || checkoutRequestId,
+      success: true,
+      transactionId: checkoutRequestId,
       amount,
       currency: 'KES',
-      status: paymentResult.status
+      status: 'processing',
+      message: 'M-PESA prompt request sent successfully'
     };
   } catch (error) {
-    const message = error.response?.data?.message || error.message || 'M-PESA payment failed';
+    const message = extractApiErrorMessage(error, 'M-PESA payment failed');
     throw new Error(message);
   }
 };
@@ -324,17 +355,32 @@ const pollMpesaPaymentStatus = async (checkoutRequestID) => {
         };
       }
 
+      if (resultCode === '4999' || paymentStatus === 'processing') {
+        await new Promise(resolve => setTimeout(resolve, interval));
+        continue;
+      }
+
       if (resultCode !== '1037') { // 1037 = Pending
         throw new Error(`Payment failed: ${response.data.resultDesc}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, interval));
     } catch (error) {
+      const status = error?.response?.status;
+      if (status === 429) {
+        // Sandbox often rate-limits status polling; keep processing and continue.
+        await new Promise(resolve => setTimeout(resolve, interval));
+        continue;
+      }
       if (attempt === maxAttempts - 1) throw error;
     }
   }
 
-  throw new Error('M-PESA payment timeout. Confirm the STK prompt on your phone and try again.');
+  return {
+    status: 'processing',
+    transactionId: checkoutRequestID,
+    message: 'M-PESA request sent and still processing'
+  };
 };
 
 /**

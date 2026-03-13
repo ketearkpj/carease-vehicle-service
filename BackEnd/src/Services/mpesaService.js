@@ -27,7 +27,11 @@ const getAccessToken = async () => {
 
     return response.data.access_token;
   } catch (error) {
-    logger.error('M-PESA get access token failed:', error);
+    logger.error('M-PESA get access token failed:', {
+      message: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data
+    });
     throw error;
   }
 };
@@ -71,7 +75,11 @@ exports.stkPush = async ({ amount, phoneNumber, accountReference }) => {
       responseDescription: response.data.ResponseDescription
     };
   } catch (error) {
-    logger.error('M-PESA STK Push failed:', error);
+    logger.error('M-PESA STK Push failed:', {
+      message: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data
+    });
     throw error;
   }
 };
@@ -108,7 +116,11 @@ exports.queryStatus = async (checkoutRequestId) => {
       phoneNumber: response.data.ResultParameters?.PhoneNumber
     };
   } catch (error) {
-    logger.error('M-PESA query status failed:', error);
+    logger.error('M-PESA query status failed:', {
+      message: error?.message,
+      status: error?.response?.status,
+      data: error?.response?.data
+    });
     throw error;
   }
 };

@@ -68,6 +68,7 @@ const DashboardLayout = ({
       { path: ROUTES.ADMIN_VEHICLES, label: 'Vehicles', icon: Icons.Vehicles, badge: 24 },
       { path: ROUTES.ADMIN_PAYMENTS, label: 'Payments', icon: Icons.Payments, badge: 3 },
       { path: ROUTES.ADMIN_REPORTS, label: 'Reports', icon: Icons.Reports },
+      { path: ROUTES.ADMIN_NOTIFICATIONS, label: 'Notifications', icon: Icons.Notification, badge: unreadCount || null },
       { path: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Icons.Settings }
     ],
     provider: [
@@ -163,7 +164,7 @@ const DashboardLayout = ({
 
         {/* Sidebar Footer */}
         <div className="sidebar-footer">
-          <div className="sidebar-footer-item">
+          <Link to={ROUTES.ADMIN_NOTIFICATIONS} className={`sidebar-footer-item ${isActive(ROUTES.ADMIN_NOTIFICATIONS)}`}>
             <Icons.Notification />
             {sidebarOpen && (
               <>
@@ -173,7 +174,7 @@ const DashboardLayout = ({
                 )}
               </>
             )}
-          </div>
+          </Link>
           <button 
             className="sidebar-footer-item logout-btn"
             onClick={handleLogout}
@@ -214,7 +215,7 @@ const DashboardLayout = ({
 
           <div className="header-right">
             <div className="header-notifications">
-              <button className="notification-btn">
+              <button className="notification-btn" onClick={() => navigate(ROUTES.ADMIN_NOTIFICATIONS)}>
                 <Icons.Notification />
                 {unreadCount > 0 && (
                   <span className="notification-badge">{unreadCount}</span>

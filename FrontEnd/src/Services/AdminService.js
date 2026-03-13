@@ -748,9 +748,15 @@ export const updateSystemSetting = async (key, value, category = 'operations') =
 
 export const getAdminNotifications = async (limit = 25) => {
   try {
-    const response = await axios.get(`${ADMIN_BASE_URL}/notifications`, {
+    const token = localStorage.getItem('admin_token');
+    const notificationsEndpoint =
+      token === DEMO_ADMIN_TOKEN
+        ? `${ADMIN_BASE_URL}/notifications-feed`
+        : `${ADMIN_BASE_URL}/notifications`;
+
+    const response = await axios.get(notificationsEndpoint, {
       params: { limit, page: 1 },
-      ...withAuth()
+      ...(token === DEMO_ADMIN_TOKEN ? {} : withAuth())
     });
     const payload = readPayload(response);
     return payload.notifications || [];

@@ -128,12 +128,30 @@ const sendEmailWithRetry = async (emailData, attempt = 1) => {
       return { success: false, reason: 'No email service available' };
     }
 
-    const service = emailService.getPreferredService();
+    const primaryService = emailService.getPreferredService();
+    const servicesToTry = primaryService === 'sendgrid'
+      ? ['sendgrid', 'nodemailer']
+      : ['nodemailer', 'sendgrid'];
 
-    if (service === 'sendgrid') {
-      return await sendViaSendGrid(emailData);
-    } else if (service === 'nodemailer') {
-      return await sendViaNodemailer(emailData);
+    let lastError = null;
+
+    for (const service of servicesToTry) {
+      if (service === 'sendgrid' && !emailService.sendgridClient) continue;
+      if (service === 'nodemailer' && !emailService.nodemailerTransporter) continue;
+
+      try {
+        if (service === 'sendgrid') {
+          return await sendViaSendGrid(emailData);
+        }
+        return await sendViaNodemailer(emailData);
+      } catch (error) {
+        lastError = error;
+        logger.warn(`Email send via ${service} failed; trying next available provider.`);
+      }
+    }
+
+    if (lastError) {
+      throw lastError;
     }
   } catch (error) {
     if (attempt < emailService.retryAttempts) {

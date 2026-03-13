@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 30
+    },
+    "auditLog": "/Users/bijakonwarcharkuoth/Desktop/CarEase /BackEnd/logs/.a11d69308ff8f3322275ecaddbf9abf64d8e5b4a-audit.json",
+    "files": [
+        {
+            "date": 1773253284149,
+            "name": "/Users/bijakonwarcharkuoth/Desktop/CarEase /BackEnd/logs/error-2026-03-11.log",
+            "hash": "5ccce82a2bb0a3f9892e0dff8a013540552a1c3d7a4fe56509dd7c253bc66685"
+        },
+        {
+            "date": 1773355762691,
+            "name": "/Users/bijakonwarcharkuoth/Desktop/CarEase /BackEnd/logs/error-2026-03-13.log",
+            "hash": "2e55fc2fabdd151ed772a7733dc0a0de84d8f9af4d34c43310da321ba9748c20"
+        }
+    ],
+    "hashType": "sha256"
+}

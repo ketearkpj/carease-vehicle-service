@@ -1,6 +1,7 @@
 // ===== src/controllers/adminController.js =====
 const bcrypt = require('bcryptjs');
 const { Op, fn, col, literal, QueryTypes } = require('sequelize');
+const { sequelize } = require('../Config/sequelize');
 const { Admin, User, Booking, Payment, Vehicle, Delivery, AuditLog, SystemSettings, Notification } = require('../Models');
 const AppError = require('../Utils/AppError');
 const catchAsync = require('../Utils/CatchAsync');
@@ -853,13 +854,28 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
 
   const [bookings, payments, subscriptions, inquiries] = await Promise.all([
     Booking.findAll({
-      attributes: ['id', 'bookingNumber', 'serviceType', 'status', 'customerFirstName', 'customerLastName', 'createdAt'],
-      order: [['createdAt', 'DESC']],
+      attributes: [
+        'id',
+        'bookingNumber',
+        'serviceType',
+        'status',
+        'customerFirstName',
+        'customerLastName',
+        [col('created_at'), 'createdAt']
+      ],
+      order: [['created_at', 'DESC']],
       limit
     }),
     Payment.findAll({
-      attributes: ['id', 'paymentNumber', 'amount', 'method', 'status', 'createdAt'],
-      order: [['createdAt', 'DESC']],
+      attributes: [
+        'id',
+        'paymentNumber',
+        'amount',
+        'method',
+        'status',
+        [col('created_at'), 'createdAt']
+      ],
+      order: [['created_at', 'DESC']],
       limit
     }),
     sequelize.query(
@@ -888,7 +904,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
     title: 'New booking',
     message: `Booking ${item.bookingNumber} created for ${item.serviceType}.`,
     status: item.status,
-    createdAt: item.createdAt
+    createdAt: item.createdAt || item.dataValues?.createdAt || item.get?.('createdAt') || item.created_at
   }));
 
   const paymentNotifications = payments.map((item) => ({
@@ -897,7 +913,7 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
     title: 'Payment update',
     message: `Payment ${item.paymentNumber} is ${item.status} (${item.method}, ${item.amount}).`,
     status: item.status,
-    createdAt: item.createdAt
+    createdAt: item.createdAt || item.dataValues?.createdAt || item.get?.('createdAt') || item.created_at
   }));
 
   const subscriptionNotifications = subscriptions.map((item) => ({

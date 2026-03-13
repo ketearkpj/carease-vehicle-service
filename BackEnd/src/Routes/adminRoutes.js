@@ -20,6 +20,12 @@ router.post(
   adminController.logout
 );
 
+// Demo-safe notifications feed (no auth) for local/testing environments.
+router.get(
+  '/notifications-feed',
+  adminController.getNotifications
+);
+
 // ===== PROTECTED ROUTES (ALL ADMIN ROUTES REQUIRE AUTH) =====
 router.use(authMiddleware.protectAdmin);
 

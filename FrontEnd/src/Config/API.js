@@ -190,6 +190,7 @@ export const API_ENDPOINTS = {
   EMAIL: {
     SEND: '/email/send',
     NEWSLETTER_SUBSCRIBE: '/email/newsletter/subscribe',
+    NEWSLETTER_UNSUBSCRIBE: '/email/newsletter/unsubscribe',
     CONTACT: '/email/contact',
     FAILED: '/email/failed',
     STATUS: (id) => `/email/status/${id}`

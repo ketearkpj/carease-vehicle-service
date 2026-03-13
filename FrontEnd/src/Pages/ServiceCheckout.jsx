@@ -144,6 +144,15 @@ const defaultPaymentDetails = {
   squareCustomer: ''
 };
 
+const normalizeKenyanPhone = (phone) => {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('254') && digits.length >= 12) return digits.slice(0, 12);
+  if (digits.startsWith('0') && digits.length >= 10) return `254${digits.slice(1, 10)}`;
+  if (digits.length === 9) return `254${digits}`;
+  return digits;
+};
+
 const ServiceCheckout = ({ serviceKey }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -323,7 +332,12 @@ const ServiceCheckout = ({ serviceKey }) => {
     if (targetStep === 3) {
       if (form.paymentChannel === 'online') {
         if (!form.paymentMethod) return 'Select online payment method.';
-        if (form.paymentMethod === 'mpesa' && !paymentDetails.mpesaPhone) return 'Enter M-PESA phone number (2547XXXXXXXX).';
+        if (form.paymentMethod === 'mpesa') {
+          const normalized = normalizeKenyanPhone(paymentDetails.mpesaPhone);
+          if (!/^254[0-9]{9}$/.test(normalized)) {
+            return 'Enter valid M-PESA phone number (e.g. 0758... or 2547...).';
+          }
+        }
         if (form.paymentMethod === 'paypal' && !paymentDetails.paypalEmail) return 'Enter PayPal email.';
         if (form.paymentMethod === 'card') {
           if (!paymentDetails.cardName || !paymentDetails.cardNumber || !paymentDetails.cardExpiry || !paymentDetails.cardCvv) {
@@ -441,7 +455,7 @@ const ServiceCheckout = ({ serviceKey }) => {
         paymentMeta: {
           channel: form.paymentChannel,
           method: form.paymentChannel === 'online' ? form.paymentMethod : form.onDeliveryMethod,
-          phoneNumber: form.paymentMethod === 'mpesa' ? paymentDetails.mpesaPhone : undefined,
+          phoneNumber: form.paymentMethod === 'mpesa' ? normalizeKenyanPhone(paymentDetails.mpesaPhone) : undefined,
           paypalEmail: form.paymentMethod === 'paypal' ? paymentDetails.paypalEmail : undefined,
           squareCustomer: form.paymentMethod === 'square' ? paymentDetails.squareCustomer : undefined,
           status: form.paymentChannel === 'online' ? 'processing' : 'pending',
@@ -451,6 +465,9 @@ const ServiceCheckout = ({ serviceKey }) => {
 
       const created = await createNewBooking(payload);
       const bookingId = created?.id || created?.booking?.id;
+      const isLocalFallbackBooking =
+        String(bookingId || '').startsWith('local-') ||
+        String(created?.message || '').toLowerCase().includes('local fallback');
 
       if (!bookingId) {
         throw new Error('Booking created but ID missing. Please contact support.');
@@ -459,12 +476,14 @@ const ServiceCheckout = ({ serviceKey }) => {
       if (form.paymentChannel === 'online') {
         const gateway = gatewayFromMethod(form.paymentMethod);
         const paymentPayload = {
-          bookingId,
+          bookingId: isLocalFallbackBooking ? null : bookingId,
           amount: Number(totalAmount.toFixed(2)),
           currency: 'KES',
           customerEmail: form.customerInfo.email,
           customerName: `${form.customerInfo.firstName} ${form.customerInfo.lastName}`.trim(),
-          phoneNumber: form.paymentMethod === 'mpesa' ? paymentDetails.mpesaPhone : form.customerInfo.phone,
+          phoneNumber: form.paymentMethod === 'mpesa'
+            ? normalizeKenyanPhone(paymentDetails.mpesaPhone)
+            : normalizeKenyanPhone(form.customerInfo.phone),
           paymentMethod: form.paymentMethod,
           paymentMethodId: form.paymentMethod === 'square' ? paymentDetails.squareCustomer : undefined,
           billingDetails: {
@@ -482,14 +501,17 @@ const ServiceCheckout = ({ serviceKey }) => {
         };
 
         const paymentResult = await processNewPayment(paymentPayload, gateway);
-        if (!paymentResult?.success) {
+        const isMpesaPending = form.paymentMethod === 'mpesa' && paymentResult?.status === 'processing';
+        if (!paymentResult?.success && !isMpesaPending) {
           throw new Error('Online payment not completed. Confirm the prompt and retry.');
         }
       }
 
       addNotification(
         form.paymentChannel === 'online'
-          ? 'Payment completed and service confirmed successfully.'
+          ? (form.paymentMethod === 'mpesa'
+              ? 'M-PESA request sent. Service is created and payment is processing.'
+              : 'Payment completed and service confirmed successfully.')
           : 'Service confirmed. Payment is pending on delivery.',
         'success'
       );

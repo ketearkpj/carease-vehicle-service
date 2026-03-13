@@ -68,6 +68,13 @@ const AdminSidebar = ({
           icon: '💰',
           description: 'Transaction management',
           badge: '3'
+        },
+        {
+          id: 'notifications',
+          path: ROUTES.ADMIN_NOTIFICATIONS,
+          label: 'Notifications',
+          icon: '🔔',
+          description: 'Operational alerts'
         }
       ]
     },

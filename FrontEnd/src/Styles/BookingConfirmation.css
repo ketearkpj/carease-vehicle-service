@@ -299,6 +299,25 @@
   border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
+.status-pill.processing {
+  background: rgba(59, 130, 246, 0.16);
+  color: #cde0ff;
+  border: 1px solid rgba(59, 130, 246, 0.45);
+}
+
+.status-pill.danger {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.payment-status-note {
+  margin: -6px 0 var(--space-3);
+  color: var(--silver-dark);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 .summary-row {
   display: flex;
   justify-content: space-between;

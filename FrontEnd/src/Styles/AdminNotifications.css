@@ -1,0 +1,109 @@
+.admin-notifications-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.notif-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.notif-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.notif-filters button {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
+  border-radius: 999px;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+}
+
+.notif-filters button.active {
+  background: rgba(212, 175, 55, 0.16);
+  color: #f5d742;
+}
+
+.notif-list-card {
+  padding: 1rem;
+}
+
+.notif-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.notif-item {
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.45);
+  padding: 0.85rem;
+}
+
+.notif-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
+}
+
+.notif-tag {
+  font-size: 0.75rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  border: 1px solid transparent;
+}
+
+.notif-booking {
+  color: #93c5fd;
+  border-color: rgba(147, 197, 253, 0.45);
+}
+
+.notif-payment {
+  color: #86efac;
+  border-color: rgba(134, 239, 172, 0.45);
+}
+
+.notif-subscription {
+  color: #fcd34d;
+  border-color: rgba(252, 211, 77, 0.45);
+}
+
+.notif-inquiry {
+  color: #fda4af;
+  border-color: rgba(253, 164, 175, 0.45);
+}
+
+.notif-system {
+  color: #cbd5e1;
+  border-color: rgba(203, 213, 225, 0.45);
+}
+
+.notif-time {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.notif-main h3 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.notif-main p {
+  margin: 0;
+  color: #cbd5e1;
+}
+
+.notif-empty {
+  color: #94a3b8;
+  text-align: center;
+  padding: 1rem 0.5rem;
+}

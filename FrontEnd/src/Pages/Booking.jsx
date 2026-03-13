@@ -16,7 +16,6 @@ import LoadingSpinner from '../Components/Common/LoadingSpinner';
 // Services
 import { checkAvailability } from '../Services/BookingService';
 import { getServicePricing } from '../Services/Service.Service';
-import { sendBookingConfirmation } from '../Services/EmailService';
 import { getBookingDraft, saveBookingDraft, clearBookingDraft } from '../Utils/bookingFlow';
 
 // Hooks
@@ -67,6 +66,7 @@ const Booking = () => {
       zipCode: '',
       notes: ''
     },
+    paymentChannel: null,
     paymentMethod: null
   });
   const [paymentDetails, setPaymentDetails] = useState({
@@ -103,6 +103,41 @@ const Booking = () => {
   const { processNewPayment } = usePayment();
 
   const formatCurrency = (amount) => `KSh ${Number(amount || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const isOnlinePayment = bookingData.paymentChannel === 'online';
+  const paymentMethods = [
+    { id: 'card', label: '💳 Credit/Debit Card', hint: 'Visa, Mastercard, Amex' },
+    { id: 'paypal', label: '🅿️ PayPal', hint: 'Fast & secure' },
+    { id: 'mpesa', label: '📱 M-PESA', hint: 'Mobile money' },
+    { id: 'square', label: '⬜ Square', hint: 'Digital wallet' }
+  ];
+  const serviceLabels = {
+    [SERVICE_TYPES.RENTAL]: 'Rental',
+    [SERVICE_TYPES.CAR_WASH]: 'Car Wash',
+    [SERVICE_TYPES.REPAIR]: 'Repair',
+    [SERVICE_TYPES.SALES]: 'Sales'
+  };
+  const locationLabels = {
+    'roysambu-trm': 'Roysambu (Next to TRM)',
+    westlands: 'Westlands',
+    'mombasa-road': 'Mombasa Road',
+    'home-delivery': 'Home Delivery - Nairobi Metro'
+  };
+  const deliveryModeLabels = {
+    pickup: 'Pick up at location',
+    delivery: 'Home delivery',
+    mobile: 'Mobile service'
+  };
+  const paymentChannelLabels = {
+    on_delivery: 'Pay on delivery',
+    online: 'Online payment'
+  };
+  const paymentMethodLabels = {
+    card: 'Card',
+    paypal: 'PayPal',
+    mpesa: 'M-PESA',
+    square: 'Square',
+    cash_on_delivery: 'Cash on delivery'
+  };
 
   useEffect(() => {
     if (!bookingPrefill || Object.keys(bookingPrefill).length === 0) return;
@@ -328,6 +363,7 @@ const Booking = () => {
   const validatePaymentDetails = () => {
     const newErrors = {};
     const paymentErrorKeys = [
+      'paymentChannel',
       'paymentMethod',
       'cardName',
       'cardNumber',
@@ -338,8 +374,23 @@ const Booking = () => {
       'squareCustomer'
     ];
 
+    if (!bookingData.paymentChannel) {
+      newErrors.paymentChannel = 'Please select how you want to settle payment';
+      setErrors((prev) => ({ ...prev, ...newErrors }));
+      return false;
+    }
+
+    if (!isOnlinePayment) {
+      setErrors((prev) => {
+        const remaining = { ...prev };
+        paymentErrorKeys.forEach((key) => delete remaining[key]);
+        return remaining;
+      });
+      return true;
+    }
+
     if (!bookingData.paymentMethod) {
-      newErrors.paymentMethod = 'Please select a payment method';
+      newErrors.paymentMethod = 'Please select an online payment method';
       setErrors((prev) => ({ ...prev, ...newErrors }));
       return false;
     }
@@ -529,39 +580,45 @@ const Booking = () => {
   const handlePaymentSuccess = async (paymentResult) => {
     setLoading(true);
     try {
-      if (bookingData.paymentMethod === 'mpesa') {
+      if (isOnlinePayment && bookingData.paymentMethod === 'mpesa') {
         setPaymentHint(`M-PESA prompt sent to ${normalizeMpesaPhone(paymentDetails.mpesaPhone)}. Approve on your phone to continue.`);
       }
 
       const paymentPayload = getPaymentPayload();
-      const gateway = bookingData.paymentMethod === 'card' ? 'stripe' : bookingData.paymentMethod;
-      const payment = paymentResult || await processNewPayment({
-        bookingId: null,
-        amount: pricing.total,
-        currency: 'KES',
-        customerEmail: paymentPayload.customerEmail || bookingData.customerInfo?.email,
-        customerName: `${bookingData.customerInfo?.firstName || ''} ${bookingData.customerInfo?.lastName || ''}`.trim(),
-        paymentMethod: bookingData.paymentMethod,
-        ...paymentPayload
-      }, gateway || 'stripe');
+      let payment = null;
 
-      if (!payment?.success || payment?.status !== 'completed') {
-        throw new Error(
-          bookingData.paymentMethod === 'mpesa'
-            ? 'Payment is still pending. Complete the M-PESA prompt on your phone, then try again.'
-            : 'Payment is not completed yet. Please complete the payment authorization and retry.'
-        );
+      if (isOnlinePayment) {
+        const gateway = bookingData.paymentMethod === 'card' ? 'stripe' : bookingData.paymentMethod;
+        payment = paymentResult || await processNewPayment({
+          bookingId: null,
+          amount: pricing.total,
+          currency: 'KES',
+          customerEmail: paymentPayload.customerEmail || bookingData.customerInfo?.email,
+          customerName: `${bookingData.customerInfo?.firstName || ''} ${bookingData.customerInfo?.lastName || ''}`.trim(),
+          paymentMethod: bookingData.paymentMethod,
+          ...paymentPayload
+        }, gateway || 'stripe');
+
+        if (!payment?.success || payment?.status !== 'completed') {
+          throw new Error(
+            bookingData.paymentMethod === 'mpesa'
+              ? 'Payment is still pending. Complete the M-PESA prompt on your phone, then try again.'
+              : 'Payment is not completed yet. Please complete the payment authorization and retry.'
+          );
+        }
       }
 
       // Create final booking
       const finalBookingData = {
         ...bookingData,
         inquiryType: bookingData.inquiryType || queryParams.get('inquiryType') || null,
-        paymentId: payment?.transactionId || `txn_${Date.now()}`,
+        paymentId: isOnlinePayment ? (payment?.transactionId || `txn_${Date.now()}`) : null,
         totalAmount: pricing.total,
         status: 'confirmed',
         paymentMeta: {
-          method: bookingData.paymentMethod,
+          channel: bookingData.paymentChannel,
+          method: isOnlinePayment ? bookingData.paymentMethod : 'cash_on_delivery',
+          paymentStatus: isOnlinePayment ? 'completed' : 'due_on_delivery',
           phoneNumber: bookingData.paymentMethod === 'mpesa' ? normalizeMpesaPhone(paymentDetails.mpesaPhone) : undefined,
           paypalEmail: bookingData.paymentMethod === 'paypal' ? paymentDetails.paypalEmail.trim() : undefined,
           cardLast4: bookingData.paymentMethod === 'card' ? paymentDetails.cardNumber.replace(/\D/g, '').slice(-4) : undefined,
@@ -572,18 +629,10 @@ const Booking = () => {
       const result = await createNewBooking(finalBookingData);
 
       if (result?.success && result?.booking) {
-        addNotification('Booking confirmed! Check your email for details.', 'success');
-        if (bookingData.customerInfo?.email) {
-          await sendBookingConfirmation({
-            customerEmail: bookingData.customerInfo.email,
-            customerName: `${bookingData.customerInfo.firstName || ''} ${bookingData.customerInfo.lastName || ''}`.trim(),
-            bookingId: result.booking.id,
-            serviceType: bookingData.serviceType,
-            date: bookingData.startDate,
-            time: bookingData.timeSlot,
-            amount: pricing.total
-          });
-        }
+        const successMessage = isOnlinePayment
+          ? 'Booking confirmed and payment received. Confirmation email sent.'
+          : 'Booking confirmed. Pay on delivery is selected and confirmation email has been sent.';
+        addNotification(successMessage, 'success');
         navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${result.booking.id}`);
         clearBookingDraft();
       }
@@ -964,7 +1013,7 @@ const Booking = () => {
                           <div className="review-card">
                             <div className="detail-row">
                               <span className="label">Service Type:</span>
-                              <span className="value">{bookingData.serviceType?.toUpperCase() || 'Not selected'}</span>
+                              <span className="value">{serviceLabels[bookingData.serviceType] || bookingData.serviceType || 'Not selected'}</span>
                             </div>
                             {bookingData.vehicleName && (
                               <div className="detail-row">
@@ -999,13 +1048,31 @@ const Booking = () => {
                             {bookingData.pickupLocation && (
                               <div className="detail-row">
                                 <span className="label">Location:</span>
-                                <span className="value">{bookingData.pickupLocation}</span>
+                                <span className="value">{locationLabels[bookingData.pickupLocation] || bookingData.pickupLocation}</span>
                               </div>
                             )}
                             <div className="detail-row">
                               <span className="label">Delivery Mode:</span>
-                              <span className="value">{bookingData.deliveryMode}</span>
+                              <span className="value">{deliveryModeLabels[bookingData.deliveryMode] || bookingData.deliveryMode}</span>
                             </div>
+                            {bookingData.paymentChannel && (
+                              <div className="detail-row">
+                                <span className="label">Payment Mode:</span>
+                                <span className="value">{paymentChannelLabels[bookingData.paymentChannel] || bookingData.paymentChannel}</span>
+                              </div>
+                            )}
+                            {isOnlinePayment && bookingData.paymentMethod && (
+                              <div className="detail-row">
+                                <span className="label">Payment Method:</span>
+                                <span className="value">{paymentMethodLabels[bookingData.paymentMethod] || bookingData.paymentMethod}</span>
+                              </div>
+                            )}
+                            {bookingData.inquiryType && (
+                              <div className="detail-row">
+                                <span className="label">Request Type:</span>
+                                <span className="value">{bookingData.inquiryType.replace(/_/g, ' ')}</span>
+                              </div>
+                            )}
                             {bookingData.specialRequests && (
                               <div className="detail-row">
                                 <span className="label">Special Requests:</span>
@@ -1105,36 +1172,73 @@ const Booking = () => {
                   <div className="booking-main">
                     <div className="booking-step animate-fade-in">
                       <h2 className="step-heading">Complete Payment</h2>
-                      <p className="step-description">Choose your preferred payment method</p>
+                      <p className="step-description">Choose pay on delivery or online payment, then complete the final step.</p>
 
-                      {/* Payment Method Selection */}
-                      <div className="payment-methods">
-                        {[
-                          { id: 'card', label: '💳 Credit/Debit Card', hint: 'Visa, Mastercard, Amex' },
-                          { id: 'paypal', label: '🅿️ PayPal', hint: 'Fast & secure' },
-                          { id: 'mpesa', label: '📱 M-PESA', hint: 'Mobile money' },
-                          { id: 'square', label: '⬜ Square', hint: 'Digital wallet' }
-                        ].map(method => (
-                          <label key={method.id} className="payment-method-option">
+                      <div className="payment-credentials">
+                        <h3 className="payment-credentials-title">Payment Mode</h3>
+                        <div className="payment-methods">
+                          <label className="payment-method-option">
                             <input
                               type="radio"
-                              name="paymentMethod"
-                              value={method.id}
-                              checked={bookingData.paymentMethod === method.id}
+                              name="paymentChannel"
+                              value="on_delivery"
+                              checked={bookingData.paymentChannel === 'on_delivery'}
                               onChange={(e) => {
                                 setPaymentHint('');
-                                handleFieldChange('paymentMethod', e.target.value);
+                                handleFieldChange('paymentChannel', e.target.value);
+                                handleFieldChange('paymentMethod', null);
                               }}
                               required
                             />
-                            <span className="method-label">{method.label}</span>
-                            <span className="method-hint">{method.hint}</span>
+                            <span className="method-label">💵 Pay on Delivery</span>
+                            <span className="method-hint">Confirm now and settle when the service is delivered</span>
                           </label>
-                        ))}
+                          <label className="payment-method-option">
+                            <input
+                              type="radio"
+                              name="paymentChannel"
+                              value="online"
+                              checked={bookingData.paymentChannel === 'online'}
+                              onChange={(e) => {
+                                setPaymentHint('');
+                                handleFieldChange('paymentChannel', e.target.value);
+                              }}
+                              required
+                            />
+                            <span className="method-label">🌐 Online Payment</span>
+                            <span className="method-hint">Pay now using M-PESA, card, PayPal, or Square</span>
+                          </label>
+                        </div>
                       </div>
-                      {errors.paymentMethod && <div className="error-message show">{errors.paymentMethod}</div>}
+                      {errors.paymentChannel && <div className="error-message show">{errors.paymentChannel}</div>}
 
-                      {bookingData.paymentMethod === 'card' && (
+                      {/* Payment Method Selection */}
+                      {isOnlinePayment && (
+                        <>
+                          <div className="payment-methods">
+                            {paymentMethods.map(method => (
+                              <label key={method.id} className="payment-method-option">
+                                <input
+                                  type="radio"
+                                  name="paymentMethod"
+                                  value={method.id}
+                                  checked={bookingData.paymentMethod === method.id}
+                                  onChange={(e) => {
+                                    setPaymentHint('');
+                                    handleFieldChange('paymentMethod', e.target.value);
+                                  }}
+                                  required
+                                />
+                                <span className="method-label">{method.label}</span>
+                                <span className="method-hint">{method.hint}</span>
+                              </label>
+                            ))}
+                          </div>
+                          {errors.paymentMethod && <div className="error-message show">{errors.paymentMethod}</div>}
+                        </>
+                      )}
+
+                      {isOnlinePayment && bookingData.paymentMethod === 'card' && (
                         <div className="payment-credentials">
                           <h3 className="payment-credentials-title">Card Details</h3>
                           <div className="form-group">
@@ -1179,7 +1283,7 @@ const Booking = () => {
                         </div>
                       )}
 
-                      {bookingData.paymentMethod === 'paypal' && (
+                      {isOnlinePayment && bookingData.paymentMethod === 'paypal' && (
                         <div className="payment-credentials">
                           <h3 className="payment-credentials-title">PayPal Account</h3>
                           <div className="form-group">
@@ -1195,7 +1299,7 @@ const Booking = () => {
                         </div>
                       )}
 
-                      {bookingData.paymentMethod === 'mpesa' && (
+                      {isOnlinePayment && bookingData.paymentMethod === 'mpesa' && (
                         <div className="payment-credentials">
                           <h3 className="payment-credentials-title">M-PESA STK Push</h3>
                           <div className="form-group">
@@ -1214,7 +1318,7 @@ const Booking = () => {
                         </div>
                       )}
 
-                      {bookingData.paymentMethod === 'square' && (
+                      {isOnlinePayment && bookingData.paymentMethod === 'square' && (
                         <div className="payment-credentials">
                           <h3 className="payment-credentials-title">Square Checkout</h3>
                           <div className="form-group">
@@ -1248,7 +1352,9 @@ const Booking = () => {
 
                       {/* Security Message */}
                       <div className="security-message">
-                        🔒 Your payment is secure and encrypted. We never store your full card details.
+                        {isOnlinePayment
+                          ? '🔒 Your payment is secure and encrypted. We never store your full card details.'
+                          : '✅ You selected pay on delivery. We will confirm your request and send service details by email.'}
                       </div>
                       {paymentHint && <div className="payment-hint">{paymentHint}</div>}
                     </div>
@@ -1264,7 +1370,7 @@ const Booking = () => {
                       {bookingData.serviceType && (
                         <div className="summary-item">
                           <span className="summary-label">Service:</span>
-                          <span className="summary-value">{bookingData.serviceType}</span>
+                          <span className="summary-value">{serviceLabels[bookingData.serviceType] || bookingData.serviceType}</span>
                         </div>
                       )}
 
@@ -1279,6 +1385,20 @@ const Booking = () => {
                         <div className="summary-item">
                           <span className="summary-label">Time:</span>
                           <span className="summary-value">{bookingData.timeSlot}</span>
+                        </div>
+                      )}
+
+                      {bookingData.pickupLocation && (
+                        <div className="summary-item">
+                          <span className="summary-label">Location:</span>
+                          <span className="summary-value">{locationLabels[bookingData.pickupLocation] || bookingData.pickupLocation}</span>
+                        </div>
+                      )}
+
+                      {bookingData.paymentChannel && (
+                        <div className="summary-item">
+                          <span className="summary-label">Payment:</span>
+                          <span className="summary-value">{paymentChannelLabels[bookingData.paymentChannel] || bookingData.paymentChannel}</span>
                         </div>
                       )}
 
@@ -1354,7 +1474,7 @@ const Booking = () => {
                     variant="success"
                     onClick={handleCompleteBooking}
                     size="lg"
-                    disabled={!bookingData.paymentMethod || loading || !agreedToTerms}
+                    disabled={loading || !agreedToTerms || !bookingData.paymentChannel || (isOnlinePayment && !bookingData.paymentMethod)}
                   >
                     {loading ? 'Processing...' : 'Complete Booking'}
                   </Button>
