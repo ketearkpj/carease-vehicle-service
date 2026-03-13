@@ -227,15 +227,30 @@
 }
 
 .vehicles-container.list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: var(--space-4);
 }
 
 .vehicles-container.list .vehicle-card {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  height: auto;
+  grid-template-columns: minmax(320px, 38%) minmax(0, 1fr);
+  width: 100%;
+  min-height: 320px;
+  height: 100%;
+}
+
+.vehicles-container.list .vehicle-wrapper {
+  width: 100%;
+}
+
+.vehicles-container.list .vehicle-image-section {
+  height: 100%;
+  min-height: 320px;
+}
+
+.vehicles-container.list .vehicle-content {
+  padding: var(--space-6);
 }
 
 .vehicle-wrapper {
@@ -714,6 +729,11 @@
 
   .vehicles-container.list .vehicle-card {
     grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .vehicles-container.list .vehicle-image-section {
+    min-height: 260px;
   }
 
   .filter-group {
