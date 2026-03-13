@@ -363,9 +363,9 @@ const About = () => {
                   Contact Us
                 </Button>
               </Link>
-              <Link to={ROUTES.BOOKING}>
+              <Link to={ROUTES.RENTALS_FLOW}>
                 <Button variant="outline" size="lg">
-                  Book Now
+                  Start Service Flow
                 </Button>
               </Link>
             </div>

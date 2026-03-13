@@ -1,11 +1,8 @@
 // ===== src/Components/Layout/Footer.jsx =====
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { APP_CONFIG, COMPANY_INFO } from '../../Utils/constants';
 import { ROUTES } from '../../Config/Routes';
-import Button from '../Common/Button';
-import Input from '../Common/Input';
-import { subscribeToNewsletter } from '../../Services/EmailService';
+import { subscribeToNewsletter, unsubscribeFromNewsletter } from '../../Services/EmailService';
 import '../../Styles/Footer.css';
 
 const Footer = () => {
@@ -55,7 +52,7 @@ const Footer = () => {
     { path: ROUTES.SERVICES, label: 'Services' },
     { path: ROUTES.ABOUT, label: 'About Us' },
     { path: ROUTES.CONTACT, label: 'Contact' },
-    { path: ROUTES.BOOKING, label: 'Book Now' }
+    { path: ROUTES.RENTALS_FLOW, label: 'Start Rental Flow' }
   ];
 
   const supportLinks = [
@@ -73,12 +70,43 @@ const Footer = () => {
     setSubscribeStatus(null);
 
     try {
-      await subscribeToNewsletter(email);
-      setSubscribeStatus('success');
+      const result = await subscribeToNewsletter(email);
+      setSubscribeStatus({
+        type: 'success',
+        message: result?.message || 'Thank you for subscribing!'
+      });
       setEmail('');
       setTimeout(() => setSubscribeStatus(null), 5000);
     } catch (error) {
-      setSubscribeStatus('error');
+      setSubscribeStatus({
+        type: 'error',
+        message: error?.message || 'Subscription failed'
+      });
+      setTimeout(() => setSubscribeStatus(null), 5000);
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
+
+  const handleNewsletterUnsubscribe = async () => {
+    if (!email) return;
+
+    setIsSubscribing(true);
+    setSubscribeStatus(null);
+
+    try {
+      const result = await unsubscribeFromNewsletter(email);
+      setSubscribeStatus({
+        type: 'success',
+        message: result?.message || 'Unsubscribed successfully'
+      });
+      setEmail('');
+      setTimeout(() => setSubscribeStatus(null), 5000);
+    } catch (error) {
+      setSubscribeStatus({
+        type: 'error',
+        message: error?.message || 'Unsubscribe failed'
+      });
       setTimeout(() => setSubscribeStatus(null), 5000);
     } finally {
       setIsSubscribing(false);
@@ -227,31 +255,41 @@ const Footer = () => {
                   />
                   <span className="input-focus-glow"></span>
                 </div>
-                <button 
-                  type="submit" 
-                  className="newsletter-btn"
-                  disabled={isSubscribing || !email}
-                >
-                  {isSubscribing ? (
-                    <span className="btn-loader"></span>
-                  ) : (
-                    <>
-                      <span className="btn-text">Subscribe</span>
-                      <span className="btn-arrow">→</span>
-                    </>
-                  )}
-                </button>
+                <div className="newsletter-actions">
+                  <button 
+                    type="submit" 
+                    className="newsletter-btn"
+                    disabled={isSubscribing || !email}
+                  >
+                    {isSubscribing ? (
+                      <span className="btn-loader"></span>
+                    ) : (
+                      <>
+                        <span className="btn-text">Subscribe</span>
+                        <span className="btn-arrow">→</span>
+                      </>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className="newsletter-btn newsletter-btn-secondary"
+                    disabled={isSubscribing || !email}
+                    onClick={handleNewsletterUnsubscribe}
+                  >
+                    <span className="btn-text">Unsubscribe</span>
+                  </button>
+                </div>
               </form>
-              {subscribeStatus === 'success' && (
+              {subscribeStatus?.type === 'success' && (
                 <div className="newsletter-message success">
                   <span className="message-icon">✓</span>
-                  <span>Thank you for subscribing!</span>
+                  <span>{subscribeStatus.message}</span>
                 </div>
               )}
-              {subscribeStatus === 'error' && (
+              {subscribeStatus?.type === 'error' && (
                 <div className="newsletter-message error">
                   <span className="message-icon">⚠️</span>
-                  <span>Subscription failed</span>
+                  <span>{subscribeStatus.message}</span>
                 </div>
               )}
             </div>

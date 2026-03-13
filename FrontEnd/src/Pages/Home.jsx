@@ -623,9 +623,9 @@ const Home = () => {
             <h2>Begin Your Journey</h2>
             <p>Experience the difference of true automotive luxury.</p>
             <div className="final-cta-actions">
-              <Link to={ROUTES.BOOKING}>
+              <Link to={ROUTES.RENTALS_FLOW}>
                 <Button variant="primary" size="lg">
-                  Book Now
+                  Start Service Flow
                 </Button>
               </Link>
               <Link to={ROUTES.CONTACT}>

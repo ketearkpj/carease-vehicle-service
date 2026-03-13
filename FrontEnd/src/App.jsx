@@ -21,6 +21,7 @@ import Rentals from './Pages/Rentals';
 import CarWash from './Pages/CarWash';
 import Repairs from './Pages/Repairs';
 import Sales from './Pages/Sales';
+import ServiceCheckout from './Pages/ServiceCheckout';
 import Booking from './Pages/Booking';
 import Checkout from './Pages/Checkout';
 import BookingConfirmation from './Pages/BookingConfirmation';
@@ -137,9 +138,13 @@ function App() {
                     
                     {/* ===== SERVICE ROUTES ===== */}
                     <Route path={ROUTES.RENTALS} element={<Rentals />} />
+                    <Route path={ROUTES.RENTALS_FLOW} element={<ServiceCheckout serviceKey="rentals" />} />
                     <Route path={ROUTES.CAR_WASH} element={<CarWash />} />
+                    <Route path={ROUTES.CAR_WASH_FLOW} element={<ServiceCheckout serviceKey="car-wash" />} />
                     <Route path={ROUTES.REPAIRS} element={<Repairs />} />
+                    <Route path={ROUTES.REPAIRS_FLOW} element={<ServiceCheckout serviceKey="repairs" />} />
                     <Route path={ROUTES.SALES} element={<Sales />} />
+                    <Route path={ROUTES.SALES_FLOW} element={<ServiceCheckout serviceKey="sales" />} />
                     
                     {/* ===== BOOKING ROUTES ===== */}
                     <Route path={ROUTES.BOOKING} element={<Booking />} />

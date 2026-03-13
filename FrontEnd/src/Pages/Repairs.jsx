@@ -33,6 +33,7 @@ const Repairs = () => {
   const [loading, setLoading] = useState(true);
   const [bookingStep, setBookingStep] = useState(1);
   const [formData, setFormData] = useState({
+    intent: 'book',
     service: '',
     vehicleMake: '',
     vehicleModel: '',
@@ -137,6 +138,7 @@ const Repairs = () => {
   const handleBookingSubmit = () => {
     const draft = {
       serviceType: 'repair',
+      inquiryType: formData.intent,
       packageId: selectedService?.id || formData.service,
       packageName: selectedService?.name || '',
       listedPrice: Number(estimatedPrice || selectedService?.price || 0),
@@ -147,18 +149,15 @@ const Repairs = () => {
       specialRequests: formData.description
     };
     saveBookingDraft(draft);
-    const params = new URLSearchParams({
-      service: 'repair',
-      startDate: formData.date,
-      endDate: formData.date,
-      time: formData.time,
-      packageId: formData.service || '',
-      location: formData.location || ''
-    });
-    navigate(`${ROUTES.BOOKING}?${params.toString()}`, {
+    navigate(ROUTES.REPAIRS_FLOW, {
       state: { bookingPrefill: draft }
     });
-    addNotification('Continue to payment to confirm this repair booking.', 'info');
+    addNotification(
+      formData.intent === 'buy'
+        ? 'Continue to complete purchase details and payment.'
+        : 'Continue to complete repair booking and payment.',
+      'info'
+    );
   };
 
   const vehicleTypes = [
@@ -233,6 +232,32 @@ const Repairs = () => {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="why-choose-section">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">WHAT WE REPAIR</span>
+            <h2 className="section-title">Service Coverage <span className="gold-text">Across Systems</span></h2>
+          </div>
+          <div className="benefits-grid">
+            <div className="benefit-card animate-fade-up animate-delay-1">
+              <div className="benefit-icon">🛠️</div>
+              <h3 className="benefit-title">Engine & Transmission</h3>
+              <p className="benefit-description">Diagnostics, tune-ups, gearbox service, and drivetrain repair.</p>
+            </div>
+            <div className="benefit-card animate-fade-up animate-delay-2">
+              <div className="benefit-icon">🧠</div>
+              <h3 className="benefit-title">Electrical & Electronics</h3>
+              <p className="benefit-description">Battery systems, ECU faults, sensors, and wiring issues.</p>
+            </div>
+            <div className="benefit-card animate-fade-up animate-delay-3">
+              <div className="benefit-icon">🛞</div>
+              <h3 className="benefit-title">Suspension & Brakes</h3>
+              <p className="benefit-description">Shock absorbers, alignment, brake service, and safety checks.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -439,6 +464,20 @@ const Repairs = () => {
                   </p>
 
                   <div className="form-row">
+                    <Select
+                      label="Proceed As"
+                      name="intent"
+                      value={formData.intent}
+                      onChange={handleInputChange}
+                      options={[
+                        { value: 'book', label: 'Book Repair Appointment' },
+                        { value: 'buy', label: 'Buy Repair Plan / Service' }
+                      ]}
+                      icon="🛒"
+                    />
+                  </div>
+
+                  <div className="form-row">
                     <label className="textarea-label">Description of Issue</label>
                     <textarea
                       name="description"
@@ -480,7 +519,10 @@ const Repairs = () => {
                       onClick={handleBookingSubmit}
                       disabled={!formData.description}
                     >
-                      Continue to Payment
+                      {formData.intent === 'buy' ? 'Continue to Buy Flow' : 'Continue to Booking Flow'}
+                    </Button>
+                    <Button variant="outline" onClick={() => { window.location.href = 'tel:+254758458358'; }}>
+                      Contact Service Desk
                     </Button>
                   </div>
                 </div>
@@ -497,7 +539,7 @@ const Repairs = () => {
                     <Link to={ROUTES.HOME}>
                       <Button variant="outline">Return Home</Button>
                     </Link>
-                    <Link to={ROUTES.BOOKING}>
+                    <Link to={ROUTES.REPAIRS_FLOW}>
                       <Button variant="primary">View My Bookings</Button>
                     </Link>
                   </div>

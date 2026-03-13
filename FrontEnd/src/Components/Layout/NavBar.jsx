@@ -5,7 +5,6 @@ import { Link, useLocation } from 'react-router-dom';
 // Core imports
 import { ROUTES } from '../../Config/Routes';
 import { APP_CONFIG } from '../../Utils/constants';
-import Button from '../Common/Button';
 import logo from '../../assets/CarEaselogo.jpeg';
 
 // Style imports
@@ -219,11 +218,6 @@ const NavBar = () => {
             <Link to={ROUTES.ADMIN_LOGIN} className="admin-link">
               Admin
             </Link>
-            <Link to={ROUTES.BOOKING}>
-              <Button variant="primary" size="md">
-                Book Now
-              </Button>
-            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -316,9 +310,6 @@ const NavBar = () => {
             <div className="mobile-actions">
               <Link to={ROUTES.ADMIN_LOGIN} className="mobile-admin-link">
                 Admin
-              </Link>
-              <Link to={ROUTES.BOOKING} className="mobile-book-btn">
-                Book Now
               </Link>
             </div>
           </div>

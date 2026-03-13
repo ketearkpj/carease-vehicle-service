@@ -443,12 +443,9 @@ const Sales = () => {
       pickupLocation: 'roysambu-trm'
     };
     saveBookingDraft(draft);
-    navigate(
-      `${ROUTES.BOOKING}?service=sales&vehicle=${vehicle.id}&inquiryType=${type}`,
-      {
-        state: { bookingPrefill: draft }
-      }
-    );
+    navigate(ROUTES.SALES_FLOW, {
+      state: { bookingPrefill: draft }
+    });
     addNotification('Complete your details to submit this inquiry.', 'info');
     if (closeDetails) setShowDetails(false);
   };
@@ -1026,7 +1023,7 @@ const Sales = () => {
                 </Button>
               </Link>
               <Link
-                to={`${ROUTES.BOOKING}?service=sales&inquiryType=vehicle_request`}
+                to={ROUTES.SALES_FLOW}
                 state={{
                   bookingPrefill: {
                     serviceType: 'sales',

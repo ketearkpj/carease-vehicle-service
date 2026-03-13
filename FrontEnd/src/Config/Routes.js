@@ -14,9 +14,13 @@ export const ROUTES = {
   
   // Service Routes
   RENTALS: '/rentals',
+  RENTALS_FLOW: '/rentals/checkout',
   CAR_WASH: '/car-wash',
+  CAR_WASH_FLOW: '/car-wash/checkout',
   REPAIRS: '/repairs',
+  REPAIRS_FLOW: '/repairs/checkout',
   SALES: '/sales',
+  SALES_FLOW: '/sales/checkout',
   
   // Booking Routes
   BOOKING: '/booking',
@@ -75,9 +79,13 @@ export const ROUTE_GROUPS = {
   SERVICES: [
     ROUTES.SERVICES,
     ROUTES.RENTALS,
+    ROUTES.RENTALS_FLOW,
     ROUTES.CAR_WASH,
+    ROUTES.CAR_WASH_FLOW,
     ROUTES.REPAIRS,
-    ROUTES.SALES
+    ROUTES.REPAIRS_FLOW,
+    ROUTES.SALES,
+    ROUTES.SALES_FLOW
   ],
   
   // Booking flow routes
@@ -137,20 +145,36 @@ export const ROUTE_META = {
     description: 'Rent the finest luxury and exotic vehicles. Choose from our curated collection of supercars, luxury sedans, and SUVs.',
     keywords: 'luxury car rental, exotic car rental, supercar rental, sports car rental'
   },
+  [ROUTES.RENTALS_FLOW]: {
+    title: 'Rental Checkout - CAR EASE',
+    description: 'Complete rental booking details and payment.'
+  },
   [ROUTES.CAR_WASH]: {
     title: 'Professional Car Wash & Detailing - CAR EASE',
     description: 'Premium car wash and detailing services. From express wash to complete ceramic coating protection.',
     keywords: 'car wash, car detailing, ceramic coating, professional car cleaning'
+  },
+  [ROUTES.CAR_WASH_FLOW]: {
+    title: 'Car Wash Checkout - CAR EASE',
+    description: 'Configure and complete your detailing order.'
   },
   [ROUTES.REPAIRS]: {
     title: 'Expert Car Repairs & Maintenance - CAR EASE',
     description: 'Professional repair and maintenance services for all luxury vehicles. Diagnostics, performance tuning, and factory repairs.',
     keywords: 'car repair, car maintenance, auto repair, performance tuning, diagnostics'
   },
+  [ROUTES.REPAIRS_FLOW]: {
+    title: 'Repairs Checkout - CAR EASE',
+    description: 'Submit and complete your repair order.'
+  },
   [ROUTES.SALES]: {
     title: 'Luxury Vehicle Sales - CAR EASE',
     description: 'Browse our collection of premium pre-owned luxury vehicles. Each vehicle comes with full history and warranty.',
     keywords: 'luxury car sales, exotic car sales, pre-owned luxury vehicles, car financing'
+  },
+  [ROUTES.SALES_FLOW]: {
+    title: 'Sales Inquiry Checkout - CAR EASE',
+    description: 'Finalize your purchase or test-drive request.'
   },
   [ROUTES.ABOUT]: {
     title: 'About CAR EASE - Luxury Automotive Platform',
@@ -206,9 +230,13 @@ export const ROUTE_NAMES = {
   [ROUTES.HOME]: 'Home',
   [ROUTES.SERVICES]: 'Services',
   [ROUTES.RENTALS]: 'Rentals',
+  [ROUTES.RENTALS_FLOW]: 'Rental Checkout',
   [ROUTES.CAR_WASH]: 'Car Wash',
+  [ROUTES.CAR_WASH_FLOW]: 'Car Wash Checkout',
   [ROUTES.REPAIRS]: 'Repairs',
+  [ROUTES.REPAIRS_FLOW]: 'Repairs Checkout',
   [ROUTES.SALES]: 'Sales',
+  [ROUTES.SALES_FLOW]: 'Sales Checkout',
   [ROUTES.ABOUT]: 'About Us',
   [ROUTES.CONTACT]: 'Contact',
   [ROUTES.BOOKING]: 'Booking',
@@ -239,9 +267,13 @@ export const ROUTE_ICONS = {
   [ROUTES.HOME]: '🏠',
   [ROUTES.SERVICES]: '🔧',
   [ROUTES.RENTALS]: '🚗',
+  [ROUTES.RENTALS_FLOW]: '🧾',
   [ROUTES.CAR_WASH]: '🧼',
+  [ROUTES.CAR_WASH_FLOW]: '🧾',
   [ROUTES.REPAIRS]: '🔨',
+  [ROUTES.REPAIRS_FLOW]: '🧾',
   [ROUTES.SALES]: '💰',
+  [ROUTES.SALES_FLOW]: '🧾',
   [ROUTES.ABOUT]: '📋',
   [ROUTES.CONTACT]: '📞',
   [ROUTES.BOOKING]: '📅',

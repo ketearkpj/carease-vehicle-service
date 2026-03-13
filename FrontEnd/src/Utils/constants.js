@@ -329,6 +329,21 @@ export const WASH_PACKAGES = [
     icon: '🛡️'
   },
   {
+    id: 'signature-gloss',
+    name: 'Signature Gloss',
+    price: 21900,
+    duration: 165,
+    description: 'Showroom gloss treatment for luxury daily drivers',
+    features: [
+      'Everything in Paint Protection Plus',
+      'Two-stage gloss refinement',
+      'Wheel face polish and seal',
+      'Interior UV protectant',
+      'Rain-ready exterior finish'
+    ],
+    icon: '🌟'
+  },
+  {
     id: 'ultimate',
     name: 'Ultimate Ceramic',
     price: 24900,
@@ -343,6 +358,21 @@ export const WASH_PACKAGES = [
       '24 month warranty'
     ],
     icon: '💎'
+  },
+  {
+    id: 'concours-elite',
+    name: 'Concours Elite',
+    price: 38900,
+    duration: 240,
+    description: 'Full concours preparation for high-value and event vehicles',
+    features: [
+      'Everything in Ultimate Ceramic',
+      'Multi-stage correction and inspection lighting',
+      'Leather rejuvenation and conditioning',
+      'Trim and emblem precision detailing',
+      'Final gloss audit with delivery walkthrough'
+    ],
+    icon: '🏁'
   }
 ];
 

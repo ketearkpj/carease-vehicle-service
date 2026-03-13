@@ -381,7 +381,7 @@ const Rentals = () => {
       pickupLocation: 'roysambu-trm'
     };
     saveBookingDraft(draft);
-    navigate(`${ROUTES.BOOKING}?service=rental&vehicle=${vehicle.id}`, {
+    navigate(ROUTES.RENTALS_FLOW, {
       state: { bookingPrefill: draft }
     });
     addNotification('Vehicle selected. Complete your booking details.', 'info');
@@ -396,7 +396,7 @@ const Rentals = () => {
       pickupLocation: 'roysambu-trm'
     };
     saveBookingDraft(draft);
-    navigate(`${ROUTES.BOOKING}?service=sales&vehicle=${vehicle.id}&inquiryType=purchase`, {
+    navigate(ROUTES.SALES_FLOW, {
       state: { bookingPrefill: draft }
     });
     addNotification('Proceed to complete your purchase request.', 'info');

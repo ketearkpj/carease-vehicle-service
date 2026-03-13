@@ -359,7 +359,7 @@ const Services = () => {
     { id: 'nav-wash', title: 'Car Wash & Detailing', description: 'Detailing packages and wash scheduling.', route: ROUTES.CAR_WASH, tags: ['car wash', 'detailing', 'ceramic', 'cleaning'] },
     { id: 'nav-repairs', title: 'Repairs & Diagnostics', description: 'Mechanical service and maintenance workflows.', route: ROUTES.REPAIRS, tags: ['repair', 'repairs', 'diagnostics', 'maintenance'] },
     { id: 'nav-sales', title: 'Vehicle Sales & Test Drives', description: 'Inventory browsing, inquiries, and test-drive requests.', route: ROUTES.SALES, tags: ['sales', 'buy', 'purchase', 'test drive', 'inventory'] },
-    { id: 'nav-booking', title: 'Booking Flow', description: 'Complete your selected service in one booking journey.', route: ROUTES.BOOKING, tags: ['booking', 'checkout', 'reserve', 'schedule'] },
+    { id: 'nav-checkout', title: 'Service Checkout', description: 'Start service-specific booking and buying flows.', route: ROUTES.RENTALS_FLOW, tags: ['booking', 'checkout', 'reserve', 'schedule'] },
     { id: 'nav-contact', title: 'Concierge & Contact', description: 'Talk to the team for tailored support and custom requests.', route: ROUTES.CONTACT, tags: ['contact', 'concierge', 'support', 'help'] },
     { id: 'nav-about', title: 'About CAR EASE', description: 'Learn the brand story, values, and service standards.', route: ROUTES.ABOUT, tags: ['about', 'carease', 'company', 'story'] }
   ];
@@ -390,7 +390,11 @@ const Services = () => {
     if (service.category === SERVICE_TYPES.CAR_WASH || service.id === 'car_wash') return ROUTES.CAR_WASH;
     if (service.category === SERVICE_TYPES.REPAIR || service.id === 'repairs') return ROUTES.REPAIRS;
     if (service.category === SERVICE_TYPES.SALES || service.id === 'sales') return ROUTES.SALES;
-    return `${ROUTES.BOOKING}?service=${encodeURIComponent(service.category || service.id || '')}`;
+    if (service.category === SERVICE_TYPES.RENTAL || service.id === 'rentals') return ROUTES.RENTALS_FLOW;
+    if (service.category === SERVICE_TYPES.CAR_WASH || service.id === 'car_wash') return ROUTES.CAR_WASH_FLOW;
+    if (service.category === SERVICE_TYPES.REPAIR || service.id === 'repairs') return ROUTES.REPAIRS_FLOW;
+    if (service.category === SERVICE_TYPES.SALES || service.id === 'sales') return ROUTES.SALES_FLOW;
+    return ROUTES.SERVICES;
   };
 
   const getCategoryRoute = (categoryId) => {
@@ -463,8 +467,8 @@ const Services = () => {
                 <span className="cta-arrow">→</span>
                 <span className="cta-glow"></span>
               </Link>
-              <Link to={ROUTES.BOOKING} className="cta-secondary">
-                <span className="cta-text">Start Booking</span>
+              <Link to={ROUTES.RENTALS_FLOW} className="cta-secondary">
+                <span className="cta-text">Start Service Flow</span>
                 <span className="cta-glow"></span>
               </Link>
             </div>
@@ -480,7 +484,7 @@ const Services = () => {
               </div>
               <div className="services-hero-stat">
                 <span className="services-stat-number">1</span>
-                <span className="services-stat-label">Unified Flow</span>
+                <span className="services-stat-label">Service-Specific Flows</span>
               </div>
             </div>
 
@@ -859,7 +863,7 @@ const Services = () => {
                 <span>Contact Concierge</span>
                 <span className="cta-arrow">→</span>
               </Link>
-              <Link to={ROUTES.BOOKING} className="cta-secondary-cinematic">
+              <Link to={ROUTES.RENTALS_FLOW} className="cta-secondary-cinematic">
                 <span>Book Now</span>
               </Link>
             </div>
