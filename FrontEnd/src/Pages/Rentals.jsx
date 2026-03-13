@@ -758,23 +758,47 @@ const Rentals = () => {
       <section className="rentals-cta-section">
         <div className="container">
           <div className="cta-content rentals-creative-cta">
-            <h2 className="cta-title">Design Your Arrival</h2>
-            <p className="cta-description">
-              Pick the exact rental experience you want, then move straight into the right flow with concierge support.
-            </p>
+            <div className="rental-cta-head">
+              <span className="rental-cta-badge">CURATED RENTAL PATHWAYS</span>
+              <h2 className="cta-title">Design Your Arrival</h2>
+              <p className="cta-description">
+                Choose the experience first, then follow a clear path with pickup planning and concierge support.
+              </p>
+            </div>
+
+            <div className="rental-cta-metrics">
+              <div className="rental-metric">
+                <span className="metric-value">3</span>
+                <span className="metric-label">Pickup Hubs</span>
+              </div>
+              <div className="rental-metric">
+                <span className="metric-value">24/7</span>
+                <span className="metric-label">Concierge</span>
+              </div>
+              <div className="rental-metric">
+                <span className="metric-value">Same Day</span>
+                <span className="metric-label">Fast Scheduling</span>
+              </div>
+            </div>
 
             <div className="rental-experience-grid">
               <article className="rental-experience-card">
+                <div className="experience-icon">🌅</div>
                 <h3>Weekend Escape</h3>
                 <p>Short-term luxury setup with quick pickup and route-ready support.</p>
+                <a href="#fleet" className="experience-link">Match Vehicles →</a>
               </article>
               <article className="rental-experience-card">
+                <div className="experience-icon">🎬</div>
                 <h3>Event Statement</h3>
                 <p>Premium arrivals for weddings, shoots, and high-visibility occasions.</p>
+                <a href="#fleet" className="experience-link">View Showcase Cars →</a>
               </article>
               <article className="rental-experience-card">
+                <div className="experience-icon">💼</div>
                 <h3>Executive Mobility</h3>
                 <p>Reliable, polished fleet options for business schedules and VIP transfers.</p>
+                <a href="#how-it-works" className="experience-link">Review Process →</a>
               </article>
             </div>
 

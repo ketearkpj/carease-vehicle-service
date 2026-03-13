@@ -666,6 +666,54 @@
 
 .rentals-creative-cta {
   max-width: 980px;
+  display: grid;
+  gap: var(--space-6);
+  text-align: left;
+}
+
+.rental-cta-head {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.rental-cta-badge {
+  display: inline-flex;
+  width: fit-content;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.08);
+  color: var(--gold-primary);
+  font-size: var(--text-xs);
+  letter-spacing: 0.1em;
+  font-weight: var(--weight-semibold);
+}
+
+.rental-cta-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.rental-metric {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(255, 255, 255, 0.02));
+  display: grid;
+  gap: 2px;
+}
+
+.metric-value {
+  color: var(--white);
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+}
+
+.metric-label {
+  color: var(--silver-dark);
+  font-size: var(--text-sm);
 }
 
 .cta-title {
@@ -687,7 +735,7 @@
 .cta-buttons {
   display: flex;
   gap: var(--space-4);
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
 }
 
@@ -702,9 +750,13 @@
   text-align: left;
   padding: var(--space-5);
   border-radius: var(--radius-xl);
-  background: rgba(255, 255, 255, 0.03);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(212, 175, 55, 0.14) 0%, transparent 45%),
+    rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(212, 175, 55, 0.2);
   transition: all var(--transition-base);
+  display: grid;
+  gap: var(--space-2);
 }
 
 .rental-experience-card:hover {
@@ -717,14 +769,38 @@
   font-family: var(--font-heading);
   color: var(--white);
   font-size: var(--text-lg);
-  margin-bottom: var(--space-2);
+  margin: 0;
 }
 
 .rental-experience-card p {
   color: var(--silver-dark);
   font-size: var(--text-sm);
   line-height: 1.6;
-  margin: 0;
+  margin: 0 0 var(--space-2);
+}
+
+.experience-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212, 175, 55, 0.16);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  font-size: 1.2rem;
+}
+
+.experience-link {
+  color: var(--gold-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  width: fit-content;
+}
+
+.experience-link:hover {
+  text-decoration: underline;
 }
 
 /* ===== ANIMATION DELAYS ===== */
@@ -831,6 +907,10 @@
   }
 
   .rental-experience-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rental-cta-metrics {
     grid-template-columns: 1fr;
   }
 
