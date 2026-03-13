@@ -31,6 +31,7 @@ import ManageBookings from './Pages/ManageBookings';
 import ManagePayments from './Pages/ManagePayments';
 import ManageVehicles from './Pages/ManageVehicles';
 import Reports from './Pages/Reports';
+import AdminSettings from './Pages/AdminSettings';
 import Privacy from './Pages/Privacy';
 import Terms from './Pages/Terms';
 import FAQ from './Pages/FAQ';
@@ -174,6 +175,10 @@ function App() {
                     <Route
                       path={ROUTES.ADMIN_REPORTS}
                       element={<AdminProtectedRoute><Reports /></AdminProtectedRoute>}
+                    />
+                    <Route
+                      path={ROUTES.ADMIN_SETTINGS}
+                      element={<AdminProtectedRoute><AdminSettings /></AdminProtectedRoute>}
                     />
                     
                     {/* ===== LEGAL & INFORMATION ROUTES ===== */}

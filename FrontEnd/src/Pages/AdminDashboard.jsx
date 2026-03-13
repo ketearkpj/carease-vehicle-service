@@ -13,7 +13,7 @@ import AnalyticsChart from '../Components/Admin/AnalyticsChart';
 import AdminTable from '../Components/Admin/AdminTable';
 
 // Services
-import { getDashboardStats, getRecentBookings } from '../Services/AdminService';
+import { getDashboardStats, getRecentBookings, getAdminNotifications } from '../Services/AdminService';
 import { formatCurrency } from '../Utils/format';
 
 // Hooks
@@ -27,8 +27,10 @@ const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [timeframe, setTimeframe] = useState('week');
   const [chartData, setChartData] = useState(null);
+  const [adminNotifications, setAdminNotifications] = useState([]);
 
   const { admin } = useAdminAuth();
   const { addNotification } = useApp();
@@ -66,6 +68,7 @@ const AdminDashboard = () => {
           }
         ]
       });
+      await fetchAdminNotifications();
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       addNotification('Failed to load dashboard data', 'error');
@@ -79,6 +82,19 @@ const AdminDashboard = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdminNotifications = async () => {
+    setNotificationsLoading(true);
+    try {
+      const items = await getAdminNotifications(12);
+      setAdminNotifications(Array.isArray(items) ? items : []);
+    } catch (error) {
+      console.error('Failed to fetch admin notifications:', error);
+      setAdminNotifications([]);
+    } finally {
+      setNotificationsLoading(false);
     }
   };
 
@@ -98,10 +114,10 @@ const AdminDashboard = () => {
       color: 'success'
     },
     {
-      title: 'Active Users',
-      value: stats?.users?.total?.toLocaleString() || '3,456',
-      change: stats?.users?.change || 15.2,
-      icon: '👥',
+      title: 'Service Requests',
+      value: stats?.bookings?.total?.toLocaleString() || '1,245',
+      change: stats?.bookings?.change || 8.3,
+      icon: '🛠️',
       color: 'info'
     },
     {
@@ -142,7 +158,7 @@ const AdminDashboard = () => {
   return (
     <div className="admin-dashboard">
       {/* Header */}
-      <div className="dashboard-header">
+      <div className="admin-dashboard-header">
         <div>
           <h1 className="page-title">
             Welcome back, <span className="gold-text">{admin?.name || 'Admin'}</span>
@@ -299,6 +315,35 @@ const AdminDashboard = () => {
               <span className="status-label">Last Backup</span>
               <span className="status-value">2 hours ago</span>
             </div>
+          </div>
+        </Card>
+      </div>
+
+      <div className="activity-summary">
+        <Card className="activity-card">
+          <div className="activity-header">
+            <h3 className="activity-title">Operations Notifications</h3>
+            <Button variant="outline" size="sm" onClick={fetchAdminNotifications}>
+              Refresh
+            </Button>
+          </div>
+          <div className="activity-list">
+            {notificationsLoading && <p className="activity-item">Loading notifications...</p>}
+            {!notificationsLoading && adminNotifications.length === 0 && (
+              <p className="activity-item">No notifications yet.</p>
+            )}
+            {!notificationsLoading &&
+              adminNotifications.map((item) => (
+                <div key={item.id} className="activity-item">
+                  <span className="activity-dot"></span>
+                  <span className="activity-text">
+                    <strong>{item.title || 'Update'}:</strong> {item.message}
+                  </span>
+                  <span className="activity-time">
+                    {item.createdAt ? new Date(item.createdAt).toLocaleString() : ''}
+                  </span>
+                </div>
+              ))}
           </div>
         </Card>
       </div>

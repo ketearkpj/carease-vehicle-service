@@ -9,7 +9,8 @@ import axios from 'axios';
 import { getEnv } from '../Config/env';
 
 // API base URL
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1/admin';
+const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
 const DEMO_ADMIN_TOKEN = 'demo_admin_token';
 const DEMO_ADMIN = {
   id: 'demo-admin',
@@ -20,6 +21,13 @@ const DEMO_ADMIN = {
 const DEMO_PERMISSIONS = ['dashboard.view', 'bookings.manage', 'payments.manage', 'vehicles.manage', 'reports.view'];
 const isDemoCredentials = (email, password) =>
   (email === 'admin@carease.com' || email === 'admin@carease.co.ke') && password === 'admin123';
+const withAuth = () => ({ headers: { Authorization: `Bearer ${localStorage.getItem('admin_token')}` } });
+const readPayload = (response) => response?.data?.data || response?.data || {};
+const normalizeAdmin = (admin) => {
+  if (!admin) return admin;
+  const displayName = admin.name || [admin.firstName, admin.lastName].filter(Boolean).join(' ').trim();
+  return { ...admin, name: displayName || admin.email || 'Admin' };
+};
 
 /**
  * Admin authentication
@@ -40,23 +48,26 @@ export const adminLogin = async (email, password) => {
   }
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+    const response = await axios.post(`${ADMIN_BASE_URL}/login`, {
       email,
       password,
       admin: true
     });
+    const payload = readPayload(response);
+    const token = response?.data?.token;
+    const admin = normalizeAdmin(payload.admin || response?.data?.admin);
 
     // Store admin token
-    if (response.data.token) {
-      localStorage.setItem('admin_token', response.data.token);
-      localStorage.setItem('admin_data', JSON.stringify(response.data.admin));
+    if (token) {
+      localStorage.setItem('admin_token', token);
+      localStorage.setItem('admin_data', JSON.stringify(admin));
     }
 
     return {
       success: true,
-      token: response.data.token,
-      admin: response.data.admin,
-      permissions: response.data.permissions
+      token,
+      admin,
+      permissions: response?.data?.permissions || DEMO_PERMISSIONS
     };
   } catch (error) {
     console.error('Admin login failed:', error);
@@ -84,14 +95,13 @@ export const verifyAdminToken = async () => {
   }
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/auth/verify`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axios.get(`${ADMIN_BASE_URL}/profile`, withAuth());
+    const payload = readPayload(response);
 
     return {
       valid: true,
-      admin: response.data.admin,
-      permissions: response.data.permissions
+      admin: normalizeAdmin(payload.admin),
+      permissions: payload.permissions || DEMO_PERMISSIONS
     };
   } catch (error) {
     localStorage.removeItem('admin_token');
@@ -108,9 +118,7 @@ export const adminLogout = async () => {
   
   try {
     if (token) {
-      await axios.post(`${API_BASE_URL}/auth/logout`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(`${ADMIN_BASE_URL}/logout`, {}, withAuth());
     }
   } catch (error) {
     console.error('Logout error:', error);
@@ -129,22 +137,31 @@ export const getDashboardStats = async (filters = {}) => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/dashboard/stats`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/dashboard`, {
       params: {
         startDate: filters.startDate,
         endDate: filters.endDate,
         period: filters.period || 'month'
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
+    const payload = readPayload(response);
+    const overview = payload.overview || {};
+    const chartRevenue = payload?.charts?.revenue;
+    const chartBookings = payload?.charts?.bookings;
 
     return {
-      revenue: response.data.revenue,
-      bookings: response.data.bookings,
-      users: response.data.users,
-      vehicles: response.data.vehicles,
-      occupancy: response.data.occupancy,
+      revenue: { total: Number(overview.totalRevenue || 0), change: 0 },
+      bookings: { total: Number(overview.totalBookings || 0), change: 0 },
+      users: { total: Number(overview.totalUsers || 0), change: 0 },
+      vehicles: { total: Number(overview.activeVehicles || 0), change: 0 },
+      occupancy: Number(overview.activeDeliveries || 0),
       trends: response.data.trends
+        || {
+          labels: chartRevenue?.labels || chartBookings?.labels || [],
+          revenue: chartRevenue?.values || [],
+          bookings: chartBookings?.total || []
+        }
     };
   } catch (error) {
     console.error('Failed to fetch dashboard stats:', error);
@@ -172,7 +189,7 @@ export const getAllBookings = async (filters = {}) => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/bookings`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/bookings`, {
       params: {
         page: filters.page || 1,
         limit: filters.limit || 20,
@@ -184,14 +201,17 @@ export const getAllBookings = async (filters = {}) => {
         sortBy: filters.sortBy || 'createdAt',
         sortOrder: filters.sortOrder || 'desc'
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
+    const payload = readPayload(response);
+    const bookings = payload.bookings || [];
+    const total = payload.total || response?.data?.total || bookings.length;
 
     return {
-      bookings: response.data.bookings,
-      total: response.data.total,
-      page: response.data.page,
-      totalPages: response.data.totalPages
+      bookings,
+      total,
+      page: Number(filters.page || 1),
+      totalPages: Math.max(1, Math.ceil(total / Number(filters.limit || 20)))
     };
   } catch (error) {
     console.error('Failed to fetch bookings:', error);
@@ -227,11 +247,9 @@ export const getBookingDetails = async (bookingId) => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/bookings/${bookingId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return response.data;
+    const response = await axios.get(`${ADMIN_BASE_URL}/bookings/${bookingId}`, withAuth());
+    const payload = readPayload(response);
+    return payload.booking || payload;
   } catch (error) {
     console.error('Failed to fetch booking details:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch booking details');
@@ -249,15 +267,13 @@ export const updateBookingStatus = async (bookingId, status, note = '') => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.patch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+    const response = await axios.patch(`${ADMIN_BASE_URL}/bookings/${bookingId}/status`, {
       status,
       note,
       updatedAt: new Date().toISOString()
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return response.data;
+    }, withAuth());
+    const payload = readPayload(response);
+    return payload.booking || payload;
   } catch (error) {
     console.error('Failed to update booking status:', error);
     throw new Error(error.response?.data?.message || 'Failed to update booking');
@@ -695,11 +711,9 @@ export const getSystemSettings = async () => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/settings`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return response.data;
+    const response = await axios.get(`${ADMIN_BASE_URL}/settings`, withAuth());
+    const payload = readPayload(response);
+    return payload.settings || [];
   } catch (error) {
     console.error('Failed to fetch settings:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch settings');
@@ -712,17 +726,37 @@ export const getSystemSettings = async () => {
  * @returns {Promise<Object>} - Updated settings
  */
 export const updateSystemSettings = async (settings) => {
-  const token = localStorage.getItem('admin_token');
+  const entries = Object.entries(settings || {});
+  const updates = entries.map(([key, value]) => updateSystemSetting(key, value));
+  return Promise.all(updates);
+};
 
+export const updateSystemSetting = async (key, value, category = 'operations') => {
   try {
-    const response = await axios.put(`${API_BASE_URL}/settings`, settings, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return response.data;
+    const response = await axios.patch(`${ADMIN_BASE_URL}/settings/${key}`, {
+      value,
+      category,
+      reason: 'Updated from admin settings page'
+    }, withAuth());
+    const payload = readPayload(response);
+    return payload.setting || payload;
   } catch (error) {
     console.error('Failed to update settings:', error);
     throw new Error(error.response?.data?.message || 'Failed to update settings');
+  }
+};
+
+export const getAdminNotifications = async (limit = 25) => {
+  try {
+    const response = await axios.get(`${ADMIN_BASE_URL}/notifications`, {
+      params: { limit, page: 1 },
+      ...withAuth()
+    });
+    const payload = readPayload(response);
+    return payload.notifications || [];
+  } catch (error) {
+    console.error('Failed to fetch admin notifications:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch notifications');
   }
 };
 
@@ -735,7 +769,7 @@ export const getAuditLogs = async (filters = {}) => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.get(`${API_BASE_URL}/audit-logs`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/audit-logs`, {
       params: {
         page: filters.page || 1,
         limit: filters.limit || 50,
@@ -744,7 +778,7 @@ export const getAuditLogs = async (filters = {}) => {
         startDate: filters.startDate,
         endDate: filters.endDate
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
 
     return {
@@ -768,11 +802,8 @@ export const sendNotification = async (notification) => {
   const token = localStorage.getItem('admin_token');
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/notifications/send`, notification, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return response.data;
+    const response = await axios.post(`${ADMIN_BASE_URL}/notifications/send`, notification, withAuth());
+    return readPayload(response);
   } catch (error) {
     console.error('Failed to send notification:', error);
     throw new Error(error.response?.data?.message || 'Failed to send notification');
@@ -858,7 +889,9 @@ export default {
   getAnalytics,
   exportData,
   getSystemSettings,
+  updateSystemSetting,
   updateSystemSettings,
+  getAdminNotifications,
   getAuditLogs,
   sendNotification,
   getMaintenanceRequests,

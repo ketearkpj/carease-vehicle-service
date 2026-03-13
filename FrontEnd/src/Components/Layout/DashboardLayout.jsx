@@ -10,7 +10,6 @@ const Icons = {
   Vehicles: () => <span className="nav-icon">🚗</span>,
   Payments: () => <span className="nav-icon">💰</span>,
   Reports: () => <span className="nav-icon">📈</span>,
-  Users: () => <span className="nav-icon">👥</span>,
   Settings: () => <span className="nav-icon">⚙️</span>,
   Earnings: () => <span className="nav-icon">💵</span>,
   Schedule: () => <span className="nav-icon">⏰</span>,
@@ -68,7 +67,6 @@ const DashboardLayout = ({
       { path: ROUTES.ADMIN_BOOKINGS, label: 'Bookings', icon: Icons.Bookings, badge: 12 },
       { path: ROUTES.ADMIN_VEHICLES, label: 'Vehicles', icon: Icons.Vehicles, badge: 24 },
       { path: ROUTES.ADMIN_PAYMENTS, label: 'Payments', icon: Icons.Payments, badge: 3 },
-      { path: ROUTES.ADMIN_USERS, label: 'Users', icon: Icons.Users },
       { path: ROUTES.ADMIN_REPORTS, label: 'Reports', icon: Icons.Reports },
       { path: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Icons.Settings }
     ],

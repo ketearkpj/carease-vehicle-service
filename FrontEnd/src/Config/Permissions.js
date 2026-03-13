@@ -90,7 +90,6 @@ export const PROTECTED_ROUTES = {
   '/admin/payments': [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
   '/admin/vehicles': [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
   '/admin/reports': [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
-  '/admin/users': [USER_ROLES.SUPER_ADMIN],
   '/admin/settings': [USER_ROLES.SUPER_ADMIN],
   
   // Provider routes

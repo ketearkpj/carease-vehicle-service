@@ -41,7 +41,6 @@ export const ROUTES = {
   ADMIN_PAYMENTS: '/admin/payments',
   ADMIN_VEHICLES: '/admin/vehicles',
   ADMIN_REPORTS: '/admin/reports',
-  ADMIN_USERS: '/admin/users',
   ADMIN_SETTINGS: '/admin/settings',
   ADMIN_AUDIT: '/admin/audit-logs',
   
@@ -114,7 +113,6 @@ export const ROUTE_GROUPS = {
     ROUTES.ADMIN_PAYMENTS,
     ROUTES.ADMIN_VEHICLES,
     ROUTES.ADMIN_REPORTS,
-    ROUTES.ADMIN_USERS,
     ROUTES.ADMIN_SETTINGS,
     ROUTES.ADMIN_AUDIT
   ],
@@ -251,7 +249,6 @@ export const ROUTE_NAMES = {
   [ROUTES.ADMIN_PAYMENTS]: 'Manage Payments',
   [ROUTES.ADMIN_VEHICLES]: 'Manage Vehicles',
   [ROUTES.ADMIN_REPORTS]: 'Reports',
-  [ROUTES.ADMIN_USERS]: 'Manage Users',
   [ROUTES.ADMIN_SETTINGS]: 'Settings',
   [ROUTES.PRIVACY]: 'Privacy Policy',
   [ROUTES.TERMS]: 'Terms of Service',
@@ -285,7 +282,6 @@ export const ROUTE_ICONS = {
   [ROUTES.ADMIN_PAYMENTS]: '💰',
   [ROUTES.ADMIN_VEHICLES]: '🚗',
   [ROUTES.ADMIN_REPORTS]: '📈',
-  [ROUTES.ADMIN_USERS]: '👥',
   [ROUTES.ADMIN_SETTINGS]: '⚙️',
   [ROUTES.PRIVACY]: '🔒',
   [ROUTES.TERMS]: '📜',

@@ -8,6 +8,7 @@
 import emailjs from '@emailjs/browser';
 import axios from 'axios';
 import { getEnv } from '../Config/env';
+import { API_BASE_URL, API_ENDPOINTS } from '../Config/API';
 
 // Email service configuration
 const EMAIL_CONFIG = {
@@ -92,27 +93,46 @@ export const subscribeToNewsletter = async (email) => {
   }
 
   try {
-    // Option 1: Store in your database (via API)
-    const response = await axios.post('/api/newsletter/subscribe', { 
+    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.EMAIL.NEWSLETTER_SUBSCRIBE}`;
+    const response = await axios.post(endpoint, {
       email,
-      subscribedAt: new Date().toISOString(),
       source: 'website'
     });
 
-    // Option 2: Add to Mailchimp list
-    // await addToMailchimp(email);
-
-    // Option 3: Send confirmation email
-    await sendConfirmationEmail(email);
-
     return { 
       success: true, 
-      message: 'Successfully subscribed to newsletter',
+      message: response.data?.message || 'Successfully subscribed to newsletter',
       data: response.data 
     };
   } catch (error) {
     console.error('Newsletter subscription error:', error);
     throw new Error(error.response?.data?.message || 'Subscription failed');
+  }
+};
+
+/**
+ * Unsubscribe email from newsletter
+ * @param {string} email - Subscriber email
+ * @returns {Promise} - Unsubscribe result
+ */
+export const unsubscribeFromNewsletter = async (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error('Invalid email format');
+  }
+
+  try {
+    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.EMAIL.NEWSLETTER_UNSUBSCRIBE}`;
+    const response = await axios.post(endpoint, { email });
+
+    return {
+      success: true,
+      message: response.data?.message || 'Unsubscribed successfully',
+      data: response.data
+    };
+  } catch (error) {
+    console.error('Newsletter unsubscribe error:', error);
+    throw new Error(error.response?.data?.message || 'Unsubscribe failed');
   }
 };
 
@@ -137,6 +157,21 @@ export const sendBookingConfirmation = async (bookingData) => {
   };
 
   try {
+    // Prefer backend SMTP pipeline for reliability.
+    const backendEndpoint = `${API_BASE_URL}/email/booking-confirmation`;
+    const backendResponse = await axios.post(backendEndpoint, {
+      customerEmail,
+      customerName,
+      bookingId,
+      serviceType,
+      date,
+      time,
+      amount
+    });
+    if (backendResponse?.data?.status === 'success') {
+      return { success: true, data: backendResponse.data };
+    }
+
     if (EMAIL_CONFIG.useEmailJS) {
       return await sendViaEmailJS({
         ...emailParams,
@@ -217,14 +252,18 @@ export const sendBookingConfirmation = async (bookingData) => {
     }
   } catch (error) {
     console.error('Failed to send booking confirmation:', error);
-    // Fallback: log to database for retry
-    await logFailedEmail({
-      type: 'booking_confirmation',
-      recipient: customerEmail,
-      data: bookingData,
-      error: error.message
-    });
-    throw error;
+    try {
+      // Fallback: log to database for retry
+      await logFailedEmail({
+        type: 'booking_confirmation',
+        recipient: customerEmail,
+        data: bookingData,
+        error: error.message
+      });
+    } catch {
+      // Ignore logging failures and return cleanly with useful message.
+    }
+    throw new Error(error.response?.data?.message || error.message || 'Booking confirmation email failed');
   }
 };
 
@@ -410,49 +449,22 @@ export const sendPasswordResetEmail = async (email, resetToken) => {
  * @returns {Promise} - Email result
  */
 export const sendContactFormEmail = async (contactData) => {
-  const { name, email, phone, subject, message } = contactData;
+  const { name, email, phone, subject, message, preferredContact } = contactData;
 
   try {
-    // Send to admin
-    await sendViaSendGrid({
-      to: 'info@carease.co.ke',
-      from: 'contact@carease.co.ke',
-      subject: `New Contact Form: ${subject}`,
-      html: `
-        <h3>New Contact Form Submission</h3>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
-        <p><strong>Subject:</strong> ${subject}</p>
-        <p><strong>Message:</strong></p>
-        <p>${message}</p>
-      `
+    const endpoint = `${API_BASE_URL}${API_ENDPOINTS.EMAIL.CONTACT}`;
+    const response = await axios.post(endpoint, {
+      name,
+      email,
+      phone,
+      subject,
+      message,
+      preferredContact
     });
-
-    // Send auto-reply to customer
-    await sendViaSendGrid({
-      to: email,
-      from: 'info@carease.co.ke',
-      subject: 'Thank you for contacting CAR EASE',
-      html: `
-        <h3>Thank you for reaching out, ${name}!</h3>
-        <p>We've received your message and will get back to you within 24 hours.</p>
-        <p>Your inquiry details:</p>
-        <ul>
-          <li>Subject: ${subject}</li>
-          <li>Message: ${message}</li>
-        </ul>
-        <p>If you need immediate assistance, please call us at 0758458358.</p>
-        <br>
-        <p>Best regards,</p>
-        <p><strong>CAR EASE Concierge Team</strong></p>
-      `
-    });
-
-    return { success: true, message: 'Emails sent successfully' };
+    return { success: true, message: response.data?.message || 'Inquiry submitted successfully' };
   } catch (error) {
     console.error('Failed to send contact form emails:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || 'Failed to submit inquiry');
   }
 };
 
@@ -557,6 +569,7 @@ export const verifyEmailDelivery = async (emailId) => {
 // Export all email functions
 export default {
   subscribeToNewsletter,
+  unsubscribeFromNewsletter,
   sendBookingConfirmation,
   sendPaymentReceipt,
   sendPasswordResetEmail,

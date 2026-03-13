@@ -1,6 +1,6 @@
 // ===== src/controllers/adminController.js =====
 const bcrypt = require('bcryptjs');
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, fn, col, literal, QueryTypes } = require('sequelize');
 const { Admin, User, Booking, Payment, Vehicle, Delivery, AuditLog, SystemSettings, Notification } = require('../Models');
 const AppError = require('../Utils/AppError');
 const catchAsync = require('../Utils/CatchAsync');
@@ -849,18 +849,90 @@ exports.sendNotification = catchAsync(async (req, res, next) => {
 });
 
 exports.getNotifications = catchAsync(async (req, res, next) => {
-  const features = new APIFeatures(req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
+  const limit = Math.max(1, Math.min(Number(req.query.limit) || 25, 100));
 
-  const options = features.build();
-  const { rows: notifications, count: total } = await Notification.findAndCountAll(options);
+  const [bookings, payments, subscriptions, inquiries] = await Promise.all([
+    Booking.findAll({
+      attributes: ['id', 'bookingNumber', 'serviceType', 'status', 'customerFirstName', 'customerLastName', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+      limit
+    }),
+    Payment.findAll({
+      attributes: ['id', 'paymentNumber', 'amount', 'method', 'status', 'createdAt'],
+      order: [['createdAt', 'DESC']],
+      limit
+    }),
+    sequelize.query(
+      `
+        SELECT email, is_active AS "isActive", subscribed_at AS "subscribedAt", unsubscribed_at AS "unsubscribedAt", updated_at AS "updatedAt"
+        FROM newsletter_subscribers
+        ORDER BY updated_at DESC
+        LIMIT :limit
+      `,
+      { replacements: { limit }, type: QueryTypes.SELECT }
+    ).catch(() => []),
+    sequelize.query(
+      `
+        SELECT id, name, email, subject, status, created_at AS "createdAt"
+        FROM contact_inquiries
+        ORDER BY created_at DESC
+        LIMIT :limit
+      `,
+      { replacements: { limit }, type: QueryTypes.SELECT }
+    ).catch(() => [])
+  ]);
+
+  const bookingNotifications = bookings.map((item) => ({
+    id: `booking-${item.id}`,
+    type: 'booking',
+    title: 'New booking',
+    message: `Booking ${item.bookingNumber} created for ${item.serviceType}.`,
+    status: item.status,
+    createdAt: item.createdAt
+  }));
+
+  const paymentNotifications = payments.map((item) => ({
+    id: `payment-${item.id}`,
+    type: 'payment',
+    title: 'Payment update',
+    message: `Payment ${item.paymentNumber} is ${item.status} (${item.method}, ${item.amount}).`,
+    status: item.status,
+    createdAt: item.createdAt
+  }));
+
+  const subscriptionNotifications = subscriptions.map((item) => ({
+    id: `subscription-${item.email}-${item.updatedAt}`,
+    type: 'subscription',
+    title: item.isActive ? 'New subscription' : 'Unsubscription',
+    message: `${item.email} ${item.isActive ? 'subscribed' : 'unsubscribed'} to newsletter updates.`,
+    status: item.isActive ? 'active' : 'inactive',
+    createdAt: item.updatedAt || item.subscribedAt || item.unsubscribedAt
+  }));
+
+  const inquiryNotifications = inquiries.map((item) => ({
+    id: `inquiry-${item.id}`,
+    type: 'inquiry',
+    title: 'New inquiry',
+    message: `${item.name} sent an inquiry: ${item.subject}.`,
+    status: item.status,
+    createdAt: item.createdAt
+  }));
+
+  const notifications = [
+    ...bookingNotifications,
+    ...paymentNotifications,
+    ...subscriptionNotifications,
+    ...inquiryNotifications
+  ]
+    .filter((n) => n.createdAt)
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, limit);
+
+  const total = notifications.length;
 
   res.status(200).json({
     status: 'success',
-    results: notifications.length,
+    results: total,
     total,
     data: {
       notifications

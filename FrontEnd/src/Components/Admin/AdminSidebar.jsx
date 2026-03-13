@@ -83,13 +83,6 @@ const AdminSidebar = ({
           description: 'Vehicle inventory'
         },
         { 
-          id: 'users', 
-          path: '/admin/users', 
-          label: 'Users', 
-          icon: '👥',
-          description: 'User management'
-        },
-        { 
           id: 'services', 
           path: '/admin/services', 
           label: 'Services', 

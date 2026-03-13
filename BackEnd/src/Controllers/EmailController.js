@@ -24,6 +24,25 @@ const ensureNewsletterTable = async () => {
   );
 };
 
+const ensureContactInquiryTable = async () => {
+  await sequelize.query(
+    `
+      CREATE TABLE IF NOT EXISTS contact_inquiries (
+        id BIGSERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        phone VARCHAR(50),
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        preferred_contact VARCHAR(50),
+        status VARCHAR(50) NOT NULL DEFAULT 'new',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `
+  );
+};
+
 exports.subscribeToNewsletter = catchAsync(async (req, res, next) => {
   const rawEmail = req.body?.email;
   const email = typeof rawEmail === 'string' ? rawEmail.trim().toLowerCase() : '';
@@ -182,5 +201,123 @@ exports.unsubscribeFromNewsletter = catchAsync(async (req, res, next) => {
     status: 'success',
     message: 'You have been unsubscribed from CAR EASE updates.',
     data: { email, alreadyUnsubscribed: false }
+  });
+});
+
+exports.sendBookingConfirmationEmail = catchAsync(async (req, res, next) => {
+  const customerEmail = typeof req.body?.customerEmail === 'string' ? req.body.customerEmail.trim().toLowerCase() : '';
+  const customerName = typeof req.body?.customerName === 'string' ? req.body.customerName.trim() : 'Customer';
+  const bookingId = String(req.body?.bookingId || '').trim();
+  const serviceType = String(req.body?.serviceType || 'service').trim();
+  const date = String(req.body?.date || '').trim();
+  const time = String(req.body?.time || '').trim();
+  const amount = req.body?.amount;
+
+  if (!customerEmail || !EMAIL_REGEX.test(customerEmail)) {
+    return next(new AppError('Please provide a valid customerEmail', 400));
+  }
+
+  const html = EmailTemplate.newsletter(
+    'Booking Confirmation - CAR EASE',
+    `
+      <p>Hello ${customerName || 'Customer'},</p>
+      <p>Your booking has been received successfully.</p>
+      <p><strong>Booking ID:</strong> ${bookingId || 'Pending Assignment'}</p>
+      <p><strong>Service:</strong> ${serviceType}</p>
+      <p><strong>Date:</strong> ${date || 'TBD'}</p>
+      <p><strong>Time:</strong> ${time || 'TBD'}</p>
+      <p><strong>Amount:</strong> ${amount != null ? `KES ${Number(amount).toLocaleString('en-KE')}` : 'TBD'}</p>
+      <p>Our team will contact you if any additional details are required.</p>
+    `,
+    'Open CarEase',
+    `${process.env.CLIENT_URL || 'http://localhost:5173'}`
+  );
+
+  const sendResult = await sendEmail({
+    to: customerEmail,
+    subject: `Booking Confirmation - ${bookingId || 'CAR EASE'}`,
+    html,
+    text: `Booking confirmed. ID: ${bookingId || 'Pending'}, Service: ${serviceType}, Date: ${date || 'TBD'}, Time: ${time || 'TBD'}.`
+  });
+
+  if (!sendResult?.success) {
+    return next(new AppError('Could not send booking confirmation email right now.', 500));
+  }
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Booking confirmation email sent.',
+    data: {
+      recipient: customerEmail
+    }
+  });
+});
+
+exports.submitContactInquiry = catchAsync(async (req, res, next) => {
+  const name = String(req.body?.name || '').trim();
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const phone = String(req.body?.phone || '').trim();
+  const subject = String(req.body?.subject || '').trim();
+  const message = String(req.body?.message || '').trim();
+  const preferredContact = String(req.body?.preferredContact || '').trim();
+
+  if (!name || !email || !subject || !message) {
+    return next(new AppError('Please provide name, email, subject and message', 400));
+  }
+
+  if (!EMAIL_REGEX.test(email)) {
+    return next(new AppError('Please provide a valid email address', 400));
+  }
+
+  await ensureContactInquiryTable();
+  await sequelize.query(
+    `
+      INSERT INTO contact_inquiries (name, email, phone, subject, message, preferred_contact, status, created_at, updated_at)
+      VALUES (:name, :email, :phone, :subject, :message, :preferredContact, 'new', NOW(), NOW())
+    `,
+    {
+      replacements: {
+        name,
+        email,
+        phone: phone || null,
+        subject,
+        message,
+        preferredContact: preferredContact || null
+      }
+    }
+  );
+
+  const adminTo = process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM || 'support@carease.co.ke';
+
+  await sendEmail({
+    to: adminTo,
+    subject: `New Contact Inquiry: ${subject}`,
+    html: `
+      <h2>New Contact Inquiry</h2>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+      <p><strong>Preferred Contact:</strong> ${preferredContact || 'Not specified'}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Message:</strong><br/>${message}</p>
+    `,
+    text: `New contact inquiry from ${name} (${email}) | ${subject}`
+  });
+
+  await sendEmail({
+    to: email,
+    subject: 'We received your inquiry - CAR EASE',
+    html: `
+      <p>Hello ${name},</p>
+      <p>We have received your inquiry and the CarEase team will get back to you shortly.</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p>Thank you for contacting CarEase.</p>
+    `,
+    text: `Hello ${name}, we received your inquiry and will respond soon.`
+  });
+
+  return res.status(200).json({
+    status: 'success',
+    message: 'Inquiry submitted successfully.'
   });
 });
