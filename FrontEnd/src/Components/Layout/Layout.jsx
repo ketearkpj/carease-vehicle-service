@@ -1,5 +1,5 @@
 // ===== src/Components/Layout/Layout.jsx =====
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import PublicLayout from './PublicLayout';
 import AuthLayout from './AuthLayout';
@@ -17,6 +17,20 @@ import { ROUTES } from '../../Config/Routes';
 const Layout = ({ children, layoutProps = {} }) => {
   const location = useLocation();
   const path = location.pathname;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Keep browser from restoring old scroll positions between route changes.
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    // Preserve in-page hash navigation; otherwise always start at top.
+    if (!location.hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+  }, [location.key, location.hash]);
 
   // Determine layout type based on route
   const getLayout = () => {
