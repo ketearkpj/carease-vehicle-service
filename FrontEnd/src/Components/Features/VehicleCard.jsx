@@ -1,6 +1,5 @@
 // ===== src/Components/Features/VehicleCard.jsx =====
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
 import Card from '../Common/Card';
 import Button from '../Common/Button';
 import { formatCurrency } from '../../Utils/format';
@@ -36,10 +35,14 @@ const VehicleCard = ({
   rating,
   available = true,
   badge,
-  linkTo,
   pricePeriod = '/day',
   variant = 'default',
   onClick,
+  onQuickView,
+  onQuickBook,
+  onBuy,
+  onContact,
+  showActionGrid = false,
   onFavorite,
   isFavorite = false,
   className = '',
@@ -61,6 +64,33 @@ const VehicleCard = ({
     if (onFavorite) onFavorite(id);
   };
 
+  const handleViewDetails = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (onQuickView) return onQuickView(id);
+    if (onClick) return onClick(id);
+  };
+
+  const handleQuickBookClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onQuickBook) onQuickBook(id);
+  };
+
+  const handleBuyClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onBuy) onBuy(id);
+  };
+
+  const handleContactClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onContact) onContact(id);
+  };
+
   const formatPrice = (price) => {
     if (typeof price === 'string') return price;
     return formatCurrency(price);
@@ -78,7 +108,7 @@ const VehicleCard = ({
     <Card
       variant={variant === 'featured' ? 'interactive' : variant}
       hover={true}
-      onClick={onClick}
+      onClick={handleViewDetails}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={vehicleClasses}
@@ -185,30 +215,25 @@ const VehicleCard = ({
             <span className="price-amount">{formatPrice(price)}</span>
             {pricePeriod && <span className="price-period">{pricePeriod}</span>}
           </div>
-
-          {/* Action Buttons */}
-          <div className="vehicle-actions">
-            {linkTo ? (
-              <Link to={linkTo} className="vehicle-link">
-                <Button variant="primary" size="sm">
-                  View Details
-                </Button>
-              </Link>
-            ) : (
-              <Button variant="primary" size="sm" onClick={onClick}>
-                View Details
-              </Button>
-            )}
-          </div>
         </div>
 
-        {/* Quick Actions (shown on hover) */}
-        {isHovered && variant === 'featured' && (
-          <div className="vehicle-quick-actions">
-            <Button variant="outline" size="xs" icon="📅">Quick Book</Button>
-            <Button variant="outline" size="xs" icon="📞">Contact</Button>
+        {showActionGrid && (
+          <div className="vehicle-action-grid" onClick={(e) => e.stopPropagation()}>
+            <Button variant="primary" size="sm" fullWidth onClick={handleViewDetails}>
+              View Details
+            </Button>
+            <Button variant="success" size="sm" fullWidth onClick={handleQuickBookClick}>
+              Book Now
+            </Button>
+            <Button variant="outline" size="sm" fullWidth onClick={handleBuyClick}>
+              Buy
+            </Button>
+            <Button variant="secondary" size="sm" fullWidth onClick={handleContactClick}>
+              Contact
+            </Button>
           </div>
         )}
+
       </div>
 
       {/* Unavailable Overlay */}
