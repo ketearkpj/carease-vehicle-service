@@ -5,12 +5,17 @@
 @import './Buttons.css';
 
 .admin-table-container {
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
   padding: var(--space-6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .table-controls {
@@ -34,9 +39,9 @@
 
 .table-wrapper {
   overflow-x: auto;
-  border-radius: var(--radius-lg);
-  background: var(--bg-dark);
-  border: var(--border-fine);
+  border-radius: 18px;
+  background: rgba(5, 5, 5, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .admin-table {
@@ -46,13 +51,15 @@
 }
 
 .admin-table th {
-  background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-charcoal) 100%);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(11, 14, 20, 0.98), rgba(17, 22, 31, 0.96));
   color: var(--white);
   font-weight: var(--weight-semibold);
   text-align: left;
   padding: var(--space-4);
   white-space: nowrap;
-  border-bottom: var(--border-gold-light);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.18);
   position: sticky;
   top: 0;
   z-index: 2;
@@ -101,13 +108,13 @@
 .admin-table td {
   padding: var(--space-4);
   color: var(--silver);
-  border-bottom: var(--border-fine);
-  transition: background var(--transition-base);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background var(--transition-base), border-color var(--transition-base);
   vertical-align: top;
 }
 
 .admin-table tbody tr:hover td {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(212, 175, 55, 0.04);
 }
 
 .admin-table tbody tr.selected td {
@@ -141,9 +148,11 @@
 .action-btn {
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-full);
-  border: none;
-  background: var(--glass-bg);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.01);
   color: var(--silver);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -157,22 +166,22 @@
 }
 
 .action-btn.default:hover {
-  background: var(--gold-primary);
-  color: var(--bg-deep);
+  background: rgba(212, 175, 55, 0.14);
+  color: var(--gold-light);
 }
 
 .action-btn.edit:hover {
-  background: var(--info);
+  background: rgba(51, 181, 229, 0.14);
   color: var(--white);
 }
 
 .action-btn.delete:hover {
-  background: var(--error);
+  background: rgba(255, 68, 68, 0.14);
   color: var(--white);
 }
 
 .action-btn.view:hover {
-  background: var(--success);
+  background: rgba(0, 255, 136, 0.14);
   color: var(--white);
 }
 
@@ -217,9 +226,11 @@
 .pagination-btn {
   min-width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
-  background: var(--glass-bg);
-  border: var(--border-fine);
+  border-radius: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--silver);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -229,15 +240,17 @@
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background: var(--gold-primary);
-  color: var(--bg-deep);
-  border-color: transparent;
+  background: rgba(212, 175, 55, 0.16);
+  color: var(--white);
+  border-color: rgba(212, 175, 55, 0.22);
 }
 
 .pagination-btn.active {
-  background: var(--gold-gradient);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    var(--gold-gradient);
   color: var(--bg-deep);
-  border-color: transparent;
+  border-color: rgba(245, 215, 66, 0.18);
   font-weight: var(--weight-bold);
 }
 

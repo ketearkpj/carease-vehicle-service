@@ -15,7 +15,9 @@
 /* ===== WHY BUY SECTION ===== */
 .why-buy-section {
   padding: var(--space-24) 0;
-  background: linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+  background:
+    radial-gradient(circle at top center, rgba(212, 175, 55, 0.05), transparent 24%),
+    linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
   position: relative;
   overflow: hidden;
 }
@@ -41,14 +43,19 @@
 }
 
 .advantage-card {
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
   padding: var(--space-8);
   text-align: center;
   transition: all var(--transition-base);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .advantage-card:hover {
@@ -92,12 +99,17 @@
   flex-direction: column;
   gap: var(--space-6);
   margin-bottom: var(--space-8);
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
   padding: var(--space-6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
   position: relative;
   z-index: 20;
 }
@@ -138,8 +150,8 @@
 .view-toggle {
   display: flex;
   gap: var(--space-2);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-full);
   padding: var(--space-1);
 }
@@ -263,9 +275,11 @@
 .no-results {
   text-align: center;
   padding: var(--space-16);
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
   margin-bottom: var(--space-12);
 }
 
@@ -299,9 +313,11 @@
 .pagination-btn {
   min-width: 40px;
   height: 40px;
-  border-radius: var(--radius-full);
-  background: var(--glass-bg);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--silver);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -312,15 +328,17 @@
 }
 
 .pagination-btn:hover:not(:disabled) {
-  border-color: var(--gold-primary);
-  color: var(--gold-primary);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: var(--white);
   transform: translateY(-2px);
 }
 
 .pagination-btn.active {
-  background: var(--gold-gradient);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    var(--gold-gradient);
   color: var(--bg-deep);
-  border-color: transparent;
+  border-color: rgba(245, 215, 66, 0.18);
 }
 
 .pagination-btn:disabled {
@@ -360,11 +378,16 @@
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-deep) 100%);
-  border: 1px solid var(--gold-primary);
-  border-radius: var(--radius-3xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(9, 12, 18, 0.98), rgba(15, 20, 29, 0.96));
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-radius: 32px;
   padding: var(--space-8);
-  box-shadow: var(--shadow-2xl), var(--shadow-gold-lg);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 32px rgba(212, 175, 55, 0.12);
   animation: scaleIn 0.3s ease;
   z-index: 2;
 }
@@ -502,8 +525,9 @@
   grid-template-columns: repeat(2, 1fr);
   gap: var(--space-4);
   padding: var(--space-4);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
 }
 
 .highlight-item {
@@ -541,9 +565,9 @@
 .tab-label {
   padding: var(--space-3) var(--space-2);
   text-align: center;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   color: var(--silver);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -569,8 +593,9 @@
   display: none;
   grid-column: 1 / -1;
   padding: var(--space-6);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius-xl);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 22px;
   margin-top: var(--space-2);
   animation: fadeIn 0.3s ease;
 }
@@ -594,8 +619,9 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
 }
 
 .spec-key {

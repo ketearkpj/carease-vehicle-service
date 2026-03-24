@@ -568,14 +568,34 @@ const Home = () => {
       {/* ===== HIGHLIGHTS SECTION - REPLACED NEWSLETTER ===== */}
       <section className="highlights-section">
         <div className="container">
+          <div className="highlights-intro">
+            <span className="section-tag">SIGNATURE SERVICE</span>
+            <h2 className="section-title-large">
+              Crafted for <span className="gold-gradient">Exceptional</span> Expectations
+            </h2>
+            <p className="highlights-intro-copy">
+              CarEase is designed around more than transport. Every touchpoint is shaped to feel seamless,
+              elevated, and unmistakably premium from first inquiry to final handover.
+            </p>
+          </div>
           <div className="highlights-grid">
             {highlights.map((highlight, index) => (
-              <div key={index} className="highlight-card">
-                <div className="highlight-icon" style={{ background: `radial-gradient(circle at 30% 30%, ${highlight.color}20, transparent 70%)` }}>
-                  <span>{highlight.icon}</span>
+              <div
+                key={index}
+                className="highlight-card"
+                style={{ '--highlight-accent': highlight.color }}
+              >
+                <div className="highlight-card-top">
+                  <span className="highlight-index">0{index + 1}</span>
+                  <div className="highlight-icon">
+                    <span>{highlight.icon}</span>
+                  </div>
                 </div>
-                <h3>{highlight.title}</h3>
-                <p>{highlight.description}</p>
+                <div className="highlight-copy">
+                  <h3>{highlight.title}</h3>
+                  <p>{highlight.description}</p>
+                </div>
+                <div className="highlight-footer-line"></div>
               </div>
             ))}
           </div>

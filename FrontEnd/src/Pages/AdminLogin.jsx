@@ -6,9 +6,6 @@ import Button from '../Components/Common/Button';
 import Input from '../Components/Common/Input';
 import Card from '../Components/Common/Card';
 
-// Services
-import { adminLogin } from '../Services/AdminService';
-
 // Hooks
 import { useAdminAuth } from '../Hooks/useAdminAuth';
 import { useApp } from '../Context/AppContext';
@@ -28,7 +25,6 @@ const AdminLogin = () => {
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -115,44 +111,54 @@ const AdminLogin = () => {
       <div className="login-container">
         {/* Left Side - Branding */}
         <div className="login-brand">
+          <div className="brand-background"></div>
+          <div className="brand-grid"></div>
           <div className="brand-content">
+            <p className="brand-eyebrow">Control Center</p>
             <h1 className="brand-logo">
               CAR<span className="gold-text">EASE</span>
             </h1>
-            <p className="brand-tagline">Admin Portal</p>
-            
-            <div className="brand-features">
-              <div className="feature">
-                <span className="feature-icon">📊</span>
-                <span>Dashboard Analytics</span>
+            <p className="brand-tagline">Administrative access for bookings, payments, fleet operations, and reporting.</p>
+
+            <div className="brand-stat-strip">
+              <div className="brand-stat">
+                <span className="brand-stat-value">Bookings</span>
+                <span className="brand-stat-label">Manage customer activity</span>
               </div>
-              <div className="feature">
-                <span className="feature-icon">📅</span>
-                <span>Booking Management</span>
+              <div className="brand-stat">
+                <span className="brand-stat-value">Payments</span>
+                <span className="brand-stat-label">Track transactions and refunds</span>
               </div>
-              <div className="feature">
-                <span className="feature-icon">💰</span>
-                <span>Payment Processing</span>
-              </div>
-              <div className="feature">
-                <span className="feature-icon">🚗</span>
-                <span>Vehicle Inventory</span>
+              <div className="brand-stat">
+                <span className="brand-stat-value">Reports</span>
+                <span className="brand-stat-label">Review operational performance</span>
               </div>
             </div>
 
-            <div className="brand-footer">
-              <p>Secure access for authorized personnel only</p>
-              <div className="security-badge">🔒 SSL Encrypted</div>
+            <div className="brand-notes">
+              <div className="brand-note">
+                <span className="brand-note-title">Protected Access</span>
+                <span className="brand-note-text">Reserved for approved staff and demo administrators.</span>
+              </div>
+              <div className="brand-note">
+                <span className="brand-note-title">Operational Visibility</span>
+                <span className="brand-note-text">Designed to monitor bookings, vehicles, notifications, and service activity from one place.</span>
+              </div>
             </div>
           </div>
-          <div className="brand-background"></div>
+
+          <div className="brand-footer">
+            <div className="security-badge">Secure session</div>
+            <p>Use your admin credentials to continue into the CarEase dashboard.</p>
+          </div>
         </div>
 
         {/* Right Side - Login Form */}
         <Card className="login-form-card">
           <div className="form-header">
+            <p className="form-kicker">Administrator Sign In</p>
             <h2 className="form-title">Admin Login</h2>
-            <p className="form-subtitle">Enter your credentials to access the dashboard</p>
+            <p className="form-subtitle">Enter your credentials to access the CarEase control center.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
@@ -166,8 +172,8 @@ const AdminLogin = () => {
                 onBlur={handleBlur}
                 error={touched.email && errors.email}
                 required
-                icon="✉️"
                 placeholder="admin@carease.co.ke"
+                autocomplete="email"
               />
             </div>
 
@@ -175,23 +181,15 @@ const AdminLogin = () => {
               <Input
                 label="Password"
                 name="password"
-                type={showPassword ? 'text' : 'password'}
+                type="password"
                 value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={touched.password && errors.password}
                 required
-                icon="🔒"
                 placeholder="Enter your password"
+                autocomplete="current-password"
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-                tabIndex="-1"
-              >
-                {showPassword ? '👁️' : '👁️‍🗨️'}
-              </button>
             </div>
 
             <div className="form-options">
@@ -226,19 +224,21 @@ const AdminLogin = () => {
             </Button>
 
             <div className="demo-credentials">
-              <p className="demo-title">Demo Credentials</p>
-              <p className="demo-item">
-                <span>Email:</span> admin@carease.co.ke
-              </p>
-              <p className="demo-item">
-                <span>Password:</span> admin123
-              </p>
-              <p className="demo-note">* For demo purposes only</p>
+              <p className="demo-title">Presentation Demo Access</p>
+              <div className="demo-item">
+                <span>Email</span>
+                <strong>admin@carease.co.ke</strong>
+              </div>
+              <div className="demo-item">
+                <span>Password</span>
+                <strong>admin123</strong>
+              </div>
+              <p className="demo-note">Use these credentials for classroom presentation mode only.</p>
             </div>
           </form>
 
           <div className="form-footer">
-            <p>Need help? Contact IT Support</p>
+            <p>Need help accessing the dashboard?</p>
             <a href="mailto:it@carease.co.ke">it@carease.co.ke</a>
           </div>
         </Card>

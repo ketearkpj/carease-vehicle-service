@@ -170,10 +170,11 @@ const AdminDashboard = () => {
       {/* Header */}
       <div className="admin-dashboard-header">
         <div>
+          <p className="dashboard-kicker">Operations Overview</p>
           <h1 className="page-title">
             Welcome back, <span className="gold-text">{admin?.name || 'Admin'}</span>
           </h1>
-          <p className="page-subtitle">Here's what's happening with your business today.</p>
+          <p className="page-subtitle">Track bookings, revenue, fleet activity, and next actions from one refined control surface.</p>
         </div>
         
         <div className="header-actions">

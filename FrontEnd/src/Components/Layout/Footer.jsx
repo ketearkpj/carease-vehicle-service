@@ -162,7 +162,7 @@ const Footer = () => {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="social-link"
+                    className={`social-link social-link-${social.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                     aria-label={social.label}
                     style={{ '--social-delay': `${index * 0.1}s` }}
                   >

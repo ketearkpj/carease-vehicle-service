@@ -8,7 +8,9 @@
    ============================================ */
 
 .faq-page {
-  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
+  background:
+    radial-gradient(circle at top center, rgba(212, 175, 55, 0.05), transparent 24%),
+    linear-gradient(145deg, var(--bg-deep) 0%, var(--bg-dark) 100%);
   min-height: 100vh;
 }
 
@@ -92,15 +94,20 @@
 
 /* Categories Sidebar */
 .faq-categories {
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 26px;
   padding: var(--space-6);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   height: fit-content;
   position: sticky;
   top: 100px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .categories-title {
@@ -139,7 +146,7 @@
 }
 
 .category-btn.active {
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(212, 175, 55, 0.08);
   color: var(--gold-primary);
   border: 1px solid rgba(212, 175, 55, 0.3);
 }
@@ -167,8 +174,10 @@
 }
 
 .faq-item:hover {
-  border-color: var(--gold-primary);
-  box-shadow: var(--shadow-gold);
+  border-color: rgba(212, 175, 55, 0.24);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(212, 175, 55, 0.08) inset;
 }
 
 .faq-question {
@@ -186,7 +195,7 @@
 }
 
 .faq-question:hover {
-  background: rgba(212, 175, 55, 0.05);
+  background: rgba(212, 175, 55, 0.04);
 }
 
 .question-text {
@@ -221,9 +230,11 @@
 .no-results {
   text-align: center;
   padding: var(--space-16);
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-2xl);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
 }
 
 .no-results-icon {
@@ -248,10 +259,16 @@
 /* Contact Card */
 .contact-card {
   padding: var(--space-8);
-  background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-deep) 100%);
-  border: var(--border-gold);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 28px;
   text-align: center;
   margin-top: var(--space-8);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .contact-title {

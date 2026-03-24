@@ -20,10 +20,10 @@
 .form-label {
   display: block;
   font-family: var(--font-heading);
-  font-size: var(--text-sm);
+  font-size: 0.82rem;
   font-weight: var(--weight-semibold);
-  color: var(--silver);
-  letter-spacing: var(--tracking-wide);
+  color: rgba(226, 232, 240, 0.84);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -60,16 +60,23 @@
 /* ===== INPUT BASE STYLES ===== */
 .form-input {
   width: 100%;
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 18px;
   color: var(--white);
   font-family: var(--font-primary);
   font-size: var(--text-base);
   font-weight: var(--weight-regular);
   line-height: var(--leading-normal);
-  transition: all var(--transition-base);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base),
+    transform var(--transition-base);
   outline: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 /* Input Variants */
@@ -78,7 +85,7 @@
 }
 
 .input-filled {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.055);
   border-color: transparent;
 }
 
@@ -124,19 +131,25 @@
 
 /* Input States */
 .form-input:hover:not(:disabled):not(.input-error):not(.input-success):not(.input-warning) {
-  border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.05);
+  border-color: rgba(212, 175, 55, 0.26);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015)),
+    rgba(212, 175, 55, 0.02);
 }
 
 .form-input:focus {
   border-color: var(--gold-primary);
-  background: rgba(212, 175, 55, 0.1);
-  box-shadow: 0 0 0 3px var(--gold-glow);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018)),
+    rgba(212, 175, 55, 0.04);
+  box-shadow:
+    0 0 0 3px rgba(212, 175, 55, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .form-input.input-focused {
   border-color: var(--gold-primary);
-  box-shadow: 0 0 0 3px var(--gold-glow);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.14);
 }
 
 .form-input:disabled {
@@ -147,8 +160,8 @@
 
 .form-input::placeholder {
   color: var(--silver-dark);
-  opacity: 0.5;
-  font-weight: var(--weight-light);
+  opacity: 0.62;
+  font-weight: var(--weight-regular);
 }
 
 /* Input with Icons */
@@ -178,6 +191,7 @@
   width: 22px;
   height: 22px;
   font-size: 1rem;
+  color: rgba(212, 175, 55, 0.72);
 }
 
 .input-right-icon,
@@ -252,8 +266,8 @@
   align-items: center;
   gap: var(--space-2);
   margin-top: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-lg);
+  padding: 0.75rem 0.9rem;
+  border-radius: 14px;
   font-size: var(--text-sm);
   animation: slideDown 0.3s ease;
 }
@@ -283,8 +297,8 @@
 /* ===== FORM HELPER ===== */
 .form-helper {
   margin-top: var(--space-2);
-  color: var(--silver-dark);
-  font-size: var(--text-xs);
+  color: rgba(148, 163, 184, 0.86);
+  font-size: 0.78rem;
   padding-left: var(--space-1);
 }
 

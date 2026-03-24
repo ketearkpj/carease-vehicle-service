@@ -524,12 +524,16 @@ const Services = () => {
       <section className="categories-immersive">
         <div className="container">
           <div className="categories-header">
+            <span className="categories-kicker">Service Navigator</span>
             <h2 className="categories-title">
               <span className="title-accent">✦</span>
               Explore by Category
               <span className="title-accent">✦</span>
             </h2>
-            <p className="categories-subtitle">Navigate by service line and jump straight to each destination</p>
+            <p className="categories-subtitle">
+              Move through the CarEase ecosystem by intent, compare each service line quickly,
+              and jump directly into the experience that matches your next step.
+            </p>
           </div>
 
           <div className="categories-carousel">
@@ -546,9 +550,19 @@ const Services = () => {
                 }}
               >
                 <div className="card-front">
-                  <span className="category-icon-large">{category.icon}</span>
+                  <div className="category-card-topline">
+                    <span className="category-index">0{index + 1}</span>
+                    <span className="category-status">{activeCategory === category.id ? 'Selected' : 'Available'}</span>
+                  </div>
+                  <div className="category-icon-shell">
+                    <span className="category-icon-large">{category.icon}</span>
+                  </div>
                   <span className="category-label-large">{category.label}</span>
                   <span className="category-description">{category.description}</span>
+                  <div className="category-meta-row">
+                    <span className="category-meta-pill">Direct Access</span>
+                    <span className="category-meta-pill">Premium Flow</span>
+                  </div>
                   <div className="category-card-actions">
                     {getCategoryRoute(category.id) ? (
                       <Link to={getCategoryRoute(category.id)} className="category-route-link">

@@ -179,8 +179,9 @@ const Reports = () => {
       {/* Header */}
       <div className="page-header">
         <div>
+          <p className="reports-kicker">Insight Center</p>
           <h1 className="page-title">Analytics & <span className="gold-text">Reports</span></h1>
-          <p className="page-subtitle">View business performance and generate reports</p>
+          <p className="page-subtitle">Review trends, export operational snapshots, and monitor performance through a more refined reporting workspace.</p>
         </div>
         <div className="header-actions">
             <Select

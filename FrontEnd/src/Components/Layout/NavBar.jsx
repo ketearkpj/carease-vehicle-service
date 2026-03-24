@@ -96,10 +96,10 @@ const NavBar = () => {
   };
 
   const serviceLinks = [
-    { path: ROUTES.RENTALS, label: 'Luxury Rentals', icon: '🚗', description: 'Exotic & luxury vehicles' },
-    { path: ROUTES.CAR_WASH, label: 'Car Wash', icon: '🧼', description: 'Professional detailing' },
-    { path: ROUTES.REPAIRS, label: 'Repairs', icon: '🔧', description: 'Expert maintenance' },
-    { path: ROUTES.SALES, label: 'Sales', icon: '💰', description: 'Premium vehicles for sale' }
+    { path: ROUTES.RENTALS, label: 'Luxury Rentals', description: 'Exotic and luxury vehicles on demand' },
+    { path: ROUTES.CAR_WASH, label: 'Car Wash', description: 'Professional detailing and finish care' },
+    { path: ROUTES.REPAIRS, label: 'Repairs', description: 'Diagnostics, maintenance, and expert service' },
+    { path: ROUTES.SALES, label: 'Sales', description: 'Premium vehicles available for inquiry and purchase' }
   ];
 
   const navLinks = [
@@ -183,6 +183,10 @@ const NavBar = () => {
 
                       {/* Services Dropdown */}
                       <div className={`services-dropdown ${isServicesDropdownOpen ? 'active' : ''}`}>
+                        <div className="services-dropdown-header">
+                          <span className="services-dropdown-kicker">Explore</span>
+                          <span className="services-dropdown-heading">Automotive Services</span>
+                        </div>
                         {serviceLinks.map((service) => (
                           <Link
                             key={service.path}
@@ -190,7 +194,6 @@ const NavBar = () => {
                             className={`dropdown-item ${isActive(service.path)}`}
                             onClick={handleDropdownItemClick}
                           >
-                            <span className="dropdown-item-icon">{service.icon}</span>
                             <div className="dropdown-item-content">
                               <span className="dropdown-item-title">{service.label}</span>
                               <span className="dropdown-item-description">{service.description}</span>
@@ -284,7 +287,6 @@ const NavBar = () => {
                                 setIsMobileMenuOpen(false);
                               }}
                             >
-                              <span className="service-icon">{service.icon}</span>
                               <span className="service-label">{service.label}</span>
                             </Link>
                           ))}

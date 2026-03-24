@@ -13,6 +13,15 @@
   margin: 0 auto;
 }
 
+.reports-kicker {
+  margin: 0 0 var(--space-2);
+  color: rgba(212, 175, 55, 0.82);
+  font-size: 0.78rem;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
 /* ===== HEADER ===== */
 .page-header {
   display: flex;
@@ -51,6 +60,13 @@
 .date-range-card {
   padding: var(--space-6);
   margin-bottom: var(--space-6);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border-radius: 26px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .date-range-picker {
@@ -78,9 +94,11 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
-  background: var(--glass-bg);
-  border: var(--border-fine);
-  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   color: var(--silver);
   cursor: pointer;
   transition: all var(--transition-base);
@@ -93,9 +111,11 @@
 }
 
 .tab-btn.active {
-  background: var(--gold-gradient);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.02)),
+    var(--gold-gradient);
   color: var(--bg-deep);
-  border-color: transparent;
+  border-color: rgba(245, 215, 66, 0.18);
 }
 
 .tab-icon {
@@ -109,8 +129,11 @@
   gap: var(--space-2);
   margin-bottom: var(--space-6);
   padding: var(--space-3);
-  background: var(--glass-bg);
-  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
   display: inline-flex;
 }
 
@@ -133,12 +156,20 @@
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-4);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .kpi-icon {
   width: 60px;
   height: 60px;
-  border-radius: 50%;
+  border-radius: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -210,6 +241,13 @@
 
 .chart-card {
   padding: var(--space-6);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 38px rgba(0, 0, 0, 0.18);
 }
 
 .chart-title {
@@ -223,6 +261,13 @@
 .activity-card {
   padding: var(--space-6);
   margin-bottom: var(--space-6);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border-radius: 26px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .card-title {
@@ -243,8 +288,9 @@
   align-items: center;
   gap: var(--space-4);
   padding: var(--space-3);
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 18px;
   transition: all var(--transition-base);
 }
 
@@ -277,6 +323,13 @@
 
 .summary-card {
   padding: var(--space-6);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(10, 13, 19, 0.94), rgba(17, 22, 31, 0.92));
+  border-radius: 26px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 34px rgba(0, 0, 0, 0.18);
 }
 
 .summary-title {
