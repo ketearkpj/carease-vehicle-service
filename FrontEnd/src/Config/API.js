@@ -6,8 +6,29 @@
 import { getEnv } from './env';
 
 // API Base URLs
-export const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const normalizeBaseUrl = (value) => {
+  const fallback = '/api/v1';
+  const raw = (value || fallback).trim();
+
+  if (!raw) {
+    return fallback;
+  }
+
+  return raw.replace(/\/+$/, '');
+};
+
+export const API_BASE_URL = normalizeBaseUrl(getEnv('REACT_APP_API_URL') || '/api/v1');
 export const API_TIMEOUT = 30000; // 30 seconds
+
+export const buildApiUrl = (path = '') => {
+  const normalizedPath = String(path || '').trim();
+
+  if (!normalizedPath) {
+    return API_BASE_URL;
+  }
+
+  return `${API_BASE_URL}${normalizedPath.startsWith('/') ? normalizedPath : `/${normalizedPath}`}`;
+};
 
 // API Endpoints
 export const API_ENDPOINTS = {

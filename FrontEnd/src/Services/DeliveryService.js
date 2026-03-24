@@ -6,11 +6,11 @@
  */
 
 import axios from 'axios';
-import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 import { getDistanceMatrix, getDeliveryEstimate as getLocationEstimate } from './location.service';
 
 // API base URL
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1/delivery';
+const API_BASE_URL = buildApiUrl('/deliveries');
 
 // Delivery carrier configurations
 const DELIVERY_CARRIERS = {

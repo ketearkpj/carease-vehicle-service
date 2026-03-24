@@ -21,6 +21,30 @@ import { useApp } from '../Context/AppContext';
 // Styles
 import '../Styles/Contact.css';
 
+const FacebookIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M13.5 21v-7h2.3l.4-3h-2.7V9.2c0-.9.3-1.5 1.6-1.5H16V5.1c-.2 0-.9-.1-1.8-.1-1.8 0-3.1 1.1-3.1 3.3V11H9v3h2.3v7h2.2Z" />
+  </svg>
+);
+
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M7.5 3h9A4.5 4.5 0 0 1 21 7.5v9a4.5 4.5 0 0 1-4.5 4.5h-9A4.5 4.5 0 0 1 3 16.5v-9A4.5 4.5 0 0 1 7.5 3Zm0 1.8A2.7 2.7 0 0 0 4.8 7.5v9a2.7 2.7 0 0 0 2.7 2.7h9a2.7 2.7 0 0 0 2.7-2.7v-9a2.7 2.7 0 0 0-2.7-2.7h-9Zm9.45 1.35a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8ZM12 7.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5Zm0 1.8A2.7 2.7 0 1 0 14.7 12 2.7 2.7 0 0 0 12 9.3Z" />
+  </svg>
+);
+
+const TwitterIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M18.9 4H21l-4.6 5.3L22 20h-4.4l-3.5-6.4L8.5 20H6.4l4.9-5.7L6 4h4.5l3.2 6 5.2-6ZM18.1 18.5h1.2L9.9 5.4H8.6l9.5 13.1Z" />
+  </svg>
+);
+
+const LinkedInIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path fill="currentColor" d="M6.4 8.2H3.8V20h2.6V8.2Zm.2-3.6A1.5 1.5 0 1 0 5 6.1a1.5 1.5 0 0 0 1.6-1.5ZM20.2 12.6c0-3.1-1.7-4.6-4-4.6a3.5 3.5 0 0 0-3.1 1.7V8.2h-2.6V20H13v-6.3c0-1.7.3-3.3 2.4-3.3s2.1 1.9 2.1 3.4V20H20V12.6Z" />
+  </svg>
+);
+
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -37,6 +61,10 @@ const Contact = () => {
   const [loading, setLoading] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
   const [activeLocation, setActiveLocation] = useState(0);
+  const selectedLocation = LOCATIONS[activeLocation];
+  const selectedLocationMapQuery = encodeURIComponent(
+    `${selectedLocation?.name || ''} ${selectedLocation?.address || ''}`
+  );
 
   const { addNotification } = useApp();
 
@@ -222,6 +250,37 @@ const Contact = () => {
     {
       question: 'Do you have weekend support?',
       answer: 'Yes, our team is available Saturday 10am-6pm and Sunday 11am-5pm for phone and chat support.'
+    }
+  ];
+
+  const socialPlatforms = [
+    {
+      name: 'Facebook',
+      icon: <FacebookIcon />,
+      handle: '@carease',
+      href: APP_CONFIG.socialMedia.facebook,
+      accent: 'facebook'
+    },
+    {
+      name: 'Instagram',
+      icon: <InstagramIcon />,
+      handle: '@carease',
+      href: APP_CONFIG.socialMedia.instagram,
+      accent: 'instagram'
+    },
+    {
+      name: 'Twitter',
+      icon: <TwitterIcon />,
+      handle: '@carease',
+      href: APP_CONFIG.socialMedia.twitter,
+      accent: 'twitter'
+    },
+    {
+      name: 'LinkedIn',
+      icon: <LinkedInIcon />,
+      handle: 'CAR EASE',
+      href: APP_CONFIG.socialMedia.linkedin,
+      accent: 'linkedin'
     }
   ];
 
@@ -463,23 +522,23 @@ const Contact = () => {
 
                 <div className="active-location">
                   <div className="location-image">
-                    <img src={LOCATIONS[activeLocation].image} alt={LOCATIONS[activeLocation].name} />
+                    <img src={selectedLocation.image} alt={selectedLocation.name} />
                   </div>
-                  <h4 className="location-name">{LOCATIONS[activeLocation].name}</h4>
-                  <p className="location-address">{LOCATIONS[activeLocation].address}</p>
+                  <h4 className="location-name">{selectedLocation.name}</h4>
+                  <p className="location-address">{selectedLocation.address}</p>
                   <div className="location-contact">
-                    <a href={`tel:${LOCATIONS[activeLocation].phone}`}>
+                    <a href={`tel:${selectedLocation.phone}`}>
                       <span className="contact-icon">📞</span>
-                      {LOCATIONS[activeLocation].phone}
+                      {selectedLocation.phone}
                     </a>
-                    <a href={`mailto:${LOCATIONS[activeLocation].email}`}>
+                    <a href={`mailto:${selectedLocation.email}`}>
                       <span className="contact-icon">✉️</span>
-                      {LOCATIONS[activeLocation].email}
+                      {selectedLocation.email}
                     </a>
                   </div>
                   <p className="location-hours">
                     <span className="hours-icon">🕒</span>
-                    {LOCATIONS[activeLocation].hours}
+                    {selectedLocation.hours}
                   </p>
                 </div>
               </div>
@@ -533,23 +592,25 @@ const Contact = () => {
               {/* Social Links */}
               <div className="social-card">
                 <h3 className="info-title">Connect With Us</h3>
-                <div className="social-links">
-                  <a href={APP_CONFIG.socialMedia.facebook} className="social-link" target="_blank" rel="noopener noreferrer">
-                    <span className="social-icon">f</span>
-                    <span className="social-name">Facebook</span>
-                  </a>
-                  <a href={APP_CONFIG.socialMedia.instagram} className="social-link" target="_blank" rel="noopener noreferrer">
-                    <span className="social-icon">📷</span>
-                    <span className="social-name">Instagram</span>
-                  </a>
-                  <a href={APP_CONFIG.socialMedia.twitter} className="social-link" target="_blank" rel="noopener noreferrer">
-                    <span className="social-icon">𝕏</span>
-                    <span className="social-name">Twitter</span>
-                  </a>
-                  <a href={APP_CONFIG.socialMedia.linkedin} className="social-link" target="_blank" rel="noopener noreferrer">
-                    <span className="social-icon">in</span>
-                    <span className="social-name">LinkedIn</span>
-                  </a>
+                <p className="social-intro">
+                  Follow the brand, explore updates, and stay close to the latest CarEase experiences.
+                </p>
+                <div className="social-grid">
+                  {socialPlatforms.map((platform) => (
+                    <a
+                      key={platform.name}
+                      href={platform.href}
+                      className={`social-card-link social-${platform.accent}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <span className="social-card-icon">{platform.icon}</span>
+                      <span className="social-card-content">
+                        <span className="social-card-name">{platform.name}</span>
+                        <span className="social-card-handle">{platform.handle}</span>
+                      </span>
+                    </a>
+                  ))}
                 </div>
               </div>
             </div>
@@ -562,13 +623,13 @@ const Contact = () => {
         <div className="container">
           <div className="map-container">
             <iframe
-              src="https://www.google.com/maps?q=TRM+Mall+Roysambu+Nairobi&output=embed"
+              src={`https://www.google.com/maps?q=${selectedLocationMapQuery}&output=embed`}
               width="100%"
               height="450"
               style={{ border: 0 }}
               allowFullScreen=""
               loading="lazy"
-              title="CAR EASE Locations"
+              title={`${selectedLocation.name} map`}
               className="map-iframe"
             ></iframe>
           </div>

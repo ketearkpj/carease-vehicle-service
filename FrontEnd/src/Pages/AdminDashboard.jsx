@@ -13,7 +13,14 @@ import AnalyticsChart from '../Components/Admin/AnalyticsChart';
 import AdminTable from '../Components/Admin/AdminTable';
 
 // Services
-import { getDashboardStats, getRecentBookings, getAdminNotifications } from '../Services/AdminService';
+import {
+  getDashboardStats,
+  getRecentBookings,
+  getAdminNotifications,
+  getAllBookings,
+  getAllPayments,
+  getAllVehicles
+} from '../Services/AdminService';
 import { formatCurrency } from '../Utils/format';
 
 // Hooks
@@ -32,6 +39,12 @@ const AdminDashboard = () => {
   const [timeframe, setTimeframe] = useState('week');
   const [chartData, setChartData] = useState(null);
   const [adminNotifications, setAdminNotifications] = useState([]);
+  const [totals, setTotals] = useState({
+    bookings: 0,
+    payments: 0,
+    vehicles: 0,
+    notifications: 0
+  });
 
   const { admin } = useAdminAuth();
   const { addNotification } = useApp();
@@ -43,13 +56,24 @@ const AdminDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [statsData, bookingsData] = await Promise.all([
+      const [statsData, bookingsData, bookingsResult, paymentsResult, vehiclesResult, notifications] = await Promise.all([
         getDashboardStats({ period: timeframe }),
-        getRecentBookings(10)
+        getRecentBookings(10),
+        getAllBookings({ page: 1, limit: 1 }),
+        getAllPayments({ page: 1, limit: 1 }),
+        getAllVehicles({ page: 1, limit: 1 }),
+        getAdminNotifications(50)
       ]);
 
       setStats(statsData);
       setRecentBookings(bookingsData);
+      setAdminNotifications(Array.isArray(notifications?.notifications) ? notifications.notifications : []);
+      setTotals({
+        bookings: Number(bookingsResult?.total || statsData?.bookings?.total || 0),
+        payments: Number(paymentsResult?.total || 0),
+        vehicles: Number(vehiclesResult?.total || statsData?.vehicles?.total || 0),
+        notifications: Number(notifications?.total || 0)
+      });
       
       // Prepare chart data
       setChartData({
@@ -69,20 +93,33 @@ const AdminDashboard = () => {
           }
         ]
       });
-      await fetchAdminNotifications();
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
       addNotification('Failed to load dashboard data', 'error');
       
-      // Fallback data
       setStats({
-        revenue: { total: 158900, change: 12.5 },
-        bookings: { total: 1245, change: 8.3 },
-        users: { total: 3456, change: 15.2 },
-        vehicles: { total: 89, change: 5.1 }
+        revenue: { total: 0, change: 0 },
+        bookings: { total: 0, change: 0 },
+        users: { total: 0, change: 0 },
+        vehicles: { total: 0, change: 0 },
+        occupancy: 0,
+        trends: {
+          labels: [],
+          revenue: [],
+          bookings: []
+        }
+      });
+      setRecentBookings([]);
+      setAdminNotifications([]);
+      setTotals({
+        bookings: 0,
+        payments: 0,
+        vehicles: 0,
+        notifications: 0
       });
     } finally {
       setLoading(false);
+      setNotificationsLoading(false);
     }
   };
 
@@ -90,10 +127,18 @@ const AdminDashboard = () => {
     setNotificationsLoading(true);
     try {
       const items = await getAdminNotifications(12);
-      setAdminNotifications(Array.isArray(items) ? items : []);
+      setAdminNotifications(Array.isArray(items?.notifications) ? items.notifications : []);
+      setTotals((prev) => ({
+        ...prev,
+        notifications: Number(items?.total || 0)
+      }));
     } catch (error) {
       console.error('Failed to fetch admin notifications:', error);
       setAdminNotifications([]);
+      setTotals((prev) => ({
+        ...prev,
+        notifications: 0
+      }));
     } finally {
       setNotificationsLoading(false);
     }
@@ -102,33 +147,48 @@ const AdminDashboard = () => {
   const statCards = [
     {
       title: 'Total Revenue',
-      value: formatCurrency(stats?.revenue?.total || 158900),
-      change: stats?.revenue?.change || 12.5,
-      icon: '💰',
+      value: formatCurrency(stats?.revenue?.total || 0),
+      change: stats?.revenue?.change || 0,
+      eyebrow: 'Commercial',
       color: 'gold'
     },
     {
       title: 'Total Bookings',
-      value: stats?.bookings?.total?.toLocaleString() || '1,245',
-      change: stats?.bookings?.change || 8.3,
-      icon: '📅',
+      value: totals.bookings.toLocaleString(),
+      change: stats?.bookings?.change || 0,
+      eyebrow: 'Operations',
       color: 'success'
     },
     {
-      title: 'Service Requests',
-      value: stats?.bookings?.total?.toLocaleString() || '1,245',
-      change: stats?.bookings?.change || 8.3,
-      icon: '🛠️',
+      title: 'Payments Recorded',
+      value: totals.payments.toLocaleString(),
+      change: 0,
+      eyebrow: 'Finance',
       color: 'info'
     },
     {
       title: 'Vehicles in Fleet',
-      value: stats?.vehicles?.total?.toLocaleString() || '89',
-      change: stats?.vehicles?.change || 5.1,
-      icon: '🚗',
+      value: totals.vehicles.toLocaleString(),
+      change: stats?.vehicles?.change || 0,
+      eyebrow: 'Inventory',
       color: 'warning'
     }
   ];
+
+  const bookingStatusCounts = recentBookings.reduce(
+    (acc, booking) => {
+      const status = String(booking?.status || '').toLowerCase();
+      if (status === 'completed') acc.completed += 1;
+      if (status === 'pending') acc.pending += 1;
+      return acc;
+    },
+    { completed: 0, pending: 0 }
+  );
+
+  const recentRevenue = recentBookings.reduce(
+    (sum, booking) => sum + Number(booking?.amount || 0),
+    0
+  );
 
   const recentBookingsColumns = [
     { key: 'id', label: 'Booking ID' },
@@ -142,10 +202,10 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { label: 'New Booking', icon: '📅', path: ROUTES.ADMIN_BOOKINGS, color: 'gold' },
-    { label: 'Add Vehicle', icon: '🚗', path: ROUTES.ADMIN_VEHICLES, color: 'success' },
-    { label: 'Process Payment', icon: '💰', path: ROUTES.ADMIN_PAYMENTS, color: 'info' },
-    { label: 'View Reports', icon: '📊', path: ROUTES.ADMIN_REPORTS, color: 'warning' }
+    { label: 'New Booking', description: 'Review and act on new booking demand.', path: ROUTES.ADMIN_BOOKINGS, color: 'gold' },
+    { label: 'Add Vehicle', description: 'Expand inventory and update fleet records.', path: ROUTES.ADMIN_VEHICLES, color: 'success' },
+    { label: 'Process Payment', description: 'Track payment status and resolve issues.', path: ROUTES.ADMIN_PAYMENTS, color: 'info' },
+    { label: 'View Reports', description: 'Open analytics and export operational data.', path: ROUTES.ADMIN_REPORTS, color: 'warning' }
   ];
 
   const openBookingWorkflow = (row, mode = 'view') => {
@@ -197,9 +257,9 @@ const AdminDashboard = () => {
         {statCards.map((stat, index) => (
           <Card key={index} className={`stat-card stat-${stat.color}`}>
             <div className="stat-header">
-              <span className="stat-icon">{stat.icon}</span>
-              <span className={`stat-change ${stat.change >= 0 ? 'positive' : 'negative'}`}>
-                {stat.change > 0 ? '+' : ''}{stat.change}%
+              <span className="stat-eyebrow">{stat.eyebrow}</span>
+              <span className={`stat-change ${stat.change >= 0 ? 'positive' : 'negative'} ${stat.change === 0 ? 'neutral' : ''}`}>
+                {stat.change === 0 ? 'Live' : `${stat.change > 0 ? '+' : ''}${stat.change}%`}
               </span>
             </div>
             <div className="stat-content">
@@ -243,11 +303,10 @@ const AdminDashboard = () => {
         <h2 className="section-title">Quick Actions</h2>
         <div className="quick-actions-grid">
           {quickActions.map((action, index) => (
-            <Link to={action.path} key={index} className="quick-action-card">
-              <div className={`quick-action-icon action-${action.color}`}>
-                {action.icon}
-              </div>
+            <Link to={action.path} key={index} className={`quick-action-card action-${action.color}`}>
+              <span className="quick-action-kicker">Direct Action</span>
               <span className="quick-action-label">{action.label}</span>
+              <p className="quick-action-description">{action.description}</p>
             </Link>
           ))}
         </div>
@@ -286,45 +345,45 @@ const AdminDashboard = () => {
       {/* Activity Summary */}
       <div className="activity-summary">
         <Card className="activity-card">
-          <h3 className="activity-title">Today's Activity</h3>
+          <h3 className="activity-title">Operations Snapshot</h3>
           <div className="activity-stats">
             <div className="activity-item">
-              <span className="activity-label">New Bookings</span>
-              <span className="activity-value">24</span>
+              <span className="activity-label">Bookings</span>
+              <span className="activity-value">{totals.bookings}</span>
             </div>
             <div className="activity-item">
               <span className="activity-label">Completed</span>
-              <span className="activity-value">18</span>
+              <span className="activity-value">{bookingStatusCounts.completed}</span>
             </div>
             <div className="activity-item">
               <span className="activity-label">Pending</span>
-              <span className="activity-value">6</span>
+              <span className="activity-value">{bookingStatusCounts.pending}</span>
             </div>
             <div className="activity-item">
-              <span className="activity-label">Revenue Today</span>
-              <span className="activity-value">{formatCurrency(12450)}</span>
+              <span className="activity-label">Recent Revenue</span>
+              <span className="activity-value">{formatCurrency(recentRevenue)}</span>
             </div>
           </div>
         </Card>
 
         <Card className="activity-card">
-          <h3 className="activity-title">System Status</h3>
+          <h3 className="activity-title">Live Admin Totals</h3>
           <div className="system-status">
             <div className="status-item">
-              <span className="status-label">Database</span>
-              <span className="status-value healthy">● Healthy</span>
+              <span className="status-label">Notifications</span>
+              <span className="status-value healthy">{totals.notifications}</span>
             </div>
             <div className="status-item">
-              <span className="status-label">API</span>
-              <span className="status-value healthy">● Operational</span>
+              <span className="status-label">Payments</span>
+              <span className="status-value healthy">{totals.payments}</span>
             </div>
             <div className="status-item">
-              <span className="status-label">Storage</span>
-              <span className="status-value warning">● 78% Used</span>
+              <span className="status-label">Vehicles</span>
+              <span className="status-value healthy">{totals.vehicles}</span>
             </div>
             <div className="status-item">
-              <span className="status-label">Last Backup</span>
-              <span className="status-value">2 hours ago</span>
+              <span className="status-label">Recent Bookings Loaded</span>
+              <span className="status-value">{recentBookings.length}</span>
             </div>
           </div>
         </Card>

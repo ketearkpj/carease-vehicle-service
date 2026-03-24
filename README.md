@@ -32,3 +32,4 @@ This starts:
 - Booking and checkout polish notes: `BOOKING_CHECKOUT_POLISH_GUIDE.md`
 - Backend API and setup details: `BackEnd/README.md`
 - Frontend app structure and routes: `FrontEnd/README.md`
+- Render one-go deployment guide: `DEPLOY_RENDER.md`

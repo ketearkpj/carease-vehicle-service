@@ -155,21 +155,21 @@ const Footer = () => {
               </p>
               
               {/* Social Links with Premium Effects */}
-              <div className="social-links">
+              <div className="footer-social-grid">
                 {socialLinks.map((social, index) => (
                   <a 
                     key={index}
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`social-link social-link-${social.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                    className={`footer-social-link footer-social-link-${social.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
                     aria-label={social.label}
                     style={{ '--social-delay': `${index * 0.1}s` }}
                   >
                     <svg viewBox="0 0 24 24" fill="currentColor">
                       <path d={social.svg} />
                     </svg>
-                    <span className="social-tooltip">{social.label}</span>
+                    <span className="footer-social-tooltip">{social.label}</span>
                   </a>
                 ))}
               </div>

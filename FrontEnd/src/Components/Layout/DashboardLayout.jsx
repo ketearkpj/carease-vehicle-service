@@ -1,6 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ROUTES } from '../../Config/Routes';
+import { useAdminAuth } from '../../Hooks/useAdminAuth';
+import {
+  getAllBookings,
+  getAllPayments,
+  getAllVehicles,
+  getAdminNotifications
+} from '../../Services/AdminService';
+import {
+  getUnreadAdminNotificationCount,
+  subscribeToAdminNotificationReads
+} from '../../Utils/adminNotifications';
 import '../../Styles/DashboardLayout.css';
 
 // Icons as components
@@ -35,18 +46,70 @@ const DashboardLayout = ({
 }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'New booking #CE1245', time: '5 min ago', read: false },
-    { id: 2, text: 'Payment received $3,600', time: '1 hour ago', read: false },
-    { id: 3, text: 'Vehicle maintenance due', time: '2 hours ago', read: true }
-  ]);
+  const [metrics, setMetrics] = useState({
+    bookings: null,
+    vehicles: null,
+    payments: null
+  });
+  const [adminNotifications, setAdminNotifications] = useState([]);
+  const [readVersion, setReadVersion] = useState(0);
   
   const location = useLocation();
   const navigate = useNavigate();
+  const { admin } = useAdminAuth();
 
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location]);
+
+  useEffect(() => {
+    if (role !== 'admin') return undefined;
+
+    let mounted = true;
+
+    const fetchAdminSidebarData = async () => {
+      try {
+        const [bookings, vehicles, payments, notificationsResult] = await Promise.all([
+          getAllBookings({ page: 1, limit: 1 }),
+          getAllVehicles({ page: 1, limit: 1 }),
+          getAllPayments({ page: 1, limit: 1 }),
+          getAdminNotifications(250)
+        ]);
+
+        if (!mounted) return;
+
+        setMetrics({
+          bookings: Number(bookings?.total || 0),
+          vehicles: Number(vehicles?.total || 0),
+          payments: Number(payments?.total || 0)
+        });
+        setAdminNotifications(
+          Array.isArray(notificationsResult?.notifications)
+            ? notificationsResult.notifications
+            : []
+        );
+      } catch (error) {
+        if (!mounted) return;
+        setMetrics({
+          bookings: null,
+          vehicles: null,
+          payments: null
+        });
+        setAdminNotifications([]);
+      }
+    };
+
+    fetchAdminSidebarData();
+    const unsubscribe = subscribeToAdminNotificationReads(() => {
+      if (!mounted) return;
+      setReadVersion((prev) => prev + 1);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe?.();
+    };
+  }, [role, admin]);
 
   const handleLogout = () => {
     // Will be connected to auth service later
@@ -58,17 +121,25 @@ const DashboardLayout = ({
     return location.pathname === path ? 'active' : '';
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = useMemo(() => {
+    if (role !== 'admin') return 0;
+    return getUnreadAdminNotificationCount(adminNotifications);
+  }, [adminNotifications, readVersion, role]);
+
+  const formatBadge = (value) => {
+    if (value == null || value <= 0) return null;
+    return value > 99 ? '99+' : String(value);
+  };
 
   // Navigation items based on role
   const navItems = {
     admin: [
       { path: ROUTES.ADMIN_DASHBOARD, label: 'Dashboard', icon: Icons.Dashboard },
-      { path: ROUTES.ADMIN_BOOKINGS, label: 'Bookings', icon: Icons.Bookings, badge: 12 },
-      { path: ROUTES.ADMIN_VEHICLES, label: 'Vehicles', icon: Icons.Vehicles, badge: 24 },
-      { path: ROUTES.ADMIN_PAYMENTS, label: 'Payments', icon: Icons.Payments, badge: 3 },
+      { path: ROUTES.ADMIN_BOOKINGS, label: 'Bookings', icon: Icons.Bookings, badge: formatBadge(metrics.bookings) },
+      { path: ROUTES.ADMIN_VEHICLES, label: 'Vehicles', icon: Icons.Vehicles, badge: formatBadge(metrics.vehicles) },
+      { path: ROUTES.ADMIN_PAYMENTS, label: 'Payments', icon: Icons.Payments, badge: formatBadge(metrics.payments) },
       { path: ROUTES.ADMIN_REPORTS, label: 'Reports', icon: Icons.Reports },
-      { path: ROUTES.ADMIN_NOTIFICATIONS, label: 'Notifications', icon: Icons.Notification, badge: unreadCount || null },
+      { path: ROUTES.ADMIN_NOTIFICATIONS, label: 'Notifications', icon: Icons.Notification, badge: formatBadge(unreadCount) },
       { path: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Icons.Settings }
     ],
     provider: [

@@ -5,6 +5,7 @@ import Button from '../Components/Common/Button';
 import LoadingSpinner from '../Components/Common/LoadingSpinner';
 import { getAdminNotifications } from '../Services/AdminService';
 import { useApp } from '../Context/AppContext';
+import { markAdminNotificationsRead } from '../Utils/adminNotifications';
 import '../Styles/AdminNotifications.css';
 
 const NotificationItem = ({ item }) => {
@@ -35,7 +36,9 @@ const AdminNotifications = () => {
     setLoading(true);
     try {
       const data = await getAdminNotifications(50);
-      setNotifications(Array.isArray(data) ? data : []);
+      const items = Array.isArray(data?.notifications) ? data.notifications : [];
+      setNotifications(items);
+      markAdminNotificationsRead(items.map((item) => item.id));
     } catch (error) {
       addNotification(error.message || 'Failed to load notifications', 'error');
       setNotifications([]);

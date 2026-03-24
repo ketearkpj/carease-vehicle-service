@@ -6,11 +6,11 @@
  */
 
 import axios from 'axios';
-import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 import { sendPasswordResetEmail } from './EmailService';
 
 // API base URL
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1/auth';
+const API_BASE_URL = buildApiUrl('/auth');
 
 // Token management
 const TOKEN_KEY = 'carease_auth_token';

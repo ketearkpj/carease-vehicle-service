@@ -6,10 +6,10 @@
  */
 
 import axios from 'axios';
-import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 
 // API base URL
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const API_BASE_URL = buildApiUrl();
 
 /**
  * Vehicle categories with real data

@@ -5,10 +5,10 @@
  */
 
 import axios from 'axios';
-import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 import { sendBookingConfirmation } from './EmailService';
 
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const API_BASE_URL = buildApiUrl();
 const LOCAL_BOOKINGS_KEY = 'carease_local_bookings';
 const DEFAULT_SLOTS = ['09:00 AM', '11:00 AM', '01:00 PM', '03:00 PM', '05:00 PM'];
 

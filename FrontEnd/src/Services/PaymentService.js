@@ -9,6 +9,7 @@ import axios from 'axios';
 import { loadStripe } from '@stripe/stripe-js';
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 
 // Payment gateway configurations
 const PAYMENT_CONFIG = {
@@ -50,7 +51,7 @@ const PAYMENT_CONFIG = {
   }
 };
 
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const API_BASE_URL = buildApiUrl();
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('carease_auth_token');

@@ -934,17 +934,17 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
     createdAt: item.createdAt
   }));
 
-  const notifications = [
+  const allNotifications = [
     ...bookingNotifications,
     ...paymentNotifications,
     ...subscriptionNotifications,
     ...inquiryNotifications
   ]
     .filter((n) => n.createdAt)
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, limit);
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  const total = notifications.length;
+  const total = allNotifications.length;
+  const notifications = allNotifications.slice(0, limit);
 
   res.status(200).json({
     status: 'success',

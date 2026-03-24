@@ -775,41 +775,143 @@
   -webkit-backdrop-filter: blur(10px);
 }
 
-.social-links {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-3);
+.social-intro {
+  margin: 0 0 var(--space-4);
+  color: rgba(232, 238, 247, 0.66);
+  line-height: 1.7;
+  font-size: 0.92rem;
 }
 
-.social-link {
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.social-card-link {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: var(--radius-lg);
-  color: var(--silver);
+  gap: 16px;
+  min-height: 104px;
+  padding: 18px 20px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.012)),
+    linear-gradient(145deg, rgba(8, 12, 19, 0.96), rgba(16, 22, 32, 0.96));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
   text-decoration: none;
-  transition: all var(--transition-base);
+  transition: transform var(--transition-base), border-color var(--transition-base), box-shadow var(--transition-base);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 28px rgba(0, 0, 0, 0.14);
 }
 
-.social-link:hover {
-  border-color: var(--gold-primary);
-  color: var(--gold-primary);
+.social-card-link:hover {
   transform: translateY(-2px);
-  background: rgba(212, 175, 55, 0.05);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset;
 }
 
-.social-icon {
-  font-size: var(--text-lg);
-  min-width: 24px;
-  text-align: center;
+.social-facebook:hover {
+  border-color: rgba(91, 129, 255, 0.34);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(91, 129, 255, 0.12) inset;
 }
 
-.social-name {
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
+.social-instagram:hover {
+  border-color: rgba(255, 138, 101, 0.34);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 138, 101, 0.12) inset;
+}
+
+.social-twitter:hover {
+  border-color: rgba(166, 180, 194, 0.3);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(166, 180, 194, 0.12) inset;
+}
+
+.social-linkedin:hover {
+  border-color: rgba(102, 178, 255, 0.34);
+  box-shadow:
+    0 18px 32px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(102, 178, 255, 0.12) inset;
+}
+
+.social-card-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 12px 22px rgba(0, 0, 0, 0.16);
+}
+
+.social-card-icon svg {
+  width: 32px;
+  height: 32px;
+  display: block;
+  fill: currentColor;
+}
+
+.social-facebook .social-card-icon {
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(91, 129, 255, 0.38), rgba(91, 129, 255, 0.18)),
+    rgba(91, 129, 255, 0.18);
+}
+
+.social-instagram .social-card-icon {
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(255, 138, 101, 0.4), rgba(201, 73, 133, 0.2)),
+    rgba(255, 138, 101, 0.18);
+}
+
+.social-twitter .social-card-icon {
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(166, 180, 194, 0.36), rgba(100, 110, 121, 0.18)),
+    rgba(166, 180, 194, 0.16);
+}
+
+.social-linkedin .social-card-icon {
+  color: #ffffff;
+  background:
+    linear-gradient(180deg, rgba(102, 178, 255, 0.38), rgba(44, 119, 194, 0.18)),
+    rgba(102, 178, 255, 0.18);
+}
+
+.social-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.social-card-name {
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: var(--weight-semibold);
+}
+
+.social-card-handle {
+  color: rgba(232, 238, 247, 0.62);
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
 }
 
 /* ===== MAP SECTION ===== */
@@ -891,8 +993,8 @@
     flex-direction: column;
   }
 
-  .social-links {
-    grid-template-columns: 1fr;
+  .social-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -913,6 +1015,14 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-1);
+  }
+
+  .social-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .social-card-link {
+    padding: 16px 18px;
   }
 
   .map-container {

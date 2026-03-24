@@ -28,6 +28,65 @@ import '../Styles/Repairs.css';
 const Repairs = () => {
   const navigate = useNavigate();
   const formatKES = (amount) => formatCurrency(Number(amount || 0));
+  const serviceJourney = [
+    { id: 'select', title: 'Choose Service', description: 'Pick diagnostics, maintenance, repair, or performance support based on the issue.' },
+    { id: 'schedule', title: 'Schedule Intake', description: 'Select location, preferred date, and service time with live slot guidance.' },
+    { id: 'confirm', title: 'Confirm Scope', description: 'Describe symptoms, request urgent handling, and continue into booking checkout.' }
+  ];
+  const repairCoverage = [
+    {
+      title: 'Engine, Cooling & Driveability',
+      icon: '🛠️',
+      description: 'Misfires, overheating, rough idling, leaks, power loss, and drivability troubleshooting.',
+      highlights: ['Diagnostics and fault tracing', 'Cooling system and leak inspection', 'Road-test validation']
+    },
+    {
+      title: 'Brakes, Suspension & Steering',
+      icon: '🛞',
+      description: 'Brake wear, suspension noise, steering instability, alignment, and ride-quality concerns.',
+      highlights: ['Brake inspection and servicing', 'Suspension component checks', 'Handling and safety review']
+    },
+    {
+      title: 'Electrical, Battery & Electronics',
+      icon: '🧠',
+      description: 'Battery health, sensors, warning lights, ECU communication, and electrical fault isolation.',
+      highlights: ['Battery and charging health', 'Electronic system scan', 'Sensor and wiring review']
+    }
+  ];
+  const repairAdvantages = [
+    { icon: '🔧', title: 'Certified Technicians', description: 'ASE-certified master technicians with luxury vehicle expertise' },
+    { icon: '⚡', title: 'Latest Equipment', description: 'State-of-the-art diagnostics, inspection tooling, and calibration support' },
+    { icon: '🛡️', title: 'Warranty Included', description: '24-month/40,000-km warranty on qualifying repairs and labor' },
+    { icon: '🚗', title: 'Genuine Parts', description: 'OEM and genuine parts sourcing for reliable service quality' },
+    { icon: '⏱️', title: 'Quick Turnaround', description: 'Efficient scheduling with transparent updates and minimal downtime' },
+    { icon: '🤝', title: 'Clear Estimates', description: 'Transparent repair scope and pricing guidance before work proceeds' }
+  ];
+  const repairCatalog = {
+    diagnostic: {
+      category: 'Inspection',
+      idealFor: 'Warning lights, unusual sounds, rough idling, and pre-purchase checks',
+      turnaround: 'Approx. 60 minutes',
+      includes: ['Full systems scan', 'Battery and charging health check', 'Fault-code report', 'Technician consultation']
+    },
+    maintenance: {
+      category: 'Maintenance',
+      idealFor: 'Routine service intervals, fleet upkeep, and reliability-focused care',
+      turnaround: 'Approx. 2 hours',
+      includes: ['Oil and filter service', 'Fluid top-up and inspection', 'Brake and tire check', 'Service reset and care notes']
+    },
+    repair: {
+      category: 'Repair',
+      idealFor: 'Brakes, suspension, drivability faults, cooling, and engine-related issues',
+      turnaround: 'Same day to multi-day depending on parts',
+      includes: ['Fault isolation and inspection', 'Parts and labor estimate', 'Repair execution', 'Post-repair road test']
+    },
+    performance: {
+      category: 'Performance',
+      idealFor: 'Tuning, response upgrades, ECU work, and enthusiast-focused setups',
+      turnaround: 'Approx. 4 hours',
+      includes: ['Performance consultation', 'ECU or tuning setup', 'Dyno / calibration checks', 'Setup review and recommendations']
+    }
+  };
   const [services, setServices] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,16 +130,24 @@ const Repairs = () => {
     setLoading(true);
     try {
       const data = await getRepairServices();
-      setServices(data);
-      if (data.length > 0) {
-        setSelectedService(data[0]);
-        setFormData(prev => ({ ...prev, service: data[0].id }));
+      const enrichedServices = data.map((service) => ({
+        ...service,
+        ...repairCatalog[service.id]
+      }));
+      setServices(enrichedServices);
+      if (enrichedServices.length > 0) {
+        setSelectedService(enrichedServices[0]);
+        setFormData(prev => ({ ...prev, service: enrichedServices[0].id }));
       }
     } catch (error) {
       console.error('Failed to fetch repair services:', error);
-      setServices(REPAIR_SERVICES);
-      setSelectedService(REPAIR_SERVICES[0]);
-      setFormData(prev => ({ ...prev, service: REPAIR_SERVICES[0].id }));
+      const fallbackServices = REPAIR_SERVICES.map((service) => ({
+        ...service,
+        ...repairCatalog[service.id]
+      }));
+      setServices(fallbackServices);
+      setSelectedService(fallbackServices[0]);
+      setFormData(prev => ({ ...prev, service: fallbackServices[0].id }));
     } finally {
       setLoading(false);
     }
@@ -125,6 +192,10 @@ const Repairs = () => {
   const handleServiceSelect = (service) => {
     setSelectedService(service);
     setFormData(prev => ({ ...prev, service: service.id }));
+  };
+
+  const jumpToBooking = () => {
+    document.getElementById('booking')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleInputChange = (e) => {
@@ -174,6 +245,8 @@ const Repairs = () => {
     value: currentYear - i,
     label: (currentYear - i).toString()
   }));
+  const totalEstimate = (estimatedPrice || 0) + (selectedService && selectedService.id !== 'diagnostic' ? diagnosticFee : 0);
+  const selectedLocation = LOCATIONS.find((l) => l.id === formData.location);
 
   return (
     <div className="repairs-page">
@@ -190,6 +263,32 @@ const Repairs = () => {
         fullHeight={false}
       />
 
+      <section className="repairs-intro-strip">
+        <div className="container">
+          <div className="repairs-intro-grid">
+            <article className="repairs-intro-card">
+              <span className="intro-kicker">Service Standards</span>
+              <h3>Luxury-focused repair experience</h3>
+              <p>From diagnostics to final handover, every step is structured for premium vehicles and client clarity.</p>
+            </article>
+            <article className="repairs-intro-metrics">
+              <div className="intro-metric">
+                <span className="metric-value">24/7</span>
+                <span className="metric-label">Emergency Support</span>
+              </div>
+              <div className="intro-metric">
+                <span className="metric-value">4</span>
+                <span className="metric-label">Repair Pathways</span>
+              </div>
+              <div className="intro-metric">
+                <span className="metric-value">OEM</span>
+                <span className="metric-label">Parts Priority</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
       {/* Services Section */}
       <section className="repair-services-section" id="services">
         <div className="container">
@@ -199,6 +298,19 @@ const Repairs = () => {
             <p className="section-description">
               Comprehensive maintenance and repair solutions for all luxury vehicles
             </p>
+            <p className="section-helper">
+              Select a service line below to compare what is included, how long it typically takes, and the kind of issue it is best suited for.
+            </p>
+          </div>
+
+          <div className="repair-journey-grid">
+            {serviceJourney.map((step, index) => (
+              <article key={step.id} className="journey-step-card">
+                <span className="journey-step-index">0{index + 1}</span>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </article>
+            ))}
           </div>
 
           {loading ? (
@@ -216,6 +328,17 @@ const Repairs = () => {
                   <div className="service-icon">{service.icon || '🔧'}</div>
                   <h3 className="service-name">{service.name}</h3>
                   <p className="service-description">{service.description}</p>
+                  <div className="service-meta-strip">
+                    <span>{service.category || 'Repair'}</span>
+                    <span>{service.duration ? `${service.duration} min` : service.turnaround}</span>
+                  </div>
+                  {Array.isArray(service.includes) && service.includes.length > 0 && (
+                    <div className="service-includes-preview">
+                      {service.includes.slice(0, 3).map((item) => (
+                        <span key={item} className="include-pill">{item}</span>
+                      ))}
+                    </div>
+                  )}
                   <div className="service-price">
                     <span className="price-label">Starting at</span>
                     <span className="price-amount">{formatKES(service.price)}</span>
@@ -232,6 +355,54 @@ const Repairs = () => {
               ))}
             </div>
           )}
+
+          {!loading && selectedService && (
+            <div className="selected-service-showcase">
+              <div className="selected-service-copy">
+                <span className="selected-service-kicker">
+                  {selectedService.category || 'Selected Service'}
+                </span>
+                <h3>{selectedService.name}</h3>
+                <p>{selectedService.idealFor || selectedService.description}</p>
+
+                <div className="selected-service-stats">
+                  <div className="selected-service-stat">
+                    <span className="stat-label">Turnaround</span>
+                    <span className="stat-value">{selectedService.turnaround || `${selectedService.duration} min`}</span>
+                  </div>
+                  <div className="selected-service-stat">
+                    <span className="stat-label">Starting From</span>
+                    <span className="stat-value">{formatKES(selectedService.price)}</span>
+                  </div>
+                  <div className="selected-service-stat">
+                    <span className="stat-label">Ideal For</span>
+                    <span className="stat-value">{selectedService.category || 'Repair support'}</span>
+                  </div>
+                  <div className="selected-service-stat">
+                    <span className="stat-label">Booking Mode</span>
+                    <span className="stat-value">Inspection to checkout</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="selected-service-includes">
+                <h4>Included in this service</h4>
+                <ul>
+                  {(selectedService.includes || []).map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <div className="selected-service-actions">
+                  <Button variant="primary" onClick={jumpToBooking}>
+                    Book This Service
+                  </Button>
+                  <Button variant="outline" onClick={() => setBookingStep(1)}>
+                    Review Booking Details
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -240,23 +411,23 @@ const Repairs = () => {
           <div className="section-header">
             <span className="section-subtitle">WHAT WE REPAIR</span>
             <h2 className="section-title">Service Coverage <span className="gold-text">Across Systems</span></h2>
+            <p className="section-helper">
+              Choose the right entry point whether you need a health check, scheduled maintenance, or a targeted fault repair.
+            </p>
           </div>
           <div className="benefits-grid">
-            <div className="benefit-card animate-fade-up animate-delay-1">
-              <div className="benefit-icon">🛠️</div>
-              <h3 className="benefit-title">Engine & Transmission</h3>
-              <p className="benefit-description">Diagnostics, tune-ups, gearbox service, and drivetrain repair.</p>
-            </div>
-            <div className="benefit-card animate-fade-up animate-delay-2">
-              <div className="benefit-icon">🧠</div>
-              <h3 className="benefit-title">Electrical & Electronics</h3>
-              <p className="benefit-description">Battery systems, ECU faults, sensors, and wiring issues.</p>
-            </div>
-            <div className="benefit-card animate-fade-up animate-delay-3">
-              <div className="benefit-icon">🛞</div>
-              <h3 className="benefit-title">Suspension & Brakes</h3>
-              <p className="benefit-description">Shock absorbers, alignment, brake service, and safety checks.</p>
-            </div>
+            {repairCoverage.map((item, index) => (
+              <div key={item.title} className={`benefit-card coverage-card animate-fade-up animate-delay-${index + 1}`}>
+                <div className="benefit-icon">{item.icon}</div>
+                <h3 className="benefit-title">{item.title}</h3>
+                <p className="benefit-description">{item.description}</p>
+                <ul className="coverage-list">
+                  {item.highlights.map((highlight) => (
+                    <li key={highlight}>{highlight}</li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -267,44 +438,19 @@ const Repairs = () => {
           <div className="section-header">
             <span className="section-subtitle">WHY CHOOSE US</span>
             <h2 className="section-title">The CAR EASE <span className="gold-text">Difference</span></h2>
+            <p className="section-helper">
+              The workshop experience is designed to feel transparent, premium, and operationally dependable from first diagnosis to final release.
+            </p>
           </div>
 
           <div className="benefits-grid">
-            <div className="benefit-card animate-fade-up animate-delay-1">
-              <div className="benefit-icon">🔧</div>
-              <h3 className="benefit-title">Certified Technicians</h3>
-              <p className="benefit-description">ASE-certified master technicians with luxury vehicle expertise</p>
-            </div>
-
-            <div className="benefit-card animate-fade-up animate-delay-2">
-              <div className="benefit-icon">⚡</div>
-              <h3 className="benefit-title">Latest Equipment</h3>
-              <p className="benefit-description">State-of-the-art diagnostic tools and equipment</p>
-            </div>
-
-            <div className="benefit-card animate-fade-up animate-delay-3">
-              <div className="benefit-icon">🛡️</div>
-              <h3 className="benefit-title">Warranty Included</h3>
-              <p className="benefit-description">24-month/40,000-km warranty on all repairs</p>
-            </div>
-
-            <div className="benefit-card animate-fade-up animate-delay-4">
-              <div className="benefit-icon">🚗</div>
-              <h3 className="benefit-title">Genuine Parts</h3>
-              <p className="benefit-description">OEM and genuine parts only</p>
-            </div>
-
-            <div className="benefit-card animate-fade-up animate-delay-5">
-              <div className="benefit-icon">⏱️</div>
-              <h3 className="benefit-title">Quick Turnaround</h3>
-              <p className="benefit-description">Efficient service with minimal downtime</p>
-            </div>
-
-            <div className="benefit-card animate-fade-up animate-delay-6">
-              <div className="benefit-icon">🤝</div>
-              <h3 className="benefit-title">Free Estimates</h3>
-              <p className="benefit-description">Comprehensive estimates before work begins</p>
-            </div>
+            {repairAdvantages.map((item, index) => (
+              <div key={item.title} className={`benefit-card animate-fade-up animate-delay-${index + 1}`}>
+                <div className="benefit-icon">{item.icon}</div>
+                <h3 className="benefit-title">{item.title}</h3>
+                <p className="benefit-description">{item.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -312,15 +458,42 @@ const Repairs = () => {
       {/* Booking Section */}
       <section className="repair-booking-section" id="booking">
         <div className="container">
+          <div className="section-header">
+            <span className="section-subtitle">SERVICE INTAKE</span>
+            <h2 className="section-title">Build Your <span className="gold-text">Repair Request</span></h2>
+            <p className="section-helper">
+              Select the service path, provide vehicle details, choose your preferred slot, and move into checkout with a clearer repair brief.
+            </p>
+          </div>
+
+          <div className="booking-progress-track">
+            <div className={`booking-progress-step ${bookingStep >= 1 ? 'active' : ''}`}>
+              <span>1</span>
+              <p>Vehicle & Slot</p>
+            </div>
+            <div className={`booking-progress-step ${bookingStep >= 2 ? 'active' : ''}`}>
+              <span>2</span>
+              <p>Issue Details</p>
+            </div>
+            <div className="booking-progress-note">
+              {selectedService?.name ? `Current service: ${selectedService.name}` : 'Choose a service to begin'}
+            </div>
+          </div>
+
           <div className="booking-grid">
             {/* Left Column - Booking Form */}
             <div className="booking-form-container animate-fade-right">
               <div className="form-header">
                 <span className="form-badge">SCHEDULE SERVICE</span>
-                <h2 className="form-title">Book Your <span className="gold-text">Repair</span></h2>
+                <h2 className="form-title">Build Your <span className="gold-text">Service Intake</span></h2>
                 <p className="form-description">
-                  Fill in your vehicle and service details below
+                  Share your vehicle details, preferred slot, and repair context so the workshop team can prepare the right service path before checkout.
                 </p>
+                <div className="form-header-highlights">
+                  <span className="form-highlight-pill">Workshop-prepared intake</span>
+                  <span className="form-highlight-pill">Luxury and exotic ready</span>
+                  <span className="form-highlight-pill">Transparent estimate guidance</span>
+                </div>
               </div>
 
               {bookingStep === 1 && (
@@ -328,6 +501,12 @@ const Repairs = () => {
                   <div className="selected-service-info">
                     <h3>Selected Service: {selectedService?.name}</h3>
                     <p className="service-price">Starting at {formatKES(selectedService?.price)}</p>
+                  </div>
+
+                  <div className="booking-context-panel">
+                    <div className="context-chip">{selectedService?.category || 'Repair'}</div>
+                    <div className="context-chip">{selectedService?.turnaround || `${selectedService?.duration || 0} min`}</div>
+                    <div className="context-chip">{formData.urgent ? 'Urgent Priority' : 'Standard Queue'}</div>
                   </div>
 
                   <div className="form-row">
@@ -341,7 +520,6 @@ const Repairs = () => {
                       value={formData.vehicleMake}
                       onChange={handleInputChange}
                       required
-                      icon="🚗"
                       placeholder="e.g., BMW, Mercedes, Porsche"
                     />
                   </div>
@@ -353,7 +531,6 @@ const Repairs = () => {
                       value={formData.vehicleModel}
                       onChange={handleInputChange}
                       required
-                      icon="🔧"
                       placeholder="e.g., 911, S-Class, M5"
                     />
                   </div>
@@ -366,7 +543,6 @@ const Repairs = () => {
                       onChange={handleInputChange}
                       options={years}
                       required
-                      icon="📅"
                       placeholder="Select year"
                     />
                   </div>
@@ -379,7 +555,6 @@ const Repairs = () => {
                       onChange={handleInputChange}
                       options={vehicleTypes}
                       required
-                      icon="🚘"
                     />
                   </div>
 
@@ -395,7 +570,6 @@ const Repairs = () => {
                       onChange={handleInputChange}
                       options={LOCATIONS.map(loc => ({ value: loc.id, label: loc.name }))}
                       required
-                      icon="📍"
                       placeholder="Select service center"
                     />
                   </div>
@@ -408,7 +582,6 @@ const Repairs = () => {
                       value={formData.date}
                       onChange={handleInputChange}
                       required
-                      icon="📅"
                       min={new Date().toISOString().split('T')[0]}
                     />
                   </div>
@@ -422,7 +595,6 @@ const Repairs = () => {
                         onChange={handleInputChange}
                         options={availableSlots.map(slot => ({ value: slot, label: slot }))}
                         required
-                        icon="⏰"
                         placeholder="Select time"
                       />
                     </div>
@@ -473,7 +645,6 @@ const Repairs = () => {
                         { value: 'book', label: 'Book Repair Appointment' },
                         { value: 'buy', label: 'Buy Repair Plan / Service' }
                       ]}
-                      icon="🛒"
                     />
                   </div>
 
@@ -553,6 +724,12 @@ const Repairs = () => {
               
               {selectedService && (
                 <div className="summary-content">
+                  <div className="summary-service-hero">
+                    <span className="summary-service-kicker">{selectedService.category || 'Repair Service'}</span>
+                    <h4>{selectedService.name}</h4>
+                    <p>{selectedService.idealFor || selectedService.description}</p>
+                  </div>
+
                   <div className="summary-item">
                     <span className="item-label">Service:</span>
                     <span className="item-value">{selectedService.name}</span>
@@ -593,7 +770,7 @@ const Repairs = () => {
                   <div className="summary-total">
                     <span className="total-label">Estimated Total:</span>
                     <span className="total-value">
-                      {formatKES((estimatedPrice || 0) + (selectedService.id !== 'diagnostic' ? diagnosticFee : 0))}
+                      {formatKES(totalEstimate)}
                     </span>
                   </div>
 
@@ -602,10 +779,19 @@ const Repairs = () => {
                     <span>Final price may vary after inspection</span>
                   </div>
 
+                  <div className="summary-includes">
+                    <h4>Included in selected service</h4>
+                    <ul>
+                      {(selectedService.includes || []).map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
                   {formData.location && (
                     <div className="summary-location">
                       <span className="location-icon">📍</span>
-                      <span>{LOCATIONS.find(l => l.id === formData.location)?.name}</span>
+                      <span>{selectedLocation?.name}</span>
                     </div>
                   )}
 
@@ -615,6 +801,12 @@ const Repairs = () => {
                       <span>{formData.date} at {formData.time}</span>
                     </div>
                   )}
+
+                  <div className="summary-support-card">
+                    <span className="support-kicker">Need assistance?</span>
+                    <p>Talk to the service desk for urgent diagnostics, parts availability, or concierge coordination.</p>
+                    <a href="tel:+254758458358" className="support-link">Call Service Desk</a>
+                  </div>
                 </div>
               )}
             </div>

@@ -1,6 +1,6 @@
 // ===== src/Pages/Services.jsx =====
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -18,6 +18,7 @@ import { getServices } from '../Services/Service.Service';
 import '../Styles/Services.css';
 
 const Services = () => {
+  const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [filteredServices, setFilteredServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +29,7 @@ const Services = () => {
   const [hoveredCategory, setHoveredCategory] = useState(null);
   
   const heroRef = useRef(null);
+  const servicesGridRef = useRef(null);
   // Mouse move effect for 3D parallax
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -207,7 +209,8 @@ const Services = () => {
       icon: '✨',
       gradient: 'linear-gradient(135deg, #d4af37, #f5d742)',
       description: 'Discover our complete service network',
-      ctaLabel: 'Browse All'
+      ctaLabel: 'Browse All',
+      flowRoute: ROUTES.SERVICES
     },
     {
       id: SERVICE_TYPES.RENTAL,
@@ -216,6 +219,7 @@ const Services = () => {
       gradient: 'linear-gradient(135deg, #d4af37, #f5d742)',
       description: 'Exotic and luxury vehicles with flexible booking',
       route: ROUTES.RENTALS,
+      flowRoute: ROUTES.RENTALS_FLOW,
       ctaLabel: 'Open Rentals'
     },
     {
@@ -225,6 +229,7 @@ const Services = () => {
       gradient: 'linear-gradient(135deg, #00ff88, #00cc66)',
       description: 'Express detailing, deep clean, and coating packages',
       route: ROUTES.CAR_WASH,
+      flowRoute: ROUTES.CAR_WASH_FLOW,
       ctaLabel: 'Open Car Wash'
     },
     {
@@ -234,6 +239,7 @@ const Services = () => {
       gradient: 'linear-gradient(135deg, #33b5e5, #0099cc)',
       description: 'Diagnostics, mechanical fixes, and scheduled maintenance',
       route: ROUTES.REPAIRS,
+      flowRoute: ROUTES.REPAIRS_FLOW,
       ctaLabel: 'Open Repairs'
     },
     {
@@ -243,6 +249,7 @@ const Services = () => {
       gradient: 'linear-gradient(135deg, #ffbb33, #ff8800)',
       description: 'Verified premium stock with inquiry and test-drive flow',
       route: ROUTES.SALES,
+      flowRoute: ROUTES.SALES_FLOW,
       ctaLabel: 'Open Sales'
     },
     {
@@ -252,6 +259,7 @@ const Services = () => {
       gradient: 'linear-gradient(135deg, #aa80ff, #884dff)',
       description: 'White-glove planning for premium automotive requests',
       route: ROUTES.CONTACT,
+      flowRoute: ROUTES.CONTACT,
       ctaLabel: 'Request Concierge'
     },
     {
@@ -261,6 +269,7 @@ const Services = () => {
       gradient: 'linear-gradient(135deg, #ff80ab, #ff4081)',
       description: 'Climate-controlled secure storage and handling',
       route: ROUTES.CONTACT,
+      flowRoute: ROUTES.CONTACT,
       ctaLabel: 'Request Storage'
     }
   ];
@@ -402,6 +411,42 @@ const Services = () => {
     return selectedCategory?.route || null;
   };
 
+  const getCategoryFlowRoute = (categoryId) => {
+    const selectedCategory = categories.find((category) => category.id === categoryId);
+    return selectedCategory?.flowRoute || selectedCategory?.route || ROUTES.SERVICES;
+  };
+
+  const scrollToServicesGrid = () => {
+    servicesGridRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const previewCategory = (categoryId) => {
+    setActiveCategory(categoryId);
+    setSearchQuery('');
+    requestAnimationFrame(() => {
+      scrollToServicesGrid();
+    });
+  };
+
+  const browseAllServices = () => {
+    setActiveCategory('all');
+    setSearchQuery('');
+    requestAnimationFrame(() => {
+      scrollToServicesGrid();
+    });
+  };
+
+  const openCategoryRoute = (categoryId, route) => {
+    if (categoryId === 'all') {
+      browseAllServices();
+      return;
+    }
+
+    if (route) {
+      navigate(route);
+    }
+  };
+
   const platformSearchResults = searchQuery.trim()
     ? platformSearchIndex.filter((item) => {
         const query = normalizeText(searchQuery.trim());
@@ -534,6 +579,9 @@ const Services = () => {
               Move through the CarEase ecosystem by intent, compare each service line quickly,
               and jump directly into the experience that matches your next step.
             </p>
+            <p className="categories-helper">
+              Select any card to preview it below, or use the action buttons to move straight into the page or flow.
+            </p>
           </div>
 
           <div className="categories-carousel">
@@ -543,6 +591,19 @@ const Services = () => {
                 className={`category-card-3d ${activeCategory === category.id ? 'active' : ''}`}
                 onMouseEnter={() => setHoveredCategory(category.id)}
                 onMouseLeave={() => setHoveredCategory(null)}
+                onClick={() => (category.id === 'all' ? browseAllServices() : previewCategory(category.id))}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    if (category.id === 'all') {
+                      browseAllServices();
+                    } else {
+                      previewCategory(category.id);
+                    }
+                  }
+                }}
+                role="button"
+                tabIndex={0}
                 style={{
                   '--gradient': category.gradient,
                   transform: hoveredCategory === category.id ? 'translateY(-10px) rotateY(5deg)' : 'none',
@@ -560,30 +621,57 @@ const Services = () => {
                   <span className="category-label-large">{category.label}</span>
                   <span className="category-description">{category.description}</span>
                   <div className="category-meta-row">
-                    <span className="category-meta-pill">Direct Access</span>
-                    <span className="category-meta-pill">Premium Flow</span>
+                    <span className="category-meta-pill">
+                      {category.id === 'all' ? 'Full Catalogue' : 'Instant Route'}
+                    </span>
+                    <span className="category-meta-pill">
+                      {category.id === 'all' ? 'Live Preview' : 'Curated Journey'}
+                    </span>
                   </div>
                   <div className="category-card-actions">
-                    {getCategoryRoute(category.id) ? (
-                      <Link to={getCategoryRoute(category.id)} className="category-route-link">
+                    {category.id === 'all' ? (
+                      <button
+                        type="button"
+                        className="category-route-link"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          browseAllServices();
+                        }}
+                      >
+                        {category.ctaLabel}
+                      </button>
+                    ) : getCategoryRoute(category.id) ? (
+                      <Link
+                        to={getCategoryRoute(category.id)}
+                        className="category-route-link"
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         {category.ctaLabel}
                       </Link>
                     ) : (
                       <button
                         type="button"
                         className="category-route-link"
-                        onClick={() => handleCategoryChange('all')}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openCategoryRoute(category.id, getCategoryFlowRoute(category.id));
+                        }}
                       >
                         {category.ctaLabel}
                       </button>
                     )}
-                    <button
-                      type="button"
-                      className="category-preview-btn"
-                      onClick={() => handleCategoryChange(category.id)}
-                    >
-                      Preview Here
-                    </button>
+                    {category.id !== 'all' && (
+                      <button
+                        type="button"
+                        className="category-flow-link"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openCategoryRoute(category.id, getCategoryFlowRoute(category.id));
+                        }}
+                      >
+                        Premium Flow
+                      </button>
+                    )}
                   </div>
                 </div>
                 <div className="card-glow"></div>
@@ -681,8 +769,35 @@ const Services = () => {
       )}
 
       {/* ===== SERVICES GRID SECTION ===== */}
-      <section className="services-grid-section-premium">
+      <section ref={servicesGridRef} className="services-grid-section-premium">
         <div className="container">
+          <div className="services-grid-header">
+            <div>
+              <span className="services-grid-kicker">
+                {activeCategory === 'all' ? 'Full Catalogue' : 'Category Preview'}
+              </span>
+              <h2 className="services-grid-title">
+                {activeCategory === 'all'
+                  ? 'Browse the full CarEase service collection'
+                  : `${categories.find((category) => category.id === activeCategory)?.label || 'Selected'} preview`}
+              </h2>
+              <p className="services-grid-subtitle">
+                {activeCategory === 'all'
+                  ? 'Compare every service line and continue into the route or flow that fits your next step.'
+                  : 'Review the matching service cards here, then continue into the dedicated page or booking flow.'}
+              </p>
+            </div>
+            <div className="services-grid-actions">
+              <button type="button" className="services-grid-link" onClick={browseAllServices}>
+                Browse All
+              </button>
+              {activeCategory !== 'all' && getCategoryFlowRoute(activeCategory) && (
+                <Link to={getCategoryFlowRoute(activeCategory)} className="services-grid-link services-grid-link-primary">
+                  Continue Flow
+                </Link>
+              )}
+            </div>
+          </div>
           {loading ? (
             <div className="services-loading">
               <LoadingSpinner size="lg" color="gold" text="Curating experiences..." />

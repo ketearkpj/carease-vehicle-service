@@ -7,10 +7,11 @@
 
 import axios from 'axios';
 import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 
 // Google Maps API configuration
 const GOOGLE_MAPS_API_KEY = getEnv('REACT_APP_GOOGLE_MAPS_API_KEY');
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const API_BASE_URL = buildApiUrl();
 
 // Load Google Maps script
 let mapsScriptLoaded = false;

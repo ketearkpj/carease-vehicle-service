@@ -84,7 +84,7 @@
 /* Select Value */
 .select-value {
   flex: 1;
-  padding: var(--space-2) calc(var(--space-10) + var(--space-3)) var(--space-2) var(--space-3);
+  padding: var(--space-2) calc(var(--space-10) + var(--space-3)) var(--space-2) var(--space-4);
   color: var(--white);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -92,7 +92,7 @@
 }
 
 .select-container.select-has-left-icon .select-value {
-  padding-left: calc(var(--space-10) + var(--space-3));
+  padding-left: var(--space-4);
 }
 
 .select-value.placeholder {
@@ -102,15 +102,7 @@
 
 /* Select Icons */
 .select-left-icon {
-  position: absolute;
-  left: var(--space-3);
-  width: 20px;
-  height: 20px;
-  color: var(--silver-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
+  display: none;
 }
 
 .select-arrow {

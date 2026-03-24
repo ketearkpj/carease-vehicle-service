@@ -3,6 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAdminAuth } from '../../Context/AdminAuthContext';
 import { ROUTES } from '../../Config/Routes';
+import {
+  getAllBookings,
+  getAllPayments,
+  getAllVehicles,
+  getAdminNotifications
+} from '../../Services/AdminService';
 import '../../Styles/AdminSidebar.css';
 
 /**
@@ -22,6 +28,12 @@ const AdminSidebar = ({
   onClose 
 }) => {
   const [activeItem, setActiveItem] = useState(null);
+  const [metrics, setMetrics] = useState({
+    bookings: null,
+    payments: null,
+    vehicles: null,
+    notifications: null
+  });
   const { admin, logout } = useAdminAuth();
   const location = useLocation();
 
@@ -41,6 +53,50 @@ const AdminSidebar = ({
     setActiveItem(findActiveItem());
   }, [location]);
 
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchSidebarMetrics = async () => {
+      try {
+        const [bookings, payments, vehicles, notifications] = await Promise.all([
+          getAllBookings({ page: 1, limit: 1 }),
+          getAllPayments({ page: 1, limit: 1 }),
+          getAllVehicles({ page: 1, limit: 1 }),
+          getAdminNotifications(50)
+        ]);
+
+        if (!mounted) return;
+
+        setMetrics({
+          bookings: Number(bookings?.total || 0),
+          payments: Number(payments?.total || 0),
+          vehicles: Number(vehicles?.total || 0),
+          notifications: Number(notifications?.total || 0)
+        });
+      } catch (error) {
+        if (!mounted) return;
+        setMetrics({
+          bookings: null,
+          payments: null,
+          vehicles: null,
+          notifications: null
+        });
+      }
+    };
+
+    fetchSidebarMetrics();
+
+    return () => {
+      mounted = false;
+    };
+  }, [admin]);
+
+  const formatBadge = (value) => {
+    if (value == null) return null;
+    if (value > 99) return '99+';
+    return String(value);
+  };
+
   const navigation = [
     {
       id: 'dashboard',
@@ -59,7 +115,7 @@ const AdminSidebar = ({
           label: 'Bookings', 
           icon: '📅',
           description: 'Manage all bookings',
-          badge: '12'
+          badge: formatBadge(metrics.bookings)
         },
         { 
           id: 'payments', 
@@ -67,14 +123,15 @@ const AdminSidebar = ({
           label: 'Payments', 
           icon: '💰',
           description: 'Transaction management',
-          badge: '3'
+          badge: formatBadge(metrics.payments)
         },
         {
           id: 'notifications',
           path: ROUTES.ADMIN_NOTIFICATIONS,
           label: 'Notifications',
           icon: '🔔',
-          description: 'Operational alerts'
+          description: 'Operational alerts',
+          badge: formatBadge(metrics.notifications)
         }
       ]
     },
@@ -87,7 +144,8 @@ const AdminSidebar = ({
           path: ROUTES.ADMIN_VEHICLES, 
           label: 'Vehicles', 
           icon: '🚗',
-          description: 'Vehicle inventory'
+          description: 'Vehicle inventory',
+          badge: formatBadge(metrics.vehicles)
         },
         { 
           id: 'reports-shortcut',

@@ -6,10 +6,10 @@
  */
 
 import axios from 'axios';
-import { getEnv } from '../Config/env';
+import { buildApiUrl } from '../Config/API';
 
 // API base URL
-const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1';
+const API_BASE_URL = buildApiUrl();
 const ADMIN_BASE_URL = `${API_BASE_URL}/admin`;
 const DEMO_ADMIN_TOKEN = 'demo_admin_token';
 const DEMO_ADMIN = {
@@ -775,7 +775,12 @@ export const getAdminNotifications = async (limit = 25) => {
       ...(token === DEMO_ADMIN_TOKEN ? {} : withAuth())
     });
     const payload = readPayload(response);
-    return payload.notifications || [];
+    const notifications = payload.notifications || [];
+
+    return {
+      notifications,
+      total: Number(response.data.total || payload.total || notifications.length)
+    };
   } catch (error) {
     console.error('Failed to fetch admin notifications:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch notifications');
