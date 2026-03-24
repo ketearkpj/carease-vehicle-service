@@ -1,0 +1,51 @@
+.info-page {
+  padding: 48px 24px 72px;
+}
+
+.info-page-shell {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.info-page-hero {
+  margin-bottom: 24px;
+}
+
+.info-page-title {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  margin-bottom: 12px;
+}
+
+.info-page-subtitle {
+  max-width: 720px;
+  color: var(--text-secondary, #a7b0c0);
+  line-height: 1.7;
+}
+
+.info-page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.info-page-card {
+  padding: 24px;
+}
+
+.info-page-card h2,
+.info-page-card h3 {
+  margin-bottom: 12px;
+}
+
+.info-page-list {
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.8;
+}
+
+.info-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}

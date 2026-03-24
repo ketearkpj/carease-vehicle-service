@@ -959,7 +959,8 @@ exports.getNotifications = catchAsync(async (req, res, next) => {
 // ===== EXPORT DATA =====
 
 exports.exportData = catchAsync(async (req, res, next) => {
-  const { type, format = 'csv', startDate, endDate } = req.query;
+  const type = req.params.type || req.query.type;
+  const { format = 'csv', startDate, endDate } = req.query;
 
   let data;
   let filename;
@@ -989,6 +990,11 @@ exports.exportData = catchAsync(async (req, res, next) => {
         include: [{ model: User, as: 'user', attributes: ['email'] }]
       });
       filename = `payments_export_${Date.now()}`;
+      break;
+
+    case 'vehicles':
+      data = await Vehicle.findAll();
+      filename = `vehicles_export_${Date.now()}`;
       break;
 
     default:

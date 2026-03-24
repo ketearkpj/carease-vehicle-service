@@ -1,6 +1,6 @@
 // ===== src/Pages/ManageBookings.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -51,6 +51,7 @@ const ManageBookings = () => {
     total: 0,
     totalPages: 0
   });
+  const location = useLocation();
 
   const { admin } = useAdminAuth();
   const { addNotification } = useApp();
@@ -58,6 +59,22 @@ const ManageBookings = () => {
   useEffect(() => {
     fetchBookings();
   }, [filters, pagination.page, pagination.limit]);
+
+  useEffect(() => {
+    const selection = location.state?.selectedBookingId;
+    const action = location.state?.action;
+    if (!selection || bookings.length === 0) return;
+
+    const booking = bookings.find((item) => item.id === selection || item.bookingNumber === selection);
+    if (!booking) return;
+
+    if (action === 'edit') {
+      handleUpdateStatus(booking);
+    } else {
+      handleViewDetails(booking);
+    }
+    window.history.replaceState({}, document.title);
+  }, [location.state, bookings]);
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -82,7 +99,12 @@ const ManageBookings = () => {
   };
 
   const handleViewDetails = async (booking) => {
-    setSelectedBooking(booking);
+    try {
+      const details = await getBookingDetails(booking.id);
+      setSelectedBooking(details || booking);
+    } catch {
+      setSelectedBooking(booking);
+    }
     setShowDetailsModal(true);
   };
 

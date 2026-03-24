@@ -28,6 +28,15 @@ const normalizeAdmin = (admin) => {
   const displayName = admin.name || [admin.firstName, admin.lastName].filter(Boolean).join(' ').trim();
   return { ...admin, name: displayName || admin.email || 'Admin' };
 };
+const listToObject = (items = [], keyField = 'key', valueField = 'value') =>
+  Array.isArray(items)
+    ? items.reduce((acc, item) => {
+        if (item?.[keyField] != null) {
+          acc[item[keyField]] = Number(item[valueField] || item.count || item.total || 0);
+        }
+        return acc;
+      }, {})
+    : (items || {});
 
 /**
  * Admin authentication
@@ -592,8 +601,6 @@ export const processRefund = async (paymentId, refundData) => {
  * @returns {Promise<Object>} - Revenue data
  */
 export const getRevenueReports = async (filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
     const response = await axios.get(`${API_BASE_URL}/reports/revenue`, {
       params: {
@@ -602,16 +609,20 @@ export const getRevenueReports = async (filters = {}) => {
         endDate: filters.endDate,
         groupBy: filters.groupBy || 'day'
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
+    const payload = readPayload(response);
+    const byPeriod = payload.revenue || payload.byPeriod || [];
+    const byMethod = payload.byMethod || [];
+    const total = byPeriod.reduce((sum, item) => sum + Number(item.total || item.amount || 0), 0);
 
     return {
-      total: response.data.total,
-      byPeriod: response.data.byPeriod,
-      byService: response.data.byService,
-      byMethod: response.data.byMethod,
-      trends: response.data.trends,
-      projections: response.data.projections
+      total,
+      byPeriod,
+      byService: listToObject(payload.byService, 'serviceType', 'total'),
+      byMethod: listToObject(byMethod, 'method', 'total'),
+      trends: payload.trends || byPeriod,
+      projections: payload.projections || []
     };
   } catch (error) {
     console.error('Failed to fetch revenue reports:', error);
@@ -625,8 +636,6 @@ export const getRevenueReports = async (filters = {}) => {
  * @returns {Promise<Object>} - Booking data
  */
 export const getBookingReports = async (filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
     const response = await axios.get(`${API_BASE_URL}/reports/bookings`, {
       params: {
@@ -635,16 +644,18 @@ export const getBookingReports = async (filters = {}) => {
         endDate: filters.endDate,
         groupBy: filters.groupBy || 'day'
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
+    const payload = readPayload(response);
+    const totals = Array.isArray(payload.bookings) ? payload.bookings[0] : payload.bookings;
 
     return {
-      total: response.data.total,
-      byStatus: response.data.byStatus,
-      byService: response.data.byService,
-      byLocation: response.data.byLocation,
-      cancellationRate: response.data.cancellationRate,
-      occupancyRate: response.data.occupancyRate
+      total: Number(payload.total || totals?.count || 0),
+      byStatus: listToObject(payload.byStatus, 'status', 'count'),
+      byService: listToObject(payload.byService, 'serviceType', 'count'),
+      byLocation: payload.byLocation || {},
+      cancellationRate: Number(payload.cancellationRate || 0),
+      occupancyRate: Number(payload.occupancyRate || 0)
     };
   } catch (error) {
     console.error('Failed to fetch booking reports:', error);
@@ -658,18 +669,23 @@ export const getBookingReports = async (filters = {}) => {
  * @returns {Promise<Object>} - Analytics data
  */
 export const getAnalytics = async (filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.get(`${API_BASE_URL}/analytics`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/dashboard`, {
       params: {
-        period: filters.period || 'month',
-        metrics: filters.metrics || ['users', 'bookings', 'revenue']
+        period: filters.period || 'month'
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
-
-    return response.data;
+    const payload = readPayload(response);
+    const overview = payload.overview || {};
+    return {
+      users: Number(overview.totalUsers || 0),
+      bookings: Number(overview.totalBookings || 0),
+      revenue: Number(overview.totalRevenue || 0),
+      vehicles: Number(overview.activeVehicles || 0),
+      deliveries: Number(overview.activeDeliveries || 0),
+      charts: payload.charts || {}
+    };
   } catch (error) {
     console.error('Failed to fetch analytics:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch analytics');
@@ -772,8 +788,6 @@ export const getAdminNotifications = async (limit = 25) => {
  * @returns {Promise<Object>} - Audit logs
  */
 export const getAuditLogs = async (filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
     const response = await axios.get(`${ADMIN_BASE_URL}/audit-logs`, {
       params: {
@@ -786,12 +800,15 @@ export const getAuditLogs = async (filters = {}) => {
       },
       ...withAuth()
     });
+    const payload = readPayload(response);
+    const logs = payload.logs || [];
+    const total = response.data.total || payload.total || logs.length;
 
     return {
-      logs: response.data.logs,
-      total: response.data.total,
-      page: response.data.page,
-      totalPages: response.data.totalPages
+      logs,
+      total,
+      page: Number(filters.page || 1),
+      totalPages: Math.max(1, Math.ceil(total / Number(filters.limit || 50)))
     };
   } catch (error) {
     console.error('Failed to fetch audit logs:', error);

@@ -26,6 +26,8 @@ const reviewRoutes = require('./src/Routes/reviewRoutes');
 const locationRoutes = require('./src/Routes/locationRoutes');
 const adminRoutes = require('./src/Routes/adminRoutes');
 const emailRoutes = require('./src/Routes/emailRoutes');
+const deliveryRoutes = require('./src/Routes/deliveryRoutes');
+const reportsRoutes = require('./src/Routes/reportsRoutes');
 
 const app = express();
 
@@ -123,7 +125,9 @@ const mountRoutes = (basePath) => {
   app.use(`${basePath}/services`, serviceRoutes);
   app.use(`${basePath}/reviews`, reviewRoutes);
   app.use(`${basePath}/locations`, locationRoutes);
+  app.use(`${basePath}/deliveries`, deliveryRoutes);
   app.use(`${basePath}/admin`, adminRoutes);
+  app.use(`${basePath}/reports`, reportsRoutes);
   app.use(`${basePath}/email`, emailRoutes);
 };
 

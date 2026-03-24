@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "prod": "pm2 start ecosystem.config.js --env production",
     "test": "jest --coverage",
+    "test:unit": "jest tests/price-calculator.test.js --runInBand",
     "test:watch": "jest --watch",
     "lint": "eslint src/**/*.js",
     "format": "prettier --write 'src/**/*.js'",

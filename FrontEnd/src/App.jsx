@@ -35,8 +35,15 @@ import AdminSettings from './Pages/AdminSettings';
 import AdminNotifications from './Pages/AdminNotifications';
 import Privacy from './Pages/Privacy';
 import Terms from './Pages/Terms';
+import Cookies from './Pages/Cookies';
 import FAQ from './Pages/FAQ';
 import Careers from './Pages/Careers';
+import Press from './Pages/Press';
+import Sitemap from './Pages/Sitemap';
+import UserProfile from './Pages/UserProfile';
+import MyBookings from './Pages/MyBookings';
+import Wishlist from './Pages/Wishlist';
+import AuditLogs from './Pages/AuditLogs';
 import NotFound from './Pages/NotFound';
 
 // Routes
@@ -152,6 +159,11 @@ function App() {
                     <Route path={ROUTES.BOOKING} element={<Booking />} />
                     <Route path={ROUTES.CHECKOUT} element={<Checkout />} />
                     <Route path={ROUTES.BOOKING_CONFIRMATION} element={<BookingConfirmation />} />
+
+                    {/* ===== USER ROUTES ===== */}
+                    <Route path={ROUTES.PROFILE} element={<UserProfile />} />
+                    <Route path={ROUTES.MY_BOOKINGS} element={<MyBookings />} />
+                    <Route path={ROUTES.WISHLIST} element={<Wishlist />} />
                     
                     {/* ===== ADMIN AUTH ROUTES ===== */}
                     <Route path={ROUTES.ADMIN_LOGIN} element={<AdminLogin />} />
@@ -185,12 +197,19 @@ function App() {
                       path={ROUTES.ADMIN_SETTINGS}
                       element={<AdminProtectedRoute><AdminSettings /></AdminProtectedRoute>}
                     />
+                    <Route
+                      path={ROUTES.ADMIN_AUDIT}
+                      element={<AdminProtectedRoute><AuditLogs /></AdminProtectedRoute>}
+                    />
                     
                     {/* ===== LEGAL & INFORMATION ROUTES ===== */}
                     <Route path={ROUTES.PRIVACY} element={<Privacy />} />
                     <Route path={ROUTES.TERMS} element={<Terms />} />
+                    <Route path={ROUTES.COOKIES} element={<Cookies />} />
                     <Route path={ROUTES.FAQ} element={<FAQ />} />
                     <Route path={ROUTES.CAREERS} element={<Careers />} />
+                    <Route path={ROUTES.PRESS} element={<Press />} />
+                    <Route path={ROUTES.SITEMAP} element={<Sitemap />} />
                     
                     {/* ===== REDIRECTS ===== */}
                     <Route path="/admin" element={<Navigate to={ROUTES.ADMIN_DASHBOARD} replace />} />

@@ -137,6 +137,17 @@ exports.reverseGeocode = catchAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', data });
 });
 
+exports.distanceMatrix = catchAsync(async (req, res, next) => {
+  const { origin, destination, mode = 'driving' } = req.body || {};
+
+  if (!origin || !destination) {
+    return next(new AppError('origin and destination are required', 400));
+  }
+
+  const data = await mapService.getDistanceMatrix(origin, destination, mode);
+  res.status(200).json({ status: 'success', data });
+});
+
 // ===== ADMIN =====
 exports.createLocation = catchAsync(async (req, res) => {
   const location = await Location.create(req.body);

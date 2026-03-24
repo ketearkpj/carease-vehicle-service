@@ -45,6 +45,43 @@ const Reports = () => {
     fetchReports();
   }, [dateRange]);
 
+  const applyPresetRange = (preset) => {
+    const now = new Date();
+    const end = now.toISOString().split('T')[0];
+    const start = new Date(now);
+
+    switch (preset) {
+      case 'today':
+        break;
+      case 'yesterday':
+        start.setDate(start.getDate() - 1);
+        break;
+      case 'week':
+        start.setDate(start.getDate() - 6);
+        break;
+      case 'month':
+        start.setMonth(start.getMonth() - 1);
+        break;
+      case 'quarter':
+        start.setMonth(start.getMonth() - 3);
+        break;
+      case 'year':
+        start.setFullYear(start.getFullYear() - 1);
+        break;
+      default:
+        return;
+    }
+
+    const normalizedEnd = preset === 'yesterday'
+      ? new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      : end;
+
+    setDateRange({
+      start: start.toISOString().split('T')[0],
+      end: normalizedEnd
+    });
+  };
+
   const fetchReports = async () => {
     setLoading(true);
     try {
@@ -103,7 +140,14 @@ const Reports = () => {
   const handleExport = async (format) => {
     setExporting(true);
     try {
-      const data = await exportData(activeTab, format, dateRange);
+      const exportTypeMap = {
+        overview: 'bookings',
+        revenue: 'payments',
+        bookings: 'bookings',
+        vehicles: 'vehicles',
+        customers: 'users'
+      };
+      const data = await exportData(exportTypeMap[activeTab] || 'bookings', format, dateRange);
       
       // Create download link
       const url = window.URL.createObjectURL(new Blob([data]));
@@ -139,11 +183,11 @@ const Reports = () => {
           <p className="page-subtitle">View business performance and generate reports</p>
         </div>
         <div className="header-actions">
-          <Select
-            value={`${dateRange.start} to ${dateRange.end}`}
-            onChange={(e) => {
-              // Handle preset ranges
-            }}
+            <Select
+              value={`${dateRange.start} to ${dateRange.end}`}
+              onChange={(e) => {
+                applyPresetRange(e.target.value);
+              }}
             options={[
               { value: 'today', label: 'Today' },
               { value: 'yesterday', label: 'Yesterday' },

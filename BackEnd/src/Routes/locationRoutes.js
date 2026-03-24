@@ -58,6 +58,11 @@ router.post(
   locationController.reverseGeocode
 );
 
+router.post(
+  '/distance-matrix',
+  locationController.distanceMatrix
+);
+
 // ===== ADMIN ROUTES =====
 router.use(authMiddleware.restrictTo('admin', 'super_admin'));
 

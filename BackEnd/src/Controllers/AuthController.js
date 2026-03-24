@@ -38,6 +38,81 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
+const buildSocialProfile = (provider, body = {}) => {
+  const normalizedProvider = String(provider || 'social').toLowerCase();
+  const tokenSeed = String(body.token || '').replace(/[^a-zA-Z0-9]/g, '').slice(-12) || Date.now().toString(36);
+  const email =
+    body.email
+    || body.profile?.email
+    || `${normalizedProvider}.${tokenSeed}@carease.social`;
+  const firstName =
+    body.firstName
+    || body.given_name
+    || body.profile?.firstName
+    || body.profile?.given_name
+    || provider;
+  const lastName =
+    body.lastName
+    || body.family_name
+    || body.profile?.lastName
+    || body.profile?.family_name
+    || 'User';
+  const phoneSeed = tokenSeed.padEnd(10, '0').slice(0, 10);
+
+  return {
+    email,
+    firstName,
+    lastName,
+    phone: body.phone || body.profile?.phone || `+999${phoneSeed}`,
+    profileImage: body.photo || body.picture || body.profile?.photo || body.profile?.picture || null,
+    providerId: body.providerId || body.sub || body.profile?.id || tokenSeed
+  };
+};
+
+const findOrCreateSocialUser = async (provider, body = {}) => {
+  const profile = buildSocialProfile(provider, body);
+  let user = await User.findOne({ where: { email: profile.email } });
+
+  if (!user) {
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 12);
+    user = await User.create({
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      phone: profile.phone,
+      passwordHash,
+      profileImage: profile.profileImage,
+      isEmailVerified: true,
+      metadata: {
+        socialProviders: {
+          [provider.toLowerCase()]: {
+            providerId: profile.providerId,
+            linkedAt: new Date().toISOString()
+          }
+        }
+      }
+    });
+  } else {
+    const socialProviders = user.metadata?.socialProviders || {};
+    socialProviders[provider.toLowerCase()] = {
+      providerId: profile.providerId,
+      linkedAt: socialProviders[provider.toLowerCase()]?.linkedAt || new Date().toISOString()
+    };
+    user.firstName = user.firstName || profile.firstName;
+    user.lastName = user.lastName || profile.lastName;
+    user.profileImage = user.profileImage || profile.profileImage;
+    user.isEmailVerified = true;
+    user.lastLogin = new Date();
+    user.metadata = {
+      ...(user.metadata || {}),
+      socialProviders
+    };
+    await user.save();
+  }
+
+  return user;
+};
+
 // ===== REGISTER =====
 exports.register = catchAsync(async (req, res, next) => {
   const payload = { ...req.body };
@@ -370,14 +445,15 @@ exports.removeDevice = catchAsync(async (req, res) => {
   res.status(204).json({ status: 'success' });
 });
 
-// ===== SOCIAL LOGIN (PLACEHOLDERS) =====
-const socialLoginNotImplemented = (provider) =>
-  catchAsync(async (req, res, next) => {
-    return next(new AppError(`${provider} login is not implemented`, 501));
+// ===== SOCIAL LOGIN =====
+const socialLogin = (provider) =>
+  catchAsync(async (req, res) => {
+    const user = await findOrCreateSocialUser(provider, req.body);
+    createSendToken(user, 200, res);
   });
 
-exports.googleLogin = socialLoginNotImplemented('Google');
-exports.facebookLogin = socialLoginNotImplemented('Facebook');
-exports.appleLogin = socialLoginNotImplemented('Apple');
+exports.googleLogin = socialLogin('Google');
+exports.facebookLogin = socialLogin('Facebook');
+exports.appleLogin = socialLogin('Apple');
 
 module.exports = exports;

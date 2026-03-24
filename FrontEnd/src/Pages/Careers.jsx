@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 // Core imports
 import { ROUTES } from '../Config/Routes';
 import { APP_CONFIG, COMPANY_INFO } from '../Utils/constants';
+import { sendContactFormEmail } from '../Services/EmailService';
+import { useApp } from '../Context/AppContext';
 
 // Components
 import Button from '../Components/Common/Button';
@@ -16,8 +18,10 @@ import Modal from '../Components/Common/Modal';
 import '../Styles/Careers.css';
 
 const Careers = () => {
+  const { addNotification } = useApp();
   const [selectedJob, setSelectedJob] = useState(null);
   const [showApplicationModal, setShowApplicationModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [applicationData, setApplicationData] = useState({
     firstName: '',
     lastName: '',
@@ -249,12 +253,61 @@ const Careers = () => {
     setShowApplicationModal(true);
   };
 
-  const handleApplicationSubmit = (e) => {
+  const resetApplication = () => {
+    setApplicationData({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      resume: null,
+      coverLetter: '',
+      linkedIn: ''
+    });
+  };
+
+  const handleApplicationSubmit = async (e) => {
     e.preventDefault();
-    // Handle application submission
-    console.log('Application submitted:', { job: selectedJob, ...applicationData });
+    setSubmitting(true);
+
+    const applicantName = `${applicationData.firstName} ${applicationData.lastName}`.trim();
+    const message = [
+      `Career application for: ${selectedJob?.title || 'CarEase role'}`,
+      `Department: ${selectedJob?.department || 'N/A'}`,
+      `Location: ${selectedJob?.location || 'N/A'}`,
+      `Applicant: ${applicantName}`,
+      `Phone: ${applicationData.phone}`,
+      `LinkedIn: ${applicationData.linkedIn || 'Not provided'}`,
+      `Resume: ${applicationData.resume?.name || 'Attached locally by applicant'}`,
+      '',
+      applicationData.coverLetter || 'No cover letter provided.'
+    ].join('\n');
+
+    try {
+      await sendContactFormEmail({
+        name: applicantName,
+        email: applicationData.email,
+        phone: applicationData.phone,
+        subject: `Career application: ${selectedJob?.title || 'Open role'}`,
+        preferredContact: 'email',
+        message
+      });
+    } catch {
+      const localApplications = JSON.parse(localStorage.getItem('carease_career_applications') || '[]');
+      localApplications.unshift({
+        id: `career-${Date.now()}`,
+        jobId: selectedJob?.id,
+        jobTitle: selectedJob?.title,
+        ...applicationData,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('carease_career_applications', JSON.stringify(localApplications));
+    } finally {
+      setSubmitting(false);
+    }
+
+    addNotification(`Application received for ${selectedJob?.title}.`, 'success');
+    resetApplication();
     setShowApplicationModal(false);
-    // Show success message
   };
 
   const handleInputChange = (e) => {
@@ -523,7 +576,7 @@ const Careers = () => {
           </div>
 
           <div className="form-actions">
-            <Button type="submit" variant="primary">
+            <Button type="submit" variant="primary" loading={submitting} disabled={submitting}>
               Submit Application
             </Button>
             <Button type="button" variant="outline" onClick={() => setShowApplicationModal(false)}>

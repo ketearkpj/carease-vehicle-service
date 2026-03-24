@@ -1,6 +1,6 @@
 // ===== src/Pages/AdminDashboard.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -24,6 +24,7 @@ import { useApp } from '../Context/AppContext';
 import '../Styles/AdminDashboard.css';
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [recentBookings, setRecentBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -147,6 +148,15 @@ const AdminDashboard = () => {
     { label: 'View Reports', icon: '📊', path: ROUTES.ADMIN_REPORTS, color: 'warning' }
   ];
 
+  const openBookingWorkflow = (row, mode = 'view') => {
+    navigate(ROUTES.ADMIN_BOOKINGS, {
+      state: {
+        selectedBookingId: row.id,
+        action: mode
+      }
+    });
+  };
+
   if (loading && !stats) {
     return (
       <div className="dashboard-loading">
@@ -259,13 +269,13 @@ const AdminDashboard = () => {
             {
               icon: '👁️',
               label: 'View',
-              onClick: (row) => console.log('View', row),
+              onClick: (row) => openBookingWorkflow(row, 'view'),
               variant: 'view'
             },
             {
               icon: '✏️',
               label: 'Edit',
-              onClick: (row) => console.log('Edit', row),
+              onClick: (row) => openBookingWorkflow(row, 'edit'),
               variant: 'edit'
             }
           ]}

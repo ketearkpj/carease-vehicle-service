@@ -7,7 +7,7 @@
 
 import axios from 'axios';
 import { getEnv } from '../Config/env';
-import { sendPasswordResetEmail } from './email.service';
+import { sendPasswordResetEmail } from './EmailService';
 
 // API base URL
 const API_BASE_URL = getEnv('REACT_APP_API_URL') || '/api/v1/auth';

@@ -133,8 +133,8 @@ export const geocodeAddress = async (address) => {
     
     // Fallback to backend geocoding
     try {
-      const response = await axios.post(`${API_BASE_URL}/location/geocode`, { address });
-      return response.data;
+      const response = await axios.post(`${API_BASE_URL}/locations/geocode`, { address });
+      return response.data?.data || response.data;
     } catch (fallbackError) {
       throw new Error('Failed to geocode address');
     }
@@ -172,8 +172,8 @@ export const reverseGeocode = async (lat, lng) => {
     
     // Fallback to backend
     try {
-      const response = await axios.post(`${API_BASE_URL}/location/reverse-geocode`, { lat, lng });
-      return response.data;
+      const response = await axios.post(`${API_BASE_URL}/locations/reverse-geocode`, { lat, lng });
+      return response.data?.data || response.data;
     } catch (fallbackError) {
       throw new Error('Failed to get address from coordinates');
     }
@@ -255,12 +255,12 @@ export const getDistanceMatrix = async (origin, destination, mode = 'driving') =
     
     // Fallback to backend
     try {
-      const response = await axios.post(`${API_BASE_URL}/location/distance-matrix`, {
+      const response = await axios.post(`${API_BASE_URL}/locations/distance-matrix`, {
         origin,
         destination,
         mode
       });
-      return response.data;
+      return response.data?.data || response.data;
     } catch (fallbackError) {
       // Fallback to simple distance calculation
       if (origin.lat && origin.lng && destination.lat && destination.lng) {
