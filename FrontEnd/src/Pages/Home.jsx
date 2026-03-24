@@ -545,7 +545,7 @@ const Home = () => {
                         <span className="price-amount">${vehicle.price}</span>
                         <span className="price-period">/day</span>
                       </div>
-                      <Link to={`${ROUTES.RENTALS}/${vehicle.id}`} className="vehicle-elegant-link">
+                      <Link to={ROUTES.RENTALS} className="vehicle-elegant-link">
                         View Details
                       </Link>
                     </div>

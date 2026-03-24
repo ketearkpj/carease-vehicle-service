@@ -48,6 +48,7 @@ export const ROUTES = {
   // Legal Routes
   PRIVACY: '/privacy',
   TERMS: '/terms',
+  CANCELLATION: '/cancellation',
   COOKIES: '/cookies',
   FAQ: '/faq',
   CAREERS: '/careers',
@@ -68,6 +69,7 @@ export const ROUTE_GROUPS = {
     ROUTES.CONTACT,
     ROUTES.PRIVACY,
     ROUTES.TERMS,
+    ROUTES.CANCELLATION,
     ROUTES.COOKIES,
     ROUTES.FAQ,
     ROUTES.CAREERS,
@@ -123,6 +125,7 @@ export const ROUTE_GROUPS = {
   LEGAL: [
     ROUTES.PRIVACY,
     ROUTES.TERMS,
+    ROUTES.CANCELLATION,
     ROUTES.COOKIES
   ]
 };
@@ -218,6 +221,10 @@ export const ROUTE_META = {
   [ROUTES.TERMS]: {
     title: 'Terms of Service - CAR EASE',
     description: 'Terms and conditions for using CAR EASE services.'
+  },
+  [ROUTES.CANCELLATION]: {
+    title: 'Cancellation Policy - CAR EASE',
+    description: 'Cancellation and refund policy for CAR EASE bookings and services.'
   },
   [ROUTES.FAQ]: {
     title: 'Frequently Asked Questions - CAR EASE',

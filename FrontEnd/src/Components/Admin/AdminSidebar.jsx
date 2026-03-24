@@ -90,18 +90,11 @@ const AdminSidebar = ({
           description: 'Vehicle inventory'
         },
         { 
-          id: 'services', 
-          path: '/admin/services', 
-          label: 'Services', 
-          icon: '🔧',
-          description: 'Service catalog'
-        },
-        { 
-          id: 'locations', 
-          path: '/admin/locations', 
-          label: 'Locations', 
+          id: 'reports-shortcut',
+          path: ROUTES.ADMIN_REPORTS,
+          label: 'Reports',
           icon: '📍',
-          description: 'Branch locations'
+          description: 'Business insights'
         }
       ]
     },
@@ -118,17 +111,17 @@ const AdminSidebar = ({
         },
         { 
           id: 'audit', 
-          path: '/admin/audit-logs', 
+          path: ROUTES.ADMIN_AUDIT, 
           label: 'Audit Logs', 
           icon: '📋',
           description: 'System activity'
         },
         { 
-          id: 'exports', 
-          path: '/admin/exports', 
-          label: 'Exports', 
+          id: 'exports',
+          path: ROUTES.ADMIN_REPORTS,
+          label: 'Exports',
           icon: '📎',
-          description: 'Data export'
+          description: 'Export reports'
         }
       ]
     },
@@ -138,14 +131,14 @@ const AdminSidebar = ({
       items: [
         { 
           id: 'settings', 
-          path: '/admin/settings', 
+          path: ROUTES.ADMIN_SETTINGS, 
           label: 'System Settings', 
           icon: '⚙️',
           description: 'Configuration'
         },
         { 
           id: 'profile', 
-          path: '/admin/profile', 
+          path: ROUTES.ADMIN_SETTINGS, 
           label: 'Profile', 
           icon: '👤',
           description: 'Account settings'

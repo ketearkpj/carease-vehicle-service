@@ -35,6 +35,7 @@ import AdminSettings from './Pages/AdminSettings';
 import AdminNotifications from './Pages/AdminNotifications';
 import Privacy from './Pages/Privacy';
 import Terms from './Pages/Terms';
+import CancellationPolicy from './Pages/CancellationPolicy';
 import Cookies from './Pages/Cookies';
 import FAQ from './Pages/FAQ';
 import Careers from './Pages/Careers';
@@ -205,6 +206,7 @@ function App() {
                     {/* ===== LEGAL & INFORMATION ROUTES ===== */}
                     <Route path={ROUTES.PRIVACY} element={<Privacy />} />
                     <Route path={ROUTES.TERMS} element={<Terms />} />
+                    <Route path={ROUTES.CANCELLATION} element={<CancellationPolicy />} />
                     <Route path={ROUTES.COOKIES} element={<Cookies />} />
                     <Route path={ROUTES.FAQ} element={<FAQ />} />
                     <Route path={ROUTES.CAREERS} element={<Careers />} />

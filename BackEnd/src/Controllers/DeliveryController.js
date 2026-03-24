@@ -87,6 +87,25 @@ exports.createDelivery = catchAsync(async (req, res, next) => {
 });
 
 // ===== GET ALL DELIVERIES =====
+exports.getUserDeliveries = catchAsync(async (req, res, next) => {
+  const deliveries = await Delivery.findAll({
+    where: { userId: req.user.id },
+    include: [
+      { model: User, as: 'driver', attributes: ['id', 'firstName', 'lastName', 'phone', 'profileImage'] },
+      { model: Booking, as: 'booking' }
+    ],
+    order: [['created_at', 'DESC']]
+  });
+
+  res.status(200).json({
+    status: 'success',
+    results: deliveries.length,
+    data: {
+      deliveries
+    }
+  });
+});
+
 exports.getAllDeliveries = catchAsync(async (req, res, next) => {
   const features = new APIFeatures(req.query)
     .filter()

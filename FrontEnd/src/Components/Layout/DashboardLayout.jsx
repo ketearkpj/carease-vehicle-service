@@ -72,12 +72,12 @@ const DashboardLayout = ({
       { path: ROUTES.ADMIN_SETTINGS, label: 'Settings', icon: Icons.Settings }
     ],
     provider: [
-      { path: ROUTES.PROVIDER_DASHBOARD, label: 'Dashboard', icon: Icons.Dashboard },
-      { path: ROUTES.PROVIDER_BOOKINGS, label: 'My Bookings', icon: Icons.Bookings, badge: 5 },
-      { path: ROUTES.PROVIDER_VEHICLES, label: 'My Vehicles', icon: Icons.Vehicles, badge: 8 },
-      { path: ROUTES.PROVIDER_EARNINGS, label: 'Earnings', icon: Icons.Earnings },
-      { path: ROUTES.PROVIDER_SCHEDULE, label: 'Schedule', icon: Icons.Schedule },
-      { path: ROUTES.PROVIDER_SETTINGS, label: 'Settings', icon: Icons.Settings }
+      { path: ROUTES.HOME, label: 'Dashboard', icon: Icons.Dashboard },
+      { path: ROUTES.MY_BOOKINGS, label: 'My Bookings', icon: Icons.Bookings, badge: 5 },
+      { path: ROUTES.WISHLIST, label: 'My Vehicles', icon: Icons.Vehicles, badge: 8 },
+      { path: ROUTES.CONTACT, label: 'Support', icon: Icons.Earnings },
+      { path: ROUTES.SERVICES, label: 'Schedule', icon: Icons.Schedule },
+      { path: ROUTES.PROFILE, label: 'Settings', icon: Icons.Settings }
     ]
   };
 

@@ -3,9 +3,19 @@ const { Op, fn, col, literal, sequelize } = require('sequelize');
 const { Booking, Payment, User, Vehicle, Delivery, Review } = require('../Models');
 const AppError = require('../Utils/AppError');
 const catchAsync = require('../Utils/CatchAsync');
-const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const { formatCurrency } = require('../Utils/Helpers');
+
+let ExcelJS = null;
+const getExcelJS = () => {
+  if (!ExcelJS) {
+    // Lazy-load so missing optional export deps do not break the whole API at startup.
+    // Report export routes will surface a clear runtime error if the package is unavailable.
+    // eslint-disable-next-line global-require, import/no-extraneous-dependencies
+    ExcelJS = require('exceljs');
+  }
+  return ExcelJS;
+};
 
 // ===== REVENUE REPORT =====
 exports.getRevenueReport = catchAsync(async (req, res, next) => {
@@ -854,7 +864,7 @@ const generateCSV = async (data) => {
 };
 
 const generateExcel = async (data, type) => {
-  const workbook = new ExcelJS.Workbook();
+  const workbook = new (getExcelJS()).Workbook();
   const worksheet = workbook.addWorksheet(type);
 
   if (data.length > 0) {

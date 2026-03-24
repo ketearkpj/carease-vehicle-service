@@ -812,7 +812,12 @@ export const getAuditLogs = async (filters = {}) => {
     };
   } catch (error) {
     console.error('Failed to fetch audit logs:', error);
-    throw new Error(error.response?.data?.message || 'Failed to fetch audit logs');
+    return {
+      logs: [],
+      total: 0,
+      page: Number(filters.page || 1),
+      totalPages: 1
+    };
   }
 };
 

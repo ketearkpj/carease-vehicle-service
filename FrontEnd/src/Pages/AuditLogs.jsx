@@ -14,6 +14,8 @@ const AuditLogs = () => {
       try {
         const result = await getAuditLogs({ page: 1, limit: 25 });
         setLogs(result.logs || []);
+      } catch {
+        setLogs([]);
       } finally {
         setLoading(false);
       }

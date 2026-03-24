@@ -5,3 +5,7 @@ dist/
 .DS_Store
 Thumbs.db
 .vscode/
+playwright-report/
+test-results/
+BackEnd/docs/jsdoc/
+BackEnd/logs/*.log

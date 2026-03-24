@@ -1,6 +1,6 @@
 // ===== src/Pages/ManageBookings.jsx =====
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 
 // Core imports
 import { ROUTES } from '../Config/Routes';
@@ -52,6 +52,7 @@ const ManageBookings = () => {
     totalPages: 0
   });
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const { admin } = useAdminAuth();
   const { addNotification } = useApp();
@@ -75,6 +76,16 @@ const ManageBookings = () => {
     }
     window.history.replaceState({}, document.title);
   }, [location.state, bookings]);
+
+  useEffect(() => {
+    const bookingId = searchParams.get('id');
+    if (!bookingId || bookings.length === 0) return;
+
+    const booking = bookings.find((item) => item.id === bookingId || item.bookingNumber === bookingId);
+    if (booking) {
+      handleViewDetails(booking);
+    }
+  }, [searchParams, bookings]);
 
   const fetchBookings = async () => {
     setLoading(true);
