@@ -25,6 +25,22 @@ const AnalyticsChart = ({
   className = '',
   ...props
 }) => {
+  const normalizeDataArray = (values) => (Array.isArray(values) ? values : []);
+  const getDatasetValues = (datasets = []) =>
+    normalizeDataArray(datasets).flatMap((dataset) => normalizeDataArray(dataset?.data));
+  const getSafeMinMax = (values = []) => {
+    if (!values.length) {
+      return { minValue: 0, maxValue: 1, range: 1 };
+    }
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const minValue = min === max ? Math.max(0, min - 1) : min * 0.9;
+    const maxValue = min === max ? max + 1 : max * 1.1;
+    const range = maxValue - minValue || 1;
+
+    return { minValue, maxValue, range };
+  };
   
   // Helper function to get color based on index
   const getColor = (index) => {
@@ -48,9 +64,9 @@ const AnalyticsChart = ({
     const { labels = [], datasets = [] } = data;
     if (!labels.length || !datasets.length) return renderNoData();
 
-    const maxValue = Math.max(...datasets.flatMap(d => d.data)) * 1.1;
-    const minValue = Math.min(...datasets.flatMap(d => d.data)) * 0.9;
-    const range = maxValue - minValue;
+    const datasetValues = getDatasetValues(datasets);
+    if (!datasetValues.length) return renderNoData();
+    const { minValue, maxValue, range } = getSafeMinMax(datasetValues);
 
     return (
       <div className="chart-svg-container">
@@ -71,10 +87,14 @@ const AnalyticsChart = ({
 
           {/* Data lines and points */}
           {datasets.map((dataset, datasetIndex) => {
-            const points = dataset.data.map((value, index) => ({
+            const points = normalizeDataArray(dataset?.data).map((value, index) => ({
               x: 50 + index * 100,
               y: 250 - ((value - minValue) / range) * 200
             }));
+
+            if (!points.length) return null;
+            const lastPoint = points[points.length - 1];
+            if (!lastPoint) return null;
 
             // Create path for line
             const linePath = points.map((p, i) => 
@@ -94,7 +114,7 @@ const AnalyticsChart = ({
                 {/* Area fill (optional) */}
                 {dataset.fill && (
                   <path
-                    d={`${linePath} L ${points[points.length-1].x} 250 L 50 250 Z`}
+                    d={`${linePath} L ${lastPoint.x} 250 L 50 250 Z`}
                     fill={dataset.backgroundColor || `${getColor(datasetIndex)}33`}
                     opacity="0.1"
                   />
@@ -156,7 +176,9 @@ const AnalyticsChart = ({
     const { labels = [], datasets = [] } = data;
     if (!labels.length || !datasets.length) return renderNoData();
 
-    const maxValue = Math.max(...datasets.flatMap(d => d.data)) * 1.1;
+    const datasetValues = getDatasetValues(datasets);
+    if (!datasetValues.length) return renderNoData();
+    const { maxValue } = getSafeMinMax(datasetValues);
     const barWidth = 60;
     const groupSpacing = 20;
     const chartWidth = labels.length * (datasets.length * barWidth + groupSpacing);
@@ -184,8 +206,10 @@ const AnalyticsChart = ({
             
             return datasets.map((dataset, datasetIndex) => {
               const barHeight = (dataset.data[labelIndex] / maxValue) * 200;
+              const safeValue = Number(dataset?.data?.[labelIndex] || 0);
+              const barHeightSafe = (safeValue / maxValue) * 200;
               const barX = groupX + datasetIndex * barWidth;
-              const barY = 250 - barHeight;
+              const barY = 250 - barHeightSafe;
 
               return (
                 <g key={`bar-${labelIndex}-${datasetIndex}`}>
@@ -193,13 +217,13 @@ const AnalyticsChart = ({
                     x={barX}
                     y={barY}
                     width={barWidth - 4}
-                    height={barHeight}
+                    height={barHeightSafe}
                     fill={dataset.backgroundColor || getColor(datasetIndex)}
                     rx="4"
                     ry="4"
                   />
                   {dataset.label && (
-                    <title>{dataset.label}: {dataset.data[labelIndex]}</title>
+                    <title>{dataset.label}: {safeValue}</title>
                   )}
                 </g>
               );
@@ -250,7 +274,9 @@ const AnalyticsChart = ({
     if (!labels.length || !datasets.length) return renderNoData();
 
     const dataset = datasets[0];
-    const total = dataset.data.reduce((a, b) => a + b, 0);
+    const pieValues = normalizeDataArray(dataset?.data);
+    if (!pieValues.length) return renderNoData();
+    const total = pieValues.reduce((a, b) => a + b, 0);
     const centerX = 200;
     const centerY = 150;
     const radius = type === 'doughnut' ? 60 : 80;
@@ -262,7 +288,7 @@ const AnalyticsChart = ({
       <div className="chart-svg-container">
         <svg viewBox="0 0 400 300" preserveAspectRatio="xMidYMid meet">
           {/* Pie/doughnut segments */}
-          {dataset.data.map((value, index) => {
+          {pieValues.map((value, index) => {
             const percentage = value / total;
             const angle = percentage * 2 * Math.PI;
             const endAngle = startAngle + angle;
@@ -385,8 +411,10 @@ const AnalyticsChart = ({
 
           {/* Data polygons */}
           {datasets.map((dataset, datasetIndex) => {
-            const maxValue = Math.max(...dataset.data);
-            const points = dataset.data.map((value, index) => {
+            const radarValues = normalizeDataArray(dataset?.data);
+            if (!radarValues.length) return null;
+            const maxValue = Math.max(...radarValues);
+            const points = radarValues.map((value, index) => {
               const angle = index * angleStep - Math.PI / 2;
               const distance = (value / maxValue) * radius;
               return {
