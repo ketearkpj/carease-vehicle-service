@@ -87,9 +87,12 @@ exports.subscribeToNewsletter = catchAsync(async (req, res, next) => {
     text: 'Your CAR EASE newsletter subscription is active.'
   };
   const sendResult = await sendEmail(emailPayload);
-  const emailQueuedFallback = !sendResult?.success;
+  let emailQueuedFallback = !sendResult?.success;
+  let emailUnavailable = sendResult?.reason === 'No email service available';
   if (emailQueuedFallback) {
-    await sendEmail({ ...emailPayload, queued: true });
+    const queuedResult = await sendEmail({ ...emailPayload, queued: true });
+    emailQueuedFallback = Boolean(queuedResult?.queued);
+    emailUnavailable = emailUnavailable || queuedResult?.reason === 'No email service available';
   }
 
   if (existingSubscriber) {
@@ -135,13 +138,16 @@ exports.subscribeToNewsletter = catchAsync(async (req, res, next) => {
 
   res.status(200).json({
     status: 'success',
-    message: emailQueuedFallback
-      ? 'Subscription successful. Confirmation email is queued for delivery.'
-      : 'Subscription successful. A confirmation email has been sent.',
+    message: emailUnavailable
+      ? 'Subscription successful, but the email delivery service is currently unavailable.'
+      : emailQueuedFallback
+        ? 'Subscription successful. Confirmation email is queued for delivery.'
+        : 'Subscription successful. A confirmation email has been sent.',
     data: {
       email,
       alreadySubscribed: false,
-      emailQueued: emailQueuedFallback
+      emailQueued: emailQueuedFallback,
+      emailUnavailable
     }
   });
 });
@@ -240,25 +246,31 @@ exports.sendBookingConfirmationEmail = catchAsync(async (req, res, next) => {
     text: `Booking confirmed. ID: ${bookingId || 'Pending'}, Service: ${serviceType}, Date: ${date || 'TBD'}, Time: ${time || 'TBD'}.`
   });
 
-  const emailQueuedFallback = !sendResult?.success;
+  let emailQueuedFallback = !sendResult?.success;
+  let emailUnavailable = sendResult?.reason === 'No email service available';
   if (emailQueuedFallback) {
-    await sendEmail({
+    const queuedResult = await sendEmail({
       to: customerEmail,
       subject: `Booking Confirmation - ${bookingId || 'CAR EASE'}`,
       html,
       text: `Booking confirmed. ID: ${bookingId || 'Pending'}, Service: ${serviceType}, Date: ${date || 'TBD'}, Time: ${time || 'TBD'}.`,
       queued: true
     });
+    emailQueuedFallback = Boolean(queuedResult?.queued);
+    emailUnavailable = emailUnavailable || queuedResult?.reason === 'No email service available';
   }
 
   return res.status(200).json({
     status: 'success',
-    message: emailQueuedFallback
-      ? 'Booking confirmation email queued for delivery.'
-      : 'Booking confirmation email sent.',
+    message: emailUnavailable
+      ? 'Booking saved, but the email delivery service is currently unavailable.'
+      : emailQueuedFallback
+        ? 'Booking confirmation email queued for delivery.'
+        : 'Booking confirmation email sent.',
     data: {
       recipient: customerEmail,
-      emailQueued: emailQueuedFallback
+      emailQueued: emailQueuedFallback,
+      emailUnavailable
     }
   });
 });

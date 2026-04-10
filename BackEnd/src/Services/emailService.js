@@ -9,6 +9,7 @@ class EmailService {
   constructor() {
     this.nodemailerTransporter = null;
     this.sendgridClient = null;
+    this.nodemailerReady = false;
     this.retryAttempts = 3;
     this.retryDelay = 2000; // 2 seconds
     this.emailQueue = [];
@@ -33,9 +34,12 @@ class EmailService {
         sgMail.setApiKey(process.env.SENDGRID_API_KEY);
         this.sendgridClient = sgMail;
         logger.info('✅ SendGrid email service initialized');
+      } else {
+        this.sendgridClient = null;
       }
     } catch (error) {
       logger.error('❌ SendGrid initialization failed:', error.message);
+      this.sendgridClient = null;
     }
   }
 
@@ -59,20 +63,26 @@ class EmailService {
           rateDelta: 1000,
           rateLimit: 5
         });
-
-        // Verify connection
-        this.nodemailerTransporter.verify((error) => {
-          if (error) {
-            logger.error('❌ Nodemailer connection failed:', error.message);
-            this.nodemailerTransporter = null;
-          } else {
-            logger.info('✅ Nodemailer email service (SMTP) initialized');
-          }
-        });
+        this.nodemailerReady = true;
+      } else {
+        this.nodemailerTransporter = null;
+        this.nodemailerReady = false;
       }
     } catch (error) {
       logger.error('❌ Nodemailer initialization failed:', error.message);
+      this.nodemailerTransporter = null;
+      this.nodemailerReady = false;
     }
+  }
+
+  async ensureAvailableService() {
+    if (this.sendgridClient || this.nodemailerTransporter) {
+      return true;
+    }
+
+    this.initializeSendGrid();
+    this.initializeNodemailer();
+    return Boolean(this.sendgridClient || this.nodemailerTransporter);
   }
 
   /**
@@ -123,6 +133,8 @@ const emailService = new EmailService();
  */
 const sendEmailWithRetry = async (emailData, attempt = 1) => {
   try {
+    await emailService.ensureAvailableService();
+
     if (!emailService.isAvailable()) {
       logger.warn('⚠️ No email service configured');
       return { success: false, reason: 'No email service available' };
@@ -199,6 +211,16 @@ const sendViaSendGrid = async ({ to, subject, html, text, replyTo, attachments =
  */
 const sendViaNodemailer = async ({ to, subject, html, text, replyTo, attachments = [] }) => {
   try {
+    if (!emailService.nodemailerTransporter) {
+      throw new Error('SMTP transporter is not configured');
+    }
+
+    if (!emailService.nodemailerReady) {
+      await emailService.nodemailerTransporter.verify();
+      emailService.nodemailerReady = true;
+      logger.info('✅ Nodemailer email service (SMTP) verified on demand');
+    }
+
     const mailOptions = {
       from: process.env.EMAIL_FROM || 'CAR EASE <noreply@carease.com>',
       to,
@@ -213,6 +235,7 @@ const sendViaNodemailer = async ({ to, subject, html, text, replyTo, attachments
     logger.info(`✅ Email sent via Nodemailer (SMTP) to ${to}`);
     return { success: true, messageId: result.messageId, service: 'nodemailer' };
   } catch (error) {
+    emailService.nodemailerReady = false;
     logger.error('❌ Nodemailer email send failed:', error);
     throw error;
   }
@@ -223,6 +246,11 @@ exports.sendEmail = async ({ to, subject, html, text, replyTo, attachments = [],
   const emailData = { to, subject, html, text, replyTo, attachments };
 
   if (queued) {
+    await emailService.ensureAvailableService();
+    if (!emailService.isAvailable()) {
+      logger.warn(`⚠️ Email not queued because no provider is configured: ${to}`);
+      return { success: false, queued: false, reason: 'No email service available' };
+    }
     emailService.queueEmail(emailData);
     return { success: true, queued: true };
   }
