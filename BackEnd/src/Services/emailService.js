@@ -16,6 +16,17 @@ class EmailService {
     this.initialize();
   }
 
+  resolveSmtpConfig() {
+    const host = process.env.EMAIL_HOST || process.env.SMTP_HOST || null;
+    const port = parseInt(process.env.EMAIL_PORT || process.env.SMTP_PORT || '587', 10);
+    const user = process.env.EMAIL_USERNAME || process.env.EMAIL_USER || process.env.SMTP_USER || null;
+    const pass = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS || process.env.SMTP_PASS || null;
+    const secureFlag = process.env.EMAIL_SECURE || process.env.SMTP_SECURE || '';
+    const secure = secureFlag === 'true' || String(port) === '465';
+
+    return { host, port, user, pass, secure };
+  }
+
   /**
    * Initialize email services
    */
@@ -48,14 +59,16 @@ class EmailService {
    */
   initializeNodemailer() {
     try {
-      if (process.env.EMAIL_HOST && process.env.EMAIL_USERNAME && process.env.EMAIL_PASSWORD) {
+      const smtp = this.resolveSmtpConfig();
+
+      if (smtp.host && smtp.user && smtp.pass) {
         this.nodemailerTransporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST,
-          port: parseInt(process.env.EMAIL_PORT || '587', 10),
-          secure: process.env.EMAIL_PORT === '465' || process.env.EMAIL_SECURE === 'true',
+          host: smtp.host,
+          port: smtp.port,
+          secure: smtp.secure,
           auth: {
-            user: process.env.EMAIL_USERNAME,
-            pass: process.env.EMAIL_PASSWORD
+            user: smtp.user,
+            pass: smtp.pass
           },
           pool: true,
           maxConnections: 5,
@@ -67,6 +80,7 @@ class EmailService {
       } else {
         this.nodemailerTransporter = null;
         this.nodemailerReady = false;
+        logger.warn('⚠️ SMTP disabled: missing EMAIL/SMTP host or credentials');
       }
     } catch (error) {
       logger.error('❌ Nodemailer initialization failed:', error.message);
