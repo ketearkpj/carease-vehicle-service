@@ -105,10 +105,7 @@ const Booking = () => {
   const formatCurrency = (amount) => `KSh ${Number(amount || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const isOnlinePayment = bookingData.paymentChannel === 'online';
   const paymentMethods = [
-    { id: 'card', label: '💳 Credit/Debit Card', hint: 'Visa, Mastercard, Amex' },
-    { id: 'paypal', label: '🅿️ PayPal', hint: 'Fast & secure' },
-    { id: 'mpesa', label: '📱 M-PESA', hint: 'Mobile money' },
-    { id: 'square', label: '⬜ Square', hint: 'Digital wallet' }
+    { id: 'mpesa', label: '📱 M-PESA', hint: 'Mobile money' }
   ];
   const serviceLabels = {
     [SERVICE_TYPES.RENTAL]: 'Rental',
@@ -599,7 +596,10 @@ const Booking = () => {
           ...paymentPayload
         }, gateway || 'stripe');
 
-        if (!payment?.success || payment?.status !== 'completed') {
+        const isCompleted = payment?.status === 'completed';
+        const isMpesaPending = bookingData.paymentMethod === 'mpesa' && payment?.status === 'processing';
+
+        if (!isCompleted && !isMpesaPending) {
           throw new Error(
             bookingData.paymentMethod === 'mpesa'
               ? 'Payment is still pending. Complete the M-PESA prompt on your phone, then try again.'
@@ -618,7 +618,9 @@ const Booking = () => {
         paymentMeta: {
           channel: bookingData.paymentChannel,
           method: isOnlinePayment ? bookingData.paymentMethod : 'cash_on_delivery',
-          paymentStatus: isOnlinePayment ? 'completed' : 'due_on_delivery',
+          paymentStatus: isOnlinePayment
+            ? (bookingData.paymentMethod === 'mpesa' && payment?.status === 'processing' ? 'processing' : 'completed')
+            : 'due_on_delivery',
           phoneNumber: bookingData.paymentMethod === 'mpesa' ? normalizeMpesaPhone(paymentDetails.mpesaPhone) : undefined,
           paypalEmail: bookingData.paymentMethod === 'paypal' ? paymentDetails.paypalEmail.trim() : undefined,
           cardLast4: bookingData.paymentMethod === 'card' ? paymentDetails.cardNumber.replace(/\D/g, '').slice(-4) : undefined,
@@ -630,7 +632,11 @@ const Booking = () => {
 
       if (result?.success && result?.booking) {
         const successMessage = isOnlinePayment
-          ? 'Booking confirmed and payment received. Confirmation email sent.'
+          ? (
+              bookingData.paymentMethod === 'mpesa' && payment?.status === 'processing'
+                ? 'Booking created. Your M-PESA prompt has been sent and payment is still processing.'
+                : 'Booking confirmed and payment received. Confirmation email sent.'
+            )
           : 'Booking confirmed. Pay on delivery is selected and confirmation email has been sent.';
         addNotification(successMessage, 'success');
         navigate(`${ROUTES.BOOKING_CONFIRMATION}?id=${result.booking.id}`);

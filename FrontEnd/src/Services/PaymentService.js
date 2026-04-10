@@ -90,8 +90,7 @@ const extractApiErrorMessage = (error, fallbackMessage) => {
  */
 export const getPaymentMethods = async () => {
   return [
-    { id: 'card', name: 'Credit/Debit Card', icon: '💳', enabled: true },
-    { id: 'paypal', name: 'PayPal', icon: '📧', enabled: true },
+    // Only expose methods that have a working frontend flow in this build.
     { id: 'mpesa', name: 'M-PESA', icon: '📱', enabled: true },
     { id: 'cash', name: 'Cash on Delivery', icon: '💵', enabled: true }
   ];

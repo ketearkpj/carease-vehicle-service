@@ -234,10 +234,7 @@ const ServiceCheckout = ({ serviceKey }) => {
       } catch {
         if (mounted) {
           setPaymentMethods([
-            { id: 'card', name: 'Credit/Debit Card' },
-            { id: 'paypal', name: 'PayPal' },
-            { id: 'mpesa', name: 'M-PESA' },
-            { id: 'square', name: 'Square' }
+            { id: 'mpesa', name: 'M-PESA' }
           ]);
         }
       }

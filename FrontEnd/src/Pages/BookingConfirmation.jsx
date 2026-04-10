@@ -9,6 +9,7 @@ import Card from '../Components/Common/Card';
 import LoadingSpinner from '../Components/Common/LoadingSpinner';
 
 import { getBookingById } from '../Services/BookingService';
+import { sendBookingConfirmation } from '../Services/EmailService';
 import { generateHTMLInvoice, downloadInvoice, printInvoice } from '../Utils/generalInvoice';
 
 import { useApp } from '../Context/AppContext';
@@ -62,7 +63,22 @@ const BookingConfirmation = () => {
 
   const handleResendEmail = async () => {
     try {
-      addNotification(`Confirmation email sent to ${booking?.customerEmail || booking?.customerInfo?.email || 'your email'}`, 'success');
+      const recipient = booking?.customerEmail || booking?.customerInfo?.email;
+      if (!recipient) {
+        throw new Error('No customer email is attached to this booking');
+      }
+
+      await sendBookingConfirmation({
+        customerEmail: recipient,
+        customerName: booking?.customerName || `${booking?.customerFirstName || ''} ${booking?.customerLastName || ''}`.trim() || 'Customer',
+        bookingId: booking?.id || booking?.bookingNumber,
+        serviceType: booking?.serviceType || 'service',
+        date: booking?.startDate || booking?.date,
+        time: booking?.pickupTime || booking?.time,
+        amount: booking?.totalAmount || booking?.totalPrice || 0
+      });
+
+      addNotification(`Confirmation email sent to ${recipient}`, 'success');
     } catch {
       addNotification('Failed to resend email', 'error');
     }

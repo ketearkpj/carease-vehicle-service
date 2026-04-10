@@ -282,7 +282,12 @@ exports.confirmPayment = catchAsync(async (req, res, next) => {
       return next(new AppError('Payment confirmation not needed for this method', 400));
   }
 
-  if (result.status === 'completed') {
+  const normalizedStatus = String(result?.status || '').toLowerCase();
+
+  if (normalizedStatus === 'completed' || normalizedStatus === 'succeeded') {
+    if (result.transactionId) {
+      payment.transactionId = result.transactionId;
+    }
     payment.status = 'completed';
     payment.processedAt = new Date();
     await payment.save();
@@ -397,15 +402,15 @@ exports.processRefund = catchAsync(async (req, res, next) => {
     amount: refundAmount,
     reason,
     status: 'completed',
-    transactionId: result.transactionId,
+    transactionId: result.transactionId || result.refundId || null,
     gatewayResponse: result,
-    createdBy: req.user.id,
+    createdBy: req.admin?.id || req.user?.id || null,
     createdAt: new Date()
   });
   payment.refunds = refunds;
 
   // Update payment status
-  if (refundAmount === payment.amount) {
+  if (Number(refundAmount) === Number(payment.amount)) {
     payment.status = 'refunded';
   } else {
     payment.status = 'partially_refunded';

@@ -122,8 +122,12 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     }]
   });
 
-  // Send confirmation email
-  await sendBookingConfirmation(booking);
+  // Email delivery should never block booking creation in production.
+  try {
+    await sendBookingConfirmation(booking);
+  } catch (error) {
+    logger.error('Booking confirmation email failed:', error.message);
+  }
   await sendCompanyBookingNotification(booking);
 
   // Create notification
@@ -640,12 +644,17 @@ const sendBookingConfirmation = async (booking) => {
     // Invoice generation failure should not block confirmation email.
   }
 
-  await sendEmail({
+  const payload = {
     to: user.email,
     subject: `CAR EASE - Booking ${booking.status === 'confirmed' ? 'Confirmation' : 'Received'} #${booking.bookingNumber}`,
     html: generateBookingEmail(booking),
     attachments
-  });
+  };
+
+  const sendResult = await sendEmail(payload);
+  if (!sendResult?.success) {
+    await sendEmail({ ...payload, queued: true });
+  }
 };
 
 const sendCompanyBookingNotification = async (booking) => {
@@ -699,11 +708,15 @@ const sendBookingUpdateNotification = async (booking) => {
     : await User.findByPk(booking.userId);
   if (!user?.email) return;
 
-  await sendEmail({
+  const payload = {
     to: user.email,
     subject: `CAR EASE - Booking Update #${booking.bookingNumber}`,
     html: generateBookingEmail(booking, 'updated')
-  });
+  };
+  const sendResult = await sendEmail(payload);
+  if (!sendResult?.success) {
+    await sendEmail({ ...payload, queued: true });
+  }
 };
 
 const sendCancellationNotification = async (booking, reason) => {
@@ -712,11 +725,15 @@ const sendCancellationNotification = async (booking, reason) => {
     : await User.findByPk(booking.userId);
   if (!user?.email) return;
 
-  await sendEmail({
+  const payload = {
     to: user.email,
     subject: `CAR EASE - Booking Cancelled #${booking.bookingNumber}`,
     html: generateCancellationEmail(booking, reason)
-  });
+  };
+  const sendResult = await sendEmail(payload);
+  if (!sendResult?.success) {
+    await sendEmail({ ...payload, queued: true });
+  }
 };
 
 const processBookingRefund = async (booking) => {
