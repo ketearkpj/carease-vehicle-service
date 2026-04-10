@@ -311,7 +311,7 @@ const Rentals = () => {
   const fetchCategories = async () => {
     try {
       const data = await getVehicleCategories();
-      setCategories(data);
+      setCategories(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
       setCategories(VEHICLE_CATEGORIES);
@@ -360,6 +360,8 @@ const Rentals = () => {
 
     setFilteredVehicles(filtered);
   };
+
+  const safeCategories = Array.isArray(categories) ? categories : [];
 
   const handleFilterChange = (key, value) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -522,7 +524,7 @@ const Rentals = () => {
                 onChange={(e) => handleFilterChange('category', e.target.value)}
                 options={[
                   { value: 'all', label: 'All Categories' },
-                  ...categories.map(c => ({ value: c.id, label: c.name }))
+                  ...safeCategories.map(c => ({ value: c.id, label: c.name }))
                 ]}
                 className="filter-select"
               />

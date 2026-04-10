@@ -147,7 +147,7 @@ export const createBooking = async (bookingData) => {
 
     const localBooking = buildLocalBooking(bookingData);
     const localBookings = getLocalBookings();
-    saveLocalBookings([localBooking, ...localBookings]);
+    saveLocalBookings([localBooking, ...(Array.isArray(localBookings) ? localBookings : [])]);
 
     try {
       await sendBookingConfirmation({

@@ -62,7 +62,8 @@ export const generatePassword = (options = {}) => {
 
 // ===== ARRAY OPERATIONS =====
 export const groupBy = (array, key) => {
-  return array.reduce((result, item) => {
+  const safeArray = Array.isArray(array) ? array : [];
+  return safeArray.reduce((result, item) => {
     const groupKey = typeof key === 'function' ? key(item) : item[key];
     if (!result[groupKey]) result[groupKey] = [];
     result[groupKey].push(item);
@@ -71,7 +72,8 @@ export const groupBy = (array, key) => {
 };
 
 export const sortBy = (array, key, order = 'asc') => {
-  return [...array].sort((a, b) => {
+  const safeArray = Array.isArray(array) ? array : [];
+  return [...safeArray].sort((a, b) => {
     const aVal = typeof key === 'function' ? key(a) : a[key];
     const bVal = typeof key === 'function' ? key(b) : b[key];
     
@@ -83,8 +85,9 @@ export const sortBy = (array, key, order = 'asc') => {
 };
 
 export const uniqueBy = (array, key) => {
+  const safeArray = Array.isArray(array) ? array : [];
   const seen = new Set();
-  return array.filter(item => {
+  return safeArray.filter(item => {
     const value = typeof key === 'function' ? key(item) : item[key];
     if (seen.has(value)) return false;
     seen.add(value);
@@ -93,21 +96,23 @@ export const uniqueBy = (array, key) => {
 };
 
 export const chunk = (array, size) => {
+  const safeArray = Array.isArray(array) ? array : [];
   const chunks = [];
-  for (let i = 0; i < array.length; i += size) {
-    chunks.push(array.slice(i, i + size));
+  for (let i = 0; i < safeArray.length; i += size) {
+    chunks.push(safeArray.slice(i, i + size));
   }
   return chunks;
 };
 
 export const flatten = (array) => {
-  return array.reduce((flat, item) => {
+  const safeArray = Array.isArray(array) ? array : [];
+  return safeArray.reduce((flat, item) => {
     return flat.concat(Array.isArray(item) ? flatten(item) : item);
   }, []);
 };
 
 export const shuffle = (array) => {
-  const shuffled = [...array];
+  const shuffled = [...(Array.isArray(array) ? array : [])];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -116,14 +121,15 @@ export const shuffle = (array) => {
 };
 
 export const paginate = (array, page = 1, limit = 10) => {
+  const safeArray = Array.isArray(array) ? array : [];
   const start = (page - 1) * limit;
   const end = start + limit;
   return {
-    data: array.slice(start, end),
-    total: array.length,
+    data: safeArray.slice(start, end),
+    total: safeArray.length,
     page,
     limit,
-    totalPages: Math.ceil(array.length / limit)
+    totalPages: Math.ceil(safeArray.length / limit)
   };
 };
 
