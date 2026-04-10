@@ -37,7 +37,25 @@ export const getServices = async (filters = {}) => {
       }
     });
 
-    return response.data.services;
+    const payload = response?.data;
+
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+
+    if (Array.isArray(payload?.services)) {
+      return payload.services;
+    }
+
+    if (Array.isArray(payload?.data?.services)) {
+      return payload.data.services;
+    }
+
+    if (Array.isArray(payload?.data)) {
+      return payload.data;
+    }
+
+    return [];
   } catch (error) {
     console.error('Failed to fetch services:', error);
     return [];

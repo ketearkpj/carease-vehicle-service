@@ -287,6 +287,7 @@ const Home = () => {
   };
 
   const safeFeaturedVehicles = Array.isArray(featuredVehicles) ? featuredVehicles : [];
+  const safeServices = Array.isArray(services) ? services : [];
 
   const scrollToSection = (ref) => {
     ref.current?.scrollIntoView({ behavior: 'smooth' });
@@ -312,7 +313,7 @@ const Home = () => {
         
         <div className="hero-container">
           <div className="hero-content-flow">
-            {/* EST. 2018 Badge - Restored exactly as you wanted */}
+            {/* EST. 2026 Badge - Restored exactly as you wanted */}
             <div className="gold-subtitle">
               <span className="year-badge">EST. {APP_CONFIG.established}</span>
             </div>
@@ -484,7 +485,7 @@ const Home = () => {
             </div>
           ) : (
             <div className="services-vertical-grid">
-              {services.map((service, index) => (
+              {safeServices.map((service, index) => (
                 <div key={service.id} className="service-vertical-card">
                   <div className="service-vertical-icon">{service.icon}</div>
                   <div className="service-vertical-content">
