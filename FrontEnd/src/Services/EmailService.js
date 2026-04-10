@@ -65,15 +65,16 @@ const sendViaEmailJS = async (params) => {
  */
 const sendViaSendGrid = async (emailData) => {
   try {
-    // This should hit your backend endpoint that uses SendGrid
-    const response = await axios.post('/api/send-email', {
-      to: emailData.to,
-      from: EMAIL_CONFIG.sendGridFromEmail,
-      subject: emailData.subject,
-      html: emailData.html,
-      text: emailData.text
-    });
-    return response.data;
+    if (EMAIL_CONFIG.useEmailJS) {
+      return await sendViaEmailJS({
+        to_email: emailData.to,
+        subject: emailData.subject,
+        message: emailData.text || '',
+        html_content: emailData.html || ''
+      });
+    }
+
+    throw new Error('No direct frontend SendGrid proxy endpoint is configured');
   } catch (error) {
     console.error('SendGrid error:', error);
     throw error;

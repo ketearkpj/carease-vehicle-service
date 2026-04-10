@@ -240,15 +240,25 @@ exports.sendBookingConfirmationEmail = catchAsync(async (req, res, next) => {
     text: `Booking confirmed. ID: ${bookingId || 'Pending'}, Service: ${serviceType}, Date: ${date || 'TBD'}, Time: ${time || 'TBD'}.`
   });
 
-  if (!sendResult?.success) {
-    return next(new AppError('Could not send booking confirmation email right now.', 500));
+  const emailQueuedFallback = !sendResult?.success;
+  if (emailQueuedFallback) {
+    await sendEmail({
+      to: customerEmail,
+      subject: `Booking Confirmation - ${bookingId || 'CAR EASE'}`,
+      html,
+      text: `Booking confirmed. ID: ${bookingId || 'Pending'}, Service: ${serviceType}, Date: ${date || 'TBD'}, Time: ${time || 'TBD'}.`,
+      queued: true
+    });
   }
 
   return res.status(200).json({
     status: 'success',
-    message: 'Booking confirmation email sent.',
+    message: emailQueuedFallback
+      ? 'Booking confirmation email queued for delivery.'
+      : 'Booking confirmation email sent.',
     data: {
-      recipient: customerEmail
+      recipient: customerEmail,
+      emailQueued: emailQueuedFallback
     }
   });
 });
@@ -289,7 +299,7 @@ exports.submitContactInquiry = catchAsync(async (req, res, next) => {
 
   const adminTo = process.env.SUPPORT_EMAIL || process.env.EMAIL_FROM || 'support@carease.co.ke';
 
-  await sendEmail({
+  const adminSendResult = await sendEmail({
     to: adminTo,
     subject: `New Contact Inquiry: ${subject}`,
     html: `
@@ -304,7 +314,7 @@ exports.submitContactInquiry = catchAsync(async (req, res, next) => {
     text: `New contact inquiry from ${name} (${email}) | ${subject}`
   });
 
-  await sendEmail({
+  const customerSendResult = await sendEmail({
     to: email,
     subject: 'We received your inquiry - CAR EASE',
     html: `
@@ -315,6 +325,39 @@ exports.submitContactInquiry = catchAsync(async (req, res, next) => {
     `,
     text: `Hello ${name}, we received your inquiry and will respond soon.`
   });
+
+  if (!adminSendResult?.success) {
+    await sendEmail({
+      to: adminTo,
+      subject: `New Contact Inquiry: ${subject}`,
+      html: `
+      <h2>New Contact Inquiry</h2>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || 'Not provided'}</p>
+      <p><strong>Preferred Contact:</strong> ${preferredContact || 'Not specified'}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Message:</strong><br/>${message}</p>
+    `,
+      text: `New contact inquiry from ${name} (${email}) | ${subject}`,
+      queued: true
+    });
+  }
+
+  if (!customerSendResult?.success) {
+    await sendEmail({
+      to: email,
+      subject: 'We received your inquiry - CAR EASE',
+      html: `
+      <p>Hello ${name},</p>
+      <p>We have received your inquiry and the CarEase team will get back to you shortly.</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p>Thank you for contacting CarEase.</p>
+    `,
+      text: `Hello ${name}, we received your inquiry and will respond soon.`,
+      queued: true
+    });
+  }
 
   return res.status(200).json({
     status: 'success',

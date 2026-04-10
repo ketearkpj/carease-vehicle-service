@@ -28,6 +28,7 @@ const normalizeAdmin = (admin) => {
   const displayName = admin.name || [admin.firstName, admin.lastName].filter(Boolean).join(' ').trim();
   return { ...admin, name: displayName || admin.email || 'Admin' };
 };
+const toNumber = (value) => Number(value || 0);
 const listToObject = (items = [], keyField = 'key', valueField = 'value') =>
   Array.isArray(items)
     ? items.reduce((acc, item) => {
@@ -295,10 +296,8 @@ export const updateBookingStatus = async (bookingId, status, note = '') => {
  * @returns {Promise<Object>} - Users with pagination
  */
 export const getAllUsers = async (filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.get(`${API_BASE_URL}/users`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/users`, {
       params: {
         page: filters.page || 1,
         limit: filters.limit || 20,
@@ -308,14 +307,17 @@ export const getAllUsers = async (filters = {}) => {
         sortBy: filters.sortBy || 'createdAt',
         sortOrder: filters.sortOrder || 'desc'
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
+    const payload = readPayload(response);
+    const users = payload.users || [];
+    const total = response.data?.total || payload.total || users.length;
 
     return {
-      users: response.data.users,
-      total: response.data.total,
-      page: response.data.page,
-      totalPages: response.data.totalPages
+      users,
+      total,
+      page: Number(filters.page || 1),
+      totalPages: Math.max(1, Math.ceil(total / Number(filters.limit || 20)))
     };
   } catch (error) {
     console.error('Failed to fetch users:', error);
@@ -329,14 +331,10 @@ export const getAllUsers = async (filters = {}) => {
  * @returns {Promise<Object>} - User details
  */
 export const getUserDetails = async (userId) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.get(`${API_BASE_URL}/users/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return response.data;
+    const response = await axios.get(`${ADMIN_BASE_URL}/users/${userId}`, withAuth());
+    const payload = readPayload(response);
+    return payload.user || payload;
   } catch (error) {
     console.error('Failed to fetch user details:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch user details');
@@ -350,17 +348,13 @@ export const getUserDetails = async (userId) => {
  * @returns {Promise<Object>} - Updated user
  */
 export const updateUserRole = async (userId, role) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.patch(`${API_BASE_URL}/users/${userId}/role`, {
+    const response = await axios.patch(`${ADMIN_BASE_URL}/users/${userId}`, {
       role,
       updatedAt: new Date().toISOString()
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    }, withAuth());
 
-    return response.data;
+    return readPayload(response);
   } catch (error) {
     console.error('Failed to update user role:', error);
     throw new Error(error.response?.data?.message || 'Failed to update user role');
@@ -375,18 +369,14 @@ export const updateUserRole = async (userId, role) => {
  * @returns {Promise<Object>} - Updated user
  */
 export const toggleUserStatus = async (userId, isActive, reason = '') => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.patch(`${API_BASE_URL}/users/${userId}/status`, {
+    const response = await axios.patch(`${ADMIN_BASE_URL}/users/${userId}/status`, {
       isActive,
       reason,
       updatedAt: new Date().toISOString()
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    }, withAuth());
 
-    return response.data;
+    return readPayload(response);
   } catch (error) {
     console.error('Failed to update user status:', error);
     throw new Error(error.response?.data?.message || 'Failed to update user status');
@@ -480,14 +470,10 @@ export const addVehicle = async (vehicleData) => {
  * @returns {Promise<Object>} - Updated vehicle
  */
 export const updateVehicle = async (vehicleId, vehicleData) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.put(`${API_BASE_URL}/vehicles/${vehicleId}`, vehicleData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axios.patch(`${API_BASE_URL}/vehicles/${vehicleId}`, vehicleData, withAuth());
 
-    return response.data;
+    return readPayload(response);
   } catch (error) {
     console.error('Failed to update vehicle:', error);
     throw new Error(error.response?.data?.message || 'Failed to update vehicle');
@@ -519,10 +505,8 @@ export const deleteVehicle = async (vehicleId) => {
  * @returns {Promise<Object>} - Payments with pagination
  */
 export const getAllPayments = async (filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.get(`${API_BASE_URL}/payments`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/payments`, {
       params: {
         page: filters.page || 1,
         limit: filters.limit || 20,
@@ -532,14 +516,17 @@ export const getAllPayments = async (filters = {}) => {
         endDate: filters.endDate,
         search: filters.search
       },
-      headers: { Authorization: `Bearer ${token}` }
+      ...withAuth()
     });
+    const payload = readPayload(response);
+    const payments = payload.payments || [];
+    const total = response.data?.total || payload.total || payments.length;
 
     return {
-      payments: response.data.payments,
-      total: response.data.total,
-      page: response.data.page,
-      totalPages: response.data.totalPages
+      payments,
+      total,
+      page: Number(filters.page || 1),
+      totalPages: Math.max(1, Math.ceil(total / Number(filters.limit || 20)))
     };
   } catch (error) {
     console.error('Failed to fetch payments:', error);
@@ -561,13 +548,10 @@ export const getAllPayments = async (filters = {}) => {
  * @returns {Promise<Object>} - Payment details
  */
 export const getPaymentDetails = async (paymentId) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.get(`${API_BASE_URL}/payments/${paymentId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.data;
+    const response = await axios.get(`${ADMIN_BASE_URL}/payments/${paymentId}`, withAuth());
+    const payload = readPayload(response);
+    return payload.payment || payload;
   } catch (error) {
     console.error('Failed to fetch payment details:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch payment details');
@@ -581,14 +565,10 @@ export const getPaymentDetails = async (paymentId) => {
  * @returns {Promise<Object>} - Refund result
  */
 export const processRefund = async (paymentId, refundData) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.post(`${API_BASE_URL}/payments/${paymentId}/refund`, refundData, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+    const response = await axios.post(`${ADMIN_BASE_URL}/payments/${paymentId}/refund`, refundData, withAuth());
 
-    return response.data;
+    return readPayload(response);
   } catch (error) {
     console.error('Failed to process refund:', error);
     throw new Error(error.response?.data?.message || 'Failed to process refund');
@@ -602,7 +582,7 @@ export const processRefund = async (paymentId, refundData) => {
  */
 export const getRevenueReports = async (filters = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/reports/revenue`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/reports/revenue`, {
       params: {
         period: filters.period || 'month',
         startDate: filters.startDate,
@@ -612,17 +592,20 @@ export const getRevenueReports = async (filters = {}) => {
       ...withAuth()
     });
     const payload = readPayload(response);
-    const byPeriod = payload.revenue || payload.byPeriod || [];
+    const byPeriod = payload.byPeriod || payload.revenue || [];
     const byMethod = payload.byMethod || [];
-    const total = byPeriod.reduce((sum, item) => sum + Number(item.total || item.amount || 0), 0);
+    const total = toNumber(payload.summary?.totalRevenue)
+      || byPeriod.reduce((sum, item) => sum + toNumber(item.total || item.amount), 0);
 
     return {
       total,
+      totalTransactions: toNumber(payload.summary?.totalTransactions),
+      averageTransaction: toNumber(payload.summary?.averageTransaction),
       byPeriod,
       byService: listToObject(payload.byService, 'serviceType', 'total'),
       byMethod: listToObject(byMethod, 'method', 'total'),
-      trends: payload.trends || byPeriod,
-      projections: payload.projections || []
+      dailyAverage: toNumber(payload.dailyAverage),
+      trends: payload.trends || byPeriod
     };
   } catch (error) {
     console.error('Failed to fetch revenue reports:', error);
@@ -637,7 +620,7 @@ export const getRevenueReports = async (filters = {}) => {
  */
 export const getBookingReports = async (filters = {}) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/reports/bookings`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/reports/bookings`, {
       params: {
         period: filters.period || 'month',
         startDate: filters.startDate,
@@ -647,19 +630,69 @@ export const getBookingReports = async (filters = {}) => {
       ...withAuth()
     });
     const payload = readPayload(response);
-    const totals = Array.isArray(payload.bookings) ? payload.bookings[0] : payload.bookings;
 
     return {
-      total: Number(payload.total || totals?.count || 0),
+      total: toNumber(payload.summary?.total || payload.total),
       byStatus: listToObject(payload.byStatus, 'status', 'count'),
       byService: listToObject(payload.byService, 'serviceType', 'count'),
-      byLocation: payload.byLocation || {},
-      cancellationRate: Number(payload.cancellationRate || 0),
-      occupancyRate: Number(payload.occupancyRate || 0)
+      byPeriod: payload.byPeriod || [],
+      peakHours: payload.peakHours || [],
+      cancelled: toNumber(payload.summary?.cancelled),
+      cancellationRate: toNumber(payload.summary?.cancellationRate || payload.cancellationRate)
     };
   } catch (error) {
     console.error('Failed to fetch booking reports:', error);
     throw new Error(error.response?.data?.message || 'Failed to fetch booking reports');
+  }
+};
+
+export const getUserReports = async (filters = {}) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/reports/users`, {
+      params: {
+        startDate: filters.startDate,
+        endDate: filters.endDate
+      },
+      ...withAuth()
+    });
+    const payload = readPayload(response);
+
+    return {
+      newUsers: toNumber(payload.summary?.newUsers),
+      returningUsers: toNumber(payload.summary?.returningUsers),
+      activeUsers: toNumber(payload.summary?.activeUsers),
+      inactiveUsers: toNumber(payload.summary?.inactiveUsers),
+      growth: payload.growth || [],
+      byRole: listToObject(payload.byRole, 'role', 'count')
+    };
+  } catch (error) {
+    console.error('Failed to fetch user reports:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch user reports');
+  }
+};
+
+export const getVehicleReports = async (filters = {}) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/reports/vehicles`, {
+      params: {
+        startDate: filters.startDate,
+        endDate: filters.endDate
+      },
+      ...withAuth()
+    });
+    const payload = readPayload(response);
+
+    return {
+      totalVehicles: toNumber(payload.summary?.totalVehicles),
+      bookedVehicles: toNumber(payload.summary?.bookedVehicles),
+      utilizationRate: toNumber(payload.summary?.utilizationRate),
+      averageRentalDuration: toNumber(payload.summary?.averageRentalDuration),
+      fleetComposition: payload.fleetComposition || [],
+      popularVehicles: payload.popularVehicles || []
+    };
+  } catch (error) {
+    console.error('Failed to fetch vehicle reports:', error);
+    throw new Error(error.response?.data?.message || 'Failed to fetch vehicle reports');
   }
 };
 
@@ -700,15 +733,14 @@ export const getAnalytics = async (filters = {}) => {
  * @returns {Promise<Blob>} - Exported file
  */
 export const exportData = async (type, format = 'csv', filters = {}) => {
-  const token = localStorage.getItem('admin_token');
-
   try {
-    const response = await axios.get(`${API_BASE_URL}/export/${type}`, {
+    const response = await axios.get(`${ADMIN_BASE_URL}/export/${type}`, {
       params: {
         format,
-        ...filters
+        startDate: filters.startDate,
+        endDate: filters.endDate
       },
-      headers: { Authorization: `Bearer ${token}` },
+      ...withAuth(),
       responseType: 'blob'
     });
 
@@ -919,6 +951,8 @@ export default {
   processRefund,
   getRevenueReports,
   getBookingReports,
+  getUserReports,
+  getVehicleReports,
   getAnalytics,
   exportData,
   getSystemSettings,

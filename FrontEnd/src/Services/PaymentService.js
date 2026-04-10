@@ -249,31 +249,24 @@ const processPayPalPayment = async (paymentData) => {
  */
 export const capturePayPalPayment = async (orderId) => {
   try {
-    const response = await axios.post('/api/payments/capture-paypal-order', {
+    const response = await axios.post(`${API_BASE_URL}/payments/confirm`, {
       orderId
+    }, {
+      headers: getAuthHeaders()
     });
-
-    const { captureDetails } = response.data;
-
-    await recordPayment({
-      gateway: 'paypal',
-      transactionId: captureDetails.id,
-      amount: captureDetails.amount.value,
-      currency: captureDetails.amount.currency_code,
-      customerEmail: captureDetails.payer.email_address,
-      bookingId: captureDetails.purchase_units[0].reference_id,
-      status: 'completed'
-    });
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
+    const result = payload.result || {};
 
     return {
       success: true,
-      transactionId: captureDetails.id,
-      amount: captureDetails.amount.value,
-      status: 'completed'
+      transactionId: result.transactionId || payment.transactionId || payment.id || orderId,
+      amount: result.amount || payment.amount,
+      status: payment.status || result.status || 'completed'
     };
   } catch (error) {
     console.error('PayPal capture error:', error);
-    throw error;
+    throw new Error(error.response?.data?.message || error.message || 'PayPal capture failed');
   }
 };
 
@@ -466,19 +459,14 @@ const processFlutterwavePayment = async (paymentData) => {
  */
 export const verifyFlutterwavePayment = async (transactionId) => {
   try {
-    const response = await axios.get(`/api/payments/flutterwave-verify/${transactionId}`);
-    const { data, status } = response.data;
-
-    if (status === 'success') {
-      return {
-        success: true,
-        transactionId: data.id,
-        amount: data.amount,
-        currency: data.currency
-      };
-    }
-
-    throw new Error('Payment verification failed');
+    const payment = await getPaymentStatus(transactionId);
+    return {
+      success: payment?.status === 'completed',
+      transactionId: payment?.transactionId || payment?.id || transactionId,
+      amount: payment?.amount,
+      currency: payment?.currency,
+      status: payment?.status
+    };
   } catch (error) {
     console.error('Flutterwave verification error:', error);
     throw error;
@@ -492,33 +480,30 @@ export const verifyFlutterwavePayment = async (transactionId) => {
  */
 export const processRefund = async (refundData) => {
   try {
-    const { transactionId, amount, reason, gateway } = refundData;
+    const { paymentId, transactionId, amount, reason } = refundData;
+    const targetId = paymentId || transactionId;
+    if (!targetId) {
+      throw new Error('Payment id is required to process a refund');
+    }
 
-    const response = await axios.post('/api/payments/refund', {
-      transactionId,
+    const response = await axios.post(`${API_BASE_URL}/payments/${targetId}/refund`, {
       amount,
-      reason,
-      gateway
+      reason
+    }, {
+      headers: getAuthHeaders()
     });
-
-    const { refundId, status } = response.data;
-
-    await recordRefund({
-      transactionId,
-      refundId,
-      amount,
-      reason,
-      status
-    });
+    const payload = response.data?.data || {};
+    const payment = payload.payment || {};
+    const latestRefund = Array.isArray(payment.refunds) ? payment.refunds[payment.refunds.length - 1] : null;
 
     return {
       success: true,
-      refundId,
-      status
+      refundId: latestRefund?.transactionId || latestRefund?.id || payment.id,
+      status: payment.status || latestRefund?.status || 'processing'
     };
   } catch (error) {
     console.error('Refund error:', error);
-    throw new Error(`Refund failed: ${error.message}`);
+    throw new Error(error.response?.data?.message || error.message || 'Refund failed');
   }
 };
 
@@ -527,11 +512,7 @@ export const processRefund = async (refundData) => {
  * @param {Object} paymentRecord - Payment record details
  */
 const recordPayment = async (paymentRecord) => {
-  try {
-    await axios.post('/api/payments/record', paymentRecord);
-  } catch (error) {
-    console.error('Failed to record payment:', error);
-  }
+  return paymentRecord;
 };
 
 /**
@@ -551,11 +532,7 @@ const recordFailedPayment = async (failedRecord) => {
  * @param {Object} refundRecord - Refund details
  */
 const recordRefund = async (refundRecord) => {
-  try {
-    await axios.post('/api/payments/refund-record', refundRecord);
-  } catch (error) {
-    console.error('Failed to record refund:', error);
-  }
+  return refundRecord;
 };
 
 /**

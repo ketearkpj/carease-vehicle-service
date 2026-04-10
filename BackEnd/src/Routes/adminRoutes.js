@@ -47,38 +47,6 @@ router.post(
   adminController.changePassword
 );
 
-// ===== SUPER ADMIN ONLY ROUTES =====
-router.use(authMiddleware.restrictTo('super_admin'));
-
-router.get(
-  '/admins',
-  adminController.getAllAdmins
-);
-
-router.post(
-  '/admins',
-  validationMiddleware.validate(validateAdmin.createAdmin),
-  adminController.createAdmin
-);
-
-router.get(
-  '/admins/:id',
-  validationMiddleware.validate(validateAdmin.getAdmin, 'params'),
-  adminController.getAdmin
-);
-
-router.patch(
-  '/admins/:id',
-  validationMiddleware.validate(validateAdmin.updateAdmin),
-  adminController.updateAdmin
-);
-
-router.delete(
-  '/admins/:id',
-  validationMiddleware.validate(validateAdmin.deleteAdmin, 'params'),
-  adminController.deleteAdmin
-);
-
 // ===== DASHBOARD =====
 router.get(
   '/dashboard',
@@ -200,6 +168,38 @@ router.get(
   '/notifications',
   validationMiddleware.validate(validateAdmin.getNotifications, 'query'),
   adminController.getNotifications
+);
+
+// ===== SUPER ADMIN ONLY ROUTES =====
+router.use(authMiddleware.restrictTo('super_admin'));
+
+router.get(
+  '/admins',
+  adminController.getAllAdmins
+);
+
+router.post(
+  '/admins',
+  validationMiddleware.validate(validateAdmin.createAdmin),
+  adminController.createAdmin
+);
+
+router.get(
+  '/admins/:id',
+  validationMiddleware.validate(validateAdmin.getAdmin, 'params'),
+  adminController.getAdmin
+);
+
+router.patch(
+  '/admins/:id',
+  validationMiddleware.validate(validateAdmin.updateAdmin),
+  adminController.updateAdmin
+);
+
+router.delete(
+  '/admins/:id',
+  validationMiddleware.validate(validateAdmin.deleteAdmin, 'params'),
+  adminController.deleteAdmin
 );
 
 // ===== EXPORT DATA =====

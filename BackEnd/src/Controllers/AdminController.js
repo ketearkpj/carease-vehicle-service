@@ -91,7 +91,7 @@ exports.getProfile = catchAsync(async (req, res) => {
 });
 
 exports.updateProfile = catchAsync(async (req, res, next) => {
-  const admin = await User.findByPk(req.admin.id);
+  const admin = await Admin.findByPk(req.admin.id);
   if (!admin) {
     return next(new AppError('Admin not found', 404));
   }
@@ -114,7 +114,7 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 });
 
 exports.changePassword = catchAsync(async (req, res, next) => {
-  const admin = await User.findByPk(req.admin.id);
+  const admin = await Admin.findByPk(req.admin.id);
   if (!admin) {
     return next(new AppError('Admin not found', 404));
   }
