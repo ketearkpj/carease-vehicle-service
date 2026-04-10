@@ -65,7 +65,7 @@ const Services = () => {
     setLoading(true);
     try {
       const data = await getServices();
-      setServices(data);
+      setServices(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch services:', error);
       // Premium fallback data
@@ -157,7 +157,7 @@ const Services = () => {
   };
 
   const filterServices = () => {
-    let filtered = [...services];
+    let filtered = Array.isArray(services) ? [...services] : [];
 
     // Filter by category
     if (activeCategory !== 'all') {

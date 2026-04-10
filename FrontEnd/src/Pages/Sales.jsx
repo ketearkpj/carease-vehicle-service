@@ -73,11 +73,11 @@ const Sales = () => {
         limit: pagination.limit,
         ...filters
       });
-      setVehicles(data.vehicles);
+      setVehicles(Array.isArray(data?.vehicles) ? data.vehicles : []);
       setPagination(prev => ({
         ...prev,
-        total: data.total,
-        totalPages: data.totalPages
+        total: Number(data?.total || 0),
+        totalPages: Number(data?.totalPages || 0)
       }));
     } catch (error) {
       console.error('Failed to fetch vehicles:', error);
@@ -357,7 +357,7 @@ const Sales = () => {
   };
 
   const filterVehicles = () => {
-    let filtered = [...vehicles];
+    let filtered = Array.isArray(vehicles) ? [...vehicles] : [];
 
     // Filter by category
     if (filters.category !== 'all') {

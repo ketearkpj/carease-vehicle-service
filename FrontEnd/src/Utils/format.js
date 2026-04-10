@@ -59,8 +59,9 @@ export const formatDate = (date, options = {}) => {
     full: { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
   };
 
+  const selectedFormat = formats[format] || formats.medium;
   const formatOptions = {
-    ...formats[format] || formats.medium,
+    ...selectedFormat,
     timeZone: timezone
   };
 
